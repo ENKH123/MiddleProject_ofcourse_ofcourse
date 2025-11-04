@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:of_course/src/screens/write_course_page.dart';
+import 'package:of_course/screens/register_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -119,6 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
+      home: const RegisterScreen(),
     );
   }
 }
