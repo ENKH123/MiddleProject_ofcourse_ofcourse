@@ -16,11 +16,10 @@ class _LikedCoursePageState extends State<LikedCoursePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA), // 화면 전체 배경색
+      backgroundColor: const Color(0xFFFAFAFA),
       body: SafeArea(
         child: Column(
           children: [
-            // 🔘 토글 버튼 영역
             Padding(
               padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
               child: SingleChildScrollView(
@@ -82,7 +81,6 @@ class _LikedCoursePageState extends State<LikedCoursePage> {
 
             const SizedBox(height: 12),
 
-            // 🔽 이후에 게시물 카드들 추가할 수 있는 자리
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
