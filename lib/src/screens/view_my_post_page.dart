@@ -6,7 +6,7 @@ class ViewMyPostPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 🔹 더미 데이터
+    //더미 데이터
     final List<Map<String, dynamic>> myPosts = List.generate(10, (index) {
       return {
         'title': '내 게시물 제목 $index',
@@ -27,7 +27,6 @@ class ViewMyPostPage extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // 🔙 뒤로가기 버튼
               IconButton(
                 onPressed: () {
                   Navigator.pop(context);
@@ -48,7 +47,6 @@ class ViewMyPostPage extends StatelessWidget {
                 ),
               ),
 
-              // 🔔 알림 아이콘 버튼
               IconButton(
                 onPressed: () {},
                 icon: const Icon(
@@ -62,7 +60,6 @@ class ViewMyPostPage extends StatelessWidget {
         ),
       ),
 
-      // 🧩 Body
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
