@@ -32,7 +32,7 @@ class _OfcourseHomePageState extends State<OfcourseHomePage> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
         child: Material(
-          color: const Color(0xFFFAFAFA), // 앱바 고정 배경색
+          color: const Color(0xFFFAFAFA),
           elevation: 0,
           child: SafeArea(
             child: Padding(
@@ -131,7 +131,6 @@ class _OfcourseHomePageState extends State<OfcourseHomePage> {
 
       body: Column(
         children: [
-          // 🔘 토글 버튼
           Padding(
             padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
             child: SingleChildScrollView(
@@ -190,7 +189,7 @@ class _OfcourseHomePageState extends State<OfcourseHomePage> {
 
           const SizedBox(height: 12),
 
-          // 🔹 게시물 리스트
+          // 게시물 리스트
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
