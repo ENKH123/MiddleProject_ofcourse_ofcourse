@@ -8,24 +8,99 @@ class RegisterScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Color(0xffFAFAFA),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  SizedBox(height: 40),
-                  Text(
-                    "프로필 정보 입력",
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                  Column(
+                    children: [
+                      SizedBox(height: 40),
+                      Text(
+                        "프로필 정보 입력",
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      ProfileImage(),
+                      NicknameTextField(),
+                    ],
                   ),
-                  ProfileImage(),
-                  NicknameTextField(),
+                  CompleteButton(),
                 ],
               ),
-              CompleteButton(),
-            ],
+            ),
+            RegisterCompletePopup(nickname: "운영자"),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class RegisterCompletePopup extends StatelessWidget {
+  final String nickname;
+  const RegisterCompletePopup({super.key, required this.nickname});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.black.withOpacity(0.7),
+      child: Center(
+        child: Container(
+          width: 240,
+          height: 200,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              spacing: 12,
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  color: Color(0xff003366),
+                  size: 40,
+                ),
+                Column(
+                  children: [
+                    Text("계정 생성 완료"),
+                    Text.rich(
+                      TextSpan(
+                        children: <TextSpan>[
+                          TextSpan(text: "닉네임 : "),
+                          TextSpan(
+                            text: "\"$nickname\"",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  width: double.maxFinite,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xff003366),
+                    ),
+                    onPressed: () {},
+                    child: Text(
+                      "로그인 하러 가기",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
