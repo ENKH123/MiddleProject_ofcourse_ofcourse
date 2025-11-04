@@ -15,6 +15,7 @@ class WriteCoursePage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: const [
+                  //텍스트 버튼?
                   Text(
                     "임시저장",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),

@@ -59,7 +59,7 @@ class ViewMyPostPage extends StatelessWidget {
           ),
         ),
       ),
-
+      //내가쓴글
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
