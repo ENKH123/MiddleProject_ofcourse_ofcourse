@@ -32,7 +32,7 @@ class _OfcourseHomePageState extends State<OfcourseHomePage> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
         child: Material(
-          color: const Color(0xFFFAFAFA), // 앱바 고정 배경색
+          color: const Color(0xFFFAFAFA),
           elevation: 0,
           child: SafeArea(
             child: Padding(
