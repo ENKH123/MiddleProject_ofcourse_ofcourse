@@ -458,7 +458,6 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  /// 라벨 텍스트 위젯 생성
   Widget _buildLabel(String label) {
     return Text(
       label,
