@@ -12,7 +12,7 @@ class OfcourseHomePage extends StatefulWidget {
 
 class _OfcourseHomePageState extends State<OfcourseHomePage> {
   SeoulDistrict selectedDistrict = SeoulDistrict.gangnam;
-  Set<ToggleButtonType> selectedCategories = {};
+  Set<TagType> selectedCategories = {};
 
   // 더미 데이터
   final List<Map<String, dynamic>> posts = List.generate(10, (index) {
@@ -136,7 +136,7 @@ class _OfcourseHomePageState extends State<OfcourseHomePage> {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: ToggleButtonType.values.map((category) {
+                children: TagType.values.map((category) {
                   final bool isSelected = selectedCategories.contains(category);
                   return Padding(
                     padding: const EdgeInsets.only(right: 10),
