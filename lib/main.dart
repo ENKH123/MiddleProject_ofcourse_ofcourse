@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:of_course/screens/write_course_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:of_course/screens/login_screen.dart';
 
 Future<void> main() async {
   await Supabase.initialize(
@@ -8,6 +9,7 @@ Future<void> main() async {
     anonKey: // 인증키
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiaGVjb2x6bGpmcm1ndGRqd2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNzc2MTQsImV4cCI6MjA3NzY1MzYxNH0.BsKpELVM0vmihAPd37CDs-fm0sdaVZGeNuBaGlgFOac',
   );
+
 
   runApp(const MyApp());
 }
@@ -39,7 +41,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const WriteCoursePage(),
+      home: const LoginScreen(),
     );
   }
 }
@@ -126,7 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
-      /*home: const RegisterScreen(),*/
+      // home: const RegisterScreen(),
     );
   }
 }
