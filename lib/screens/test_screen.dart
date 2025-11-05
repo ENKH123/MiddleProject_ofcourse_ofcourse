@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -8,6 +9,41 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  GoogleSignInAccount? _user;
+  @override
+  void initState() {
+    _initializeGoogleSignIn();
+    super.initState();
+  }
+
+  Future<void> _initializeGoogleSignIn() async {
+    // Initialize and listen to authentication events
+    await GoogleSignIn.instance.initialize();
+
+    GoogleSignIn.instance.authenticationEvents.listen((event) {
+      setState(() {
+        _user = switch (event) {
+          GoogleSignInAuthenticationEventSignIn() => event.user,
+          GoogleSignInAuthenticationEventSignOut() => null,
+        };
+      });
+    });
+  }
+
+  Future<void> _signIn() async {
+    try {
+      // Check if platform supports authenticate
+      if (GoogleSignIn.instance.supportsAuthenticate()) {
+        await GoogleSignIn.instance.authenticate(scopeHint: ['email']);
+      } else {
+        // Handle web platform differently
+        print('This platform requires platform-specific sign-in UI');
+      }
+    } catch (e) {
+      print('Sign-in error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Stack(
           children: [
             // 로그인 버튼
-            GoogleLoginButton(),
+            GoogleLoginButton(clickEvent: _signIn()),
             // 앱 로고
             AppLogo(),
           ],
@@ -50,7 +86,8 @@ class AppLogo extends StatelessWidget {
 }
 
 class GoogleLoginButton extends StatelessWidget {
-  const GoogleLoginButton({super.key});
+  final Future<void> clickEvent;
+  const GoogleLoginButton({super.key, required this.clickEvent});
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +103,7 @@ class GoogleLoginButton extends StatelessWidget {
             fixedSize: Size(280, 48),
           ),
           onPressed: () {
-            print("구글 로그인 눌림");
+            clickEvent;
           },
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
