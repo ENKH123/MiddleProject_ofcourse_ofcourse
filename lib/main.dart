@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:of_course/screens/register_screen.dart';
-import 'package:of_course/screens/write_course_page.dart';
+import 'package:of_course/screens/alert_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,7 +32,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const WriteCoursePage(),
+      home: const AlertScreen(),
     );
   }
 }
@@ -120,7 +119,7 @@ class _MyHomePageState extends State<MyHomePage> {
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
-      home: const RegisterScreen(),
+      // home: const RegisterScreen(),
     );
   }
 }
