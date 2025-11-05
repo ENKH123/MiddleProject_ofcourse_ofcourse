@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:of_course/src/screens/write_course_page.dart';
 import 'package:of_course/screens/register_screen.dart';
+import 'package:of_course/screens/write_course_page.dart';
 
 void main() {
   runApp(const MyApp());
