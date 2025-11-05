@@ -60,7 +60,9 @@ class GoogleLoginButton extends StatelessWidget {
             ),
             fixedSize: Size(280, 48),
           ),
-          onPressed: () {},
+          onPressed: () {
+            print("구글 로그인 눌림");
+          },
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             spacing: 16,
