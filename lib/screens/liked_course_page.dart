@@ -11,7 +11,7 @@ class LikedCoursePage extends StatefulWidget {
 }
 
 class _LikedCoursePageState extends State<LikedCoursePage> {
-  Set<ToggleButtonType> selectedCategories = {};
+  Set<TagType> selectedCategories = {};
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ class _LikedCoursePageState extends State<LikedCoursePage> {
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: ToggleButtonType.values.map((category) {
+                  children: TagType.values.map((category) {
                     final bool isSelected = selectedCategories.contains(
                       category,
                     );

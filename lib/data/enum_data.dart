@@ -19,7 +19,7 @@ extension SeoulDistrictExtension on SeoulDistrict {
   }
 }
 
-enum ToggleButtonType {
+enum TagType {
   all,
   Food,
   Cafe,
@@ -40,42 +40,42 @@ enum ToggleButtonType {
 }
 
 // ✅ Enum에 표시용 이름 매핑 (한글)
-extension ToggleButtonTypeExtension on ToggleButtonType {
+extension TagTypeExtension on TagType {
   String get displayName {
     switch (this) {
-      case ToggleButtonType.all:
+      case TagType.all:
         return '전체';
-      case ToggleButtonType.Food:
+      case TagType.Food:
         return '맛짐';
-      case ToggleButtonType.Cafe:
+      case TagType.Cafe:
         return '카페';
-      case ToggleButtonType.Entertainment:
+      case TagType.Entertainment:
         return '오락';
-      case ToggleButtonType.Walk:
+      case TagType.Walk:
         return '산책';
-      case ToggleButtonType.Drive:
+      case TagType.Drive:
         return '드라이브';
-      case ToggleButtonType.Relaxed:
+      case TagType.Relaxed:
         return '느좋';
-      case ToggleButtonType.Museum:
+      case TagType.Museum:
         return '전시/박물관';
-      case ToggleButtonType.Activity:
+      case TagType.Activity:
         return '액티비티';
-      case ToggleButtonType.Movie:
+      case TagType.Movie:
         return '영화';
-      case ToggleButtonType.Book:
+      case TagType.Book:
         return '도서';
-      case ToggleButtonType.Rest:
+      case TagType.Rest:
         return '휴식';
-      case ToggleButtonType.Sightseeing:
+      case TagType.Sightseeing:
         return '관광';
-      case ToggleButtonType.Indoor:
+      case TagType.Indoor:
         return '실내';
-      case ToggleButtonType.EscapeRoom:
+      case TagType.EscapeRoom:
         return '방탈출';
-      case ToggleButtonType.Drink:
+      case TagType.Drink:
         return '술한잔';
-      case ToggleButtonType.Popup:
+      case TagType.Popup:
         return '팝업';
     }
   }
