@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:of_course/screens/write_course_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:of_course/screens/login_screen.dart';
 
-void main() {
+Future<void> main() async {
+  await Supabase.initialize(
+    url: 'https://dbhecolzljfrmgtdjwie.supabase.co', // 프로젝트 키
+    anonKey: // 인증키
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiaGVjb2x6bGpmcm1ndGRqd2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNzc2MTQsImV4cCI6MjA3NzY1MzYxNH0.BsKpELVM0vmihAPd37CDs-fm0sdaVZGeNuBaGlgFOac',
+  );
+
+
   runApp(const MyApp());
 }
 

@@ -40,7 +40,7 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ✅ 이미지 선택
+        // 이미지 선택
         Row(
           children: [
             for (int i = 0; i < _images.length; i++)
@@ -96,7 +96,7 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
 
         const SizedBox(height: 8),
 
-        // ✅ 텍스트 입력 (200자)
+        // 텍스트 입력 (200자)
         SizedBox(
           height: 150,
           child: TextField(
@@ -117,7 +117,7 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
 
         const SizedBox(height: 8),
 
-        // ✅ 태그 선택
+        //  태그 선택
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(

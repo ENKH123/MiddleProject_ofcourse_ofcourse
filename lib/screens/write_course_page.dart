@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:of_course/components/course_set.dart';
 
 // --------------------------
-// ✅ 전체 페이지
+//전체 페이지
 // --------------------------
 class WriteCoursePage extends StatefulWidget {
   const WriteCoursePage({super.key});
@@ -188,7 +188,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
 
               const SizedBox(height: 30),
 
-              // ✅ 코스 업로드 버튼 (활성/비활성 예시)
+              // 코스 업로드 버튼
               Center(
                 child: ElevatedButton(
                   onPressed: () {
