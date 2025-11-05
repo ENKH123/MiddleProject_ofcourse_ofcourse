@@ -9,35 +9,90 @@ class AlertScreen extends StatelessWidget {
       backgroundColor: Color(0xffFAFAFA),
       appBar: AppBar(backgroundColor: Color(0xffFAFAFA), title: AlertAppBar()),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(28.0),
-          child: Column(
-            spacing: 20,
-            children: [
-              Expanded(
-                child: ListView.separated(
-                  itemCount: 100,
-                  itemBuilder: (context, index) {
-                    return AlertBox(
-                      user: "수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈",
-                      type: "좋아요",
-                    );
-                  },
-                  separatorBuilder: (BuildContext context, int index) {
-                    return const SizedBox(height: 20.0);
-                  },
-                ),
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(28.0),
+              child: Column(
+                spacing: 20,
+                children: [
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: 100,
+                      itemBuilder: (context, index) {
+                        return AlertBox(
+                          user: "수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈",
+                          type: "좋아요",
+                        );
+                      },
+                      separatorBuilder: (BuildContext context, int index) {
+                        return const SizedBox(height: 20.0);
+                      },
+                    ),
+                  ),
+                  // 예시 코드
+                  // AlertBox(user: "수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈", type: "좋아요"),
+                  // AlertBox(user: "재현", type: "댓글"),
+                  // AlertBox(user: "강현", type: "좋아요"),
+                ],
               ),
-              // 예시 코드
-              // AlertBox(user: "수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈", type: "좋아요"),
-              // AlertBox(user: "재현", type: "댓글"),
-              // AlertBox(user: "강현", type: "좋아요"),
-            ],
-          ),
+            ),
+            // AlertErrorPopup(),
+          ],
         ),
       ),
     );
   }
+}
+
+void _showAlertErrorPopup(BuildContext context) {
+  showDialog(
+    context: context,
+    // 다이얼로그 외부를 탭해도 닫히지 않게 설정 (배경 클릭 방지)
+    barrierDismissible: false,
+
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.transparent, // Dialog 배경을 투명하게 (선택 사항)
+        child: Center(
+          child: Container(
+            width: 240,
+            height: 160,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 12,
+                children: [
+                  Text(
+                    "코스를 찾을 수 없습니다.",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  SizedBox(
+                    width: double.maxFinite,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xff003366),
+                      ),
+                      onPressed: () {
+                        print("닫기 버튼 눌림");
+                        Navigator.of(context).pop(); // 팝업 닫기
+                      },
+                      child: Text("닫기", style: TextStyle(color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
 
 class AlertAppBar extends StatelessWidget {
@@ -82,6 +137,7 @@ class AlertBox extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         print('AlertBox가 클릭되었습니다!');
+        _showAlertErrorPopup(context);
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
