@@ -17,7 +17,7 @@ class RegisterScreen extends StatelessWidget {
                 children: [
                   Column(
                     children: [
-                      SizedBox(height: 40),
+                      SizedBox(height: 40), //상단 여백
                       Text(
                         "프로필 정보 입력",
                         style: TextStyle(
@@ -25,11 +25,13 @@ class RegisterScreen extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      ProfileImage(),
-                      NicknameTextField(),
+                      ProfileImage(), //TODO: 이미지 피커 적용
+                      NicknameTextField(), //TODO: 텍스트필드 컨트롤러
                     ],
                   ),
-                  CompleteButton(),
+                  CompleteButton(
+                    nickname: "닉네임",
+                  ), //TODO: 텍스트필드 컨트롤러로 버튼 enable/disable, 텍스트 필드 글자 가져오기
                 ],
               ),
             ),
@@ -40,6 +42,9 @@ class RegisterScreen extends StatelessWidget {
   }
 }
 
+//TODO: 분기점 적용
+/// 닉네임 중복시
+/// 정상 생성시
 void _showRegisterComplePopup(BuildContext context, String nickname) {
   showDialog(
     context: context,
@@ -48,7 +53,7 @@ void _showRegisterComplePopup(BuildContext context, String nickname) {
 
     builder: (BuildContext context) {
       return Dialog(
-        backgroundColor: Colors.transparent, // Dialog 배경을 투명하게 (선택 사항)
+        backgroundColor: Colors.transparent, // Dialog 배경 투명하게
         child: Center(
           child: Container(
             width: 240,
@@ -94,12 +99,12 @@ void _showRegisterComplePopup(BuildContext context, String nickname) {
                   // Text("이미 있는 닉네임 입니다."),
                   SizedBox(
                     width: double.maxFinite,
-                    //TODO: 최소 글자 수 못 채우면 버튼 비활성화
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xff003366),
                       ),
                       onPressed: () {
+                        print("로그인 하러 가기 버튼 눌림");
                         Navigator.of(context).pop();
                       },
                       child: Text(
@@ -127,7 +132,7 @@ class ProfileImage extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        print('Box가 클릭되었습니다!');
+        print('프로필 사진 눌림');
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(50),
@@ -143,17 +148,19 @@ class ProfileImage extends StatelessWidget {
 }
 
 class CompleteButton extends StatelessWidget {
-  const CompleteButton({super.key});
+  final String nickname;
+  const CompleteButton({super.key, required this.nickname});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.maxFinite,
+      //TODO: 최소 글자 수 못 채우면 버튼 비활성화
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(backgroundColor: Color(0xff003366)),
         onPressed: () {
           print("입력 완료 버튼 눌림");
-          _showRegisterComplePopup(context, "운영자");
+          _showRegisterComplePopup(context, nickname);
         },
         child: Text("입력 완료", style: TextStyle(color: Colors.white)),
       ),
