@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:cross_file/cross_file.dart';
 import 'dart:io';
 import '../models/report_models.dart';
-
+import '../common/widgets/custom_app_bar.dart';
 ///ID: FO_03_03_01
 
 /// 신고 화면 위젯
@@ -27,13 +26,11 @@ class ReportScreen extends StatefulWidget {
 class _ReportScreenState extends State<ReportScreen> {
   /// 신고 상세 내용 입력 컨트롤러
   late TextEditingController _detailsController;
-
   /// 선택된 신고 사유
   ReportReason? _selectedReason;
-
   /// 첨부된 신고 이미지 목록 (최대 3개)
   List<XFile> _reportImages = [];
-
+  
   /// 이미지 피커 인스턴스
   final ImagePicker _picker = ImagePicker();
 
@@ -65,7 +62,9 @@ class _ReportScreenState extends State<ReportScreen> {
     }
 
     try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+      );
 
       if (image != null) {
         setState(() {
@@ -73,9 +72,9 @@ class _ReportScreenState extends State<ReportScreen> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('이미지를 선택하는 중 오류가 발생했습니다: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('이미지를 선택하는 중 오류가 발생했습니다: $e')),
+      );
     }
   }
 
@@ -131,7 +130,9 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget _buildCancelDialog() {
     return Dialog(
       backgroundColor: const Color(0xFFFAFAFA),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -168,7 +169,10 @@ class _ReportScreenState extends State<ReportScreen> {
                 ),
                 child: const Text(
                   'OK',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -189,7 +193,10 @@ class _ReportScreenState extends State<ReportScreen> {
                 ),
                 child: const Text(
                   'Cancel',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -203,7 +210,9 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget _buildCompletionDialog() {
     return Dialog(
       backgroundColor: const Color(0xFFFAFAFA),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -237,7 +246,10 @@ class _ReportScreenState extends State<ReportScreen> {
                 ),
                 child: const Text(
                   'OK',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -251,15 +263,9 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFFAFAFA),
-        elevation: 0,
-        // 뒤로가기 버튼
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => _showCancelDialog(),
-        ),
-        // 타이틀 제거
+      appBar: CustomAppBar(
+        showBackButton: true,
+        onBackPressed: () => _showCancelDialog(),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -316,13 +322,7 @@ class _ReportScreenState extends State<ReportScreen> {
                   controller: _detailsController,
                   maxLines: 5,
                   maxLength: 1000,
-                  buildCounter:
-                      (
-                        context, {
-                        required currentLength,
-                        required isFocused,
-                        maxLength,
-                      }) => null,
+                  buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
                   decoration: InputDecoration(
                     hintText: '신고 사유를 작성해주세요',
                     border: OutlineInputBorder(
@@ -342,7 +342,10 @@ class _ReportScreenState extends State<ReportScreen> {
                   right: 12,
                   child: Text(
                     '${_detailsController.text.length}/1000',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
                   ),
                 ),
               ],
@@ -446,7 +449,10 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
               child: const Text(
                 '신고하기',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -459,7 +465,10 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget _buildLabel(String label) {
     return Text(
       label,
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 }
