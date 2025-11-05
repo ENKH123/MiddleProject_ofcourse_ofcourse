@@ -176,7 +176,6 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            // Cancel 버튼 (회색)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -229,7 +228,6 @@ class _ReportScreenState extends State<ReportScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            // OK 버튼 (오렌지색)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
