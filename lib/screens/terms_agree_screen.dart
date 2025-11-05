@@ -47,20 +47,42 @@ class TermBox extends StatelessWidget {
             spacing: 16,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(Icons.check_circle, color: Color(0xff003366), size: 32),
+              GestureDetector(
+                onTap: () {
+                  print("아이콘 눌림");
+                },
+                child: Icon(
+                  Icons.check_circle,
+                  color: Color(0xff003366),
+                  size: 32,
+                ),
+              ),
+
               Text(
                 "개인정보 ~~~ 약관",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
             ],
           ),
-          Text(
-            "전체보기",
-            style: TextStyle(
-              color: Colors.blue,
-              fontSize: 16,
-              decoration: TextDecoration.underline,
-              decorationColor: Colors.blue,
+          GestureDetector(
+            onTap: () {
+              print("전체보기 눌림");
+            },
+            // 버튼 영역 확장을 위해 SizedBox 사용
+            child: SizedBox(
+              height: double.maxFinite,
+              width: 80,
+              child: Center(
+                child: Text(
+                  "전체보기",
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontSize: 16,
+                    decoration: TextDecoration.underline,
+                    decorationColor: Colors.blue,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -98,7 +120,9 @@ class TermsAgreeAppBar extends StatelessWidget {
           child: Align(
             alignment: Alignment.centerLeft,
             child: IconButton(
-              onPressed: () {},
+              onPressed: () {
+                print("뒤로가기 버튼 눌림");
+              },
               icon: Icon(Icons.arrow_back_ios_new),
             ),
           ),
