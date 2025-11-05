@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:of_course/src/components/navigation_bar.dart';
-import 'package:of_course/src/components/post_component.dart';
-import 'package:of_course/src/data/enum_data.dart';
+import 'package:of_course/components/navigation_bar.dart';
+import 'package:of_course/components/post_component.dart';
+import 'package:of_course/data/enum_data.dart';
 
 class OfcourseHomePage extends StatefulWidget {
   const OfcourseHomePage({super.key});
