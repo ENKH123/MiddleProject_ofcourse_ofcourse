@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:of_course/data/enum_data.dart';
+import 'package:of_course/core/data/enum_data.dart';
 
 class WriteCourseSet extends StatefulWidget {
   final Function(String query)? onLocationSelected; // 콜백 추가
