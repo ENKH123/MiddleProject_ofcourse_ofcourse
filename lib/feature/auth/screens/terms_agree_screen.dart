@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../feature/auth/viewmodels/terms_viewmodel.dart';
+import '../viewmodels/terms_viewmodel.dart';
 
 class TermsAgreeScreen extends StatelessWidget {
   const TermsAgreeScreen({super.key});
@@ -116,7 +116,7 @@ class TermBox extends StatelessWidget {
 
               Text(
                 termsName,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ],
           ),
