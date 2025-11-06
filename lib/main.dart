@@ -1,20 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:of_course/screens/login_screen.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-void main() async {
-  /// TODO: update Supabase credentials with your own
-  await Supabase.initialize(
-    url: 'https://dbhecolzljfrmgtdjwie.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiaGVjb2x6bGpmcm1ndGRqd2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNzc2MTQsImV4cCI6MjA3NzY1MzYxNH0.BsKpELVM0vmihAPd37CDs-fm0sdaVZGeNuBaGlgFOac',
-  );
 import 'package:go_router/go_router.dart';
-import 'package:of_course/models/course_detail_models.dart';
 import 'package:of_course/screens/alert_screen.dart';
 import 'package:of_course/screens/change_profile_screen.dart';
 import 'package:of_course/screens/course_detail_screen.dart';
 import 'package:of_course/screens/liked_course_page.dart';
+import 'package:of_course/screens/login_screen.dart';
 import 'package:of_course/screens/ofCourse_home_page.dart';
 import 'package:of_course/screens/profile_screen.dart';
 import 'package:of_course/screens/register_screen.dart';
@@ -23,9 +13,9 @@ import 'package:of_course/screens/terms_agree_screen.dart';
 import 'package:of_course/screens/terms_mypage_screen.dart';
 import 'package:of_course/screens/view_my_post_page.dart';
 import 'package:of_course/screens/write_course_page.dart';
+import 'package:of_course/viewmodels/login_viewmodel.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import 'screens/login_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,13 +26,24 @@ Future<void> main() async {
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiaGVjb2x6bGpmcm1ndGRqd2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNzc2MTQsImV4cCI6MjA3NzY1MzYxNH0.BsKpELVM0vmihAPd37CDs-fm0sdaVZGeNuBaGlgFOac',
   );
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => LoginViewModel()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 final supabase = Supabase.instance.client;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
+  get courseDetail => null;
+
+  get reportTargetType => null;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +69,7 @@ class MyApp extends StatelessWidget {
         GoRoute(
           path: '/detail',
           builder: (context, state) =>
-              const CourseDetailScreen(courseDetail: courseDetail),
+              CourseDetailScreen(courseDetail: courseDetail), // 임시 수정
         ),
         GoRoute(
           path: '/liked',
@@ -84,8 +85,10 @@ class MyApp extends StatelessWidget {
         ),
         GoRoute(
           path: '/report',
-          builder: (context, state) =>
-              ReportScreen(targetId: "", reportTargetType: null),
+          builder: (context, state) => ReportScreen(
+            targetId: "",
+            reportTargetType: reportTargetType,
+          ), // 임시 수정
         ),
         GoRoute(
           path: '/terms',
@@ -113,7 +116,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const LoginScreen(),
+      // home: const LoginScreen(),
+      routerConfig: router,
     );
   }
 }
