@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:of_course/components/custom_app_bar.dart';
+import 'package:of_course/core/components/custom_app_bar.dart';
 
 import '../models/report_models.dart';
 

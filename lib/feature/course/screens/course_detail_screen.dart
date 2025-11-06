@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:of_course/feature/report/models/report_models.dart';
+import 'package:of_course/feature/report/screens/report_screen.dart';
+
 import '../models/course_detail_models.dart';
-import '../models/report_models.dart';
-import 'report_screen.dart';
 
 /// 코스(게시글) 세부정보 화면 (FO_03_03)
 
 class CourseDetailScreen extends StatefulWidget {
   final CourseDetail courseDetail;
 
-  const CourseDetailScreen({
-    super.key,
-    required this.courseDetail,
-  });
+  const CourseDetailScreen({super.key, required this.courseDetail});
 
   @override
   State<CourseDetailScreen> createState() => _CourseDetailScreenState();
@@ -162,9 +160,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   /// TODO: 실제 수정 화면으로 이동하도록 구현 필요
   void _editCourse() {
     // TODO: 게시글 수정 화면으로 이동
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('게시글 수정 기능은 준비 중입니다.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('게시글 수정 기능은 준비 중입니다.')));
   }
 
   /// 신고 화면으로 이동
@@ -300,10 +298,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
               // 작성자만 수정/삭제 버튼 표시
               if (widget.courseDetail.isAuthor) ...[
-                TextButton(
-                  onPressed: _editCourse,
-                  child: const Text('수정'),
-                ),
+                TextButton(onPressed: _editCourse, child: const Text('수정')),
                 TextButton(
                   onPressed: _deleteCourse,
                   child: const Text('삭제', style: TextStyle(color: Colors.red)),
@@ -359,21 +354,18 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(_borderRadius),
-          child: widget.courseDetail.markerImage.isNotEmpty &&
-              widget.courseDetail.markerImage.startsWith('http')
+          child:
+              widget.courseDetail.markerImage.isNotEmpty &&
+                  widget.courseDetail.markerImage.startsWith('http')
               ? Image.network(
-            widget.courseDetail.markerImage,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              // 이미지 로드 실패 시 지도 아이콘 표시
-              return const Center(
-                child: Icon(Icons.map, size: 50),
-              );
-            },
-          )
-              : const Center(
-            child: Icon(Icons.map, size: 50),
-          ),
+                  widget.courseDetail.markerImage,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    // 이미지 로드 실패 시 지도 아이콘 표시
+                    return const Center(child: Icon(Icons.map, size: 50));
+                  },
+                )
+              : const Center(child: Icon(Icons.map, size: 50)),
         ),
       ),
     );
@@ -437,44 +429,66 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             height: 150,
                             decoration: BoxDecoration(
                               color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(_borderRadius),
+                              borderRadius: BorderRadius.circular(
+                                _borderRadius,
+                              ),
                               border: Border.all(color: Colors.grey[400]!),
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(_borderRadius),
-                              child: imageUrl.isNotEmpty && imageUrl.startsWith('http')
-                                  ? Image.network(
-                                imageUrl,
-                                width: double.infinity,
-                                height: 150,
-                                fit: BoxFit.cover,
-                                loadingBuilder: (context, child, loadingProgress) {
-                                  if (loadingProgress == null) return child;
-                                  return Center(
-                                    child: CircularProgressIndicator(
-                                      value: loadingProgress.expectedTotalBytes != null
-                                          ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
-                                          : null,
-                                    ),
-                                  );
-                                },
-                                errorBuilder: (context, error, stackTrace) {
-                                  // 이미지 로드 실패 시 아이콘 표시
-                                  return Container(
-                                    color: Colors.grey[300],
-                                    child: const Center(
-                                      child: Icon(Icons.image, size: 50, color: Colors.grey),
-                                    ),
-                                  );
-                                },
-                              )
-                                  : Container(
-                                color: Colors.grey[300],
-                                child: const Center(
-                                  child: Icon(Icons.image, size: 50, color: Colors.grey),
-                                ),
+                              borderRadius: BorderRadius.circular(
+                                _borderRadius,
                               ),
+                              child:
+                                  imageUrl.isNotEmpty &&
+                                      imageUrl.startsWith('http')
+                                  ? Image.network(
+                                      imageUrl,
+                                      width: double.infinity,
+                                      height: 150,
+                                      fit: BoxFit.cover,
+                                      loadingBuilder:
+                                          (context, child, loadingProgress) {
+                                            if (loadingProgress == null)
+                                              return child;
+                                            return Center(
+                                              child: CircularProgressIndicator(
+                                                value:
+                                                    loadingProgress
+                                                            .expectedTotalBytes !=
+                                                        null
+                                                    ? loadingProgress
+                                                              .cumulativeBytesLoaded /
+                                                          loadingProgress
+                                                              .expectedTotalBytes!
+                                                    : null,
+                                              ),
+                                            );
+                                          },
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            // 이미지 로드 실패 시 아이콘 표시
+                                            return Container(
+                                              color: Colors.grey[300],
+                                              child: const Center(
+                                                child: Icon(
+                                                  Icons.image,
+                                                  size: 50,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                    )
+                                  : Container(
+                                      color: Colors.grey[300],
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.image,
+                                          size: 50,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
                             ),
                           ),
                         ),
@@ -502,12 +516,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   ),
                 ],
               ),
-            if (set.setAddress.isNotEmpty) const SizedBox(height: _spacingSmall),
+            if (set.setAddress.isNotEmpty)
+              const SizedBox(height: _spacingSmall),
             // 텍스트 설명
-            Text(
-              set.setDescription,
-              style: const TextStyle(fontSize: 14),
-            ),
+            Text(set.setDescription, style: const TextStyle(fontSize: 14)),
             const SizedBox(height: _spacingSmall),
             // 태그
             if (set.tag.isNotEmpty)
@@ -541,19 +553,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 onPressed: _toggleLike,
               ),
               // 좋아요 개수
-              Text(
-                '$_likeCount',
-                style: const TextStyle(fontSize: 16),
-              ),
+              Text('$_likeCount', style: const TextStyle(fontSize: 16)),
               const SizedBox(width: _spacingLarge),
               // 댓글 아이콘
               const Icon(Icons.comment, size: 20),
               const SizedBox(width: _spacingSmall),
               // 댓글 개수
-              Text(
-                '${_comments.length}',
-                style: const TextStyle(fontSize: 16),
-              ),
+              Text('${_comments.length}', style: const TextStyle(fontSize: 16)),
             ],
           ),
           // 오른쪽: 신고 버튼
@@ -603,12 +609,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           CircleAvatar(
             radius: 16,
             backgroundColor: Colors.grey[300],
-            backgroundImage: comment.commentAvatar.isNotEmpty &&
-                comment.commentAvatar.startsWith('http')
+            backgroundImage:
+                comment.commentAvatar.isNotEmpty &&
+                    comment.commentAvatar.startsWith('http')
                 ? NetworkImage(comment.commentAvatar)
                 : null,
-            child: comment.commentAvatar.isEmpty ||
-                !comment.commentAvatar.startsWith('http')
+            child:
+                comment.commentAvatar.isEmpty ||
+                    !comment.commentAvatar.startsWith('http')
                 ? const Icon(Icons.person, size: 16)
                 : null,
           ),
@@ -631,25 +639,19 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     const SizedBox(width: _spacingSmall),
                     Text(
                       comment.getRelativeTime(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ],
                 ),
                 const SizedBox(height: _spacingSmall),
                 // 댓글 본문
-                Text(
-                  comment.commentBody,
-                  style: const TextStyle(fontSize: 14),
-                ),
+                Text(comment.commentBody, style: const TextStyle(fontSize: 14)),
               ],
             ),
           ),
           // 삭제/신고 버튼
           if (comment.isCommentAuthor)
-          // 자신이 작성한 댓글: 삭제 버튼
+            // 자신이 작성한 댓글: 삭제 버튼
             TextButton(
               onPressed: () => _deleteComment(comment.commentId),
               child: const Text(
@@ -658,16 +660,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
             )
           else
-          // 다른 사람이 작성한 댓글: 신고 버튼
+            // 다른 사람이 작성한 댓글: 신고 버튼
             TextButton(
               onPressed: () => _navigateToReport(
                 comment.commentId,
                 ReportTargetType.comment,
               ),
-              child: const Text(
-                '신고',
-                style: TextStyle(fontSize: 12),
-              ),
+              child: const Text('신고', style: TextStyle(fontSize: 12)),
             ),
         ],
       ),
@@ -765,9 +764,7 @@ CourseDetail createExampleCourseDetail() {
       ),
       CourseSet(
         setId: 'set-example-003',
-        setImages: [
-          'https://via.placeholder.com/300x200',
-        ],
+        setImages: ['https://via.placeholder.com/300x200'],
         setAddress: '서울특별시 중구 명동길',
         setDescription: '세 번째 장소입니다.',
         tag: '#쇼핑',
