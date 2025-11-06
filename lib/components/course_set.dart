@@ -5,7 +5,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:of_course/data/enum_data.dart';
 
 class WriteCourseSet extends StatefulWidget {
-  const WriteCourseSet({super.key});
+  final Function(String query)? onLocationSelected; // 콜백 추가
+
+  const WriteCourseSet({super.key, this.onLocationSelected});
 
   @override
   State<WriteCourseSet> createState() => _WriteCourseSetState();
@@ -14,6 +16,7 @@ class WriteCourseSet extends StatefulWidget {
 class _WriteCourseSetState extends State<WriteCourseSet> {
   final ImagePicker _picker = ImagePicker();
   final List<File> _images = [];
+  final TextEditingController _searchController = TextEditingController();
   final TextEditingController _textController = TextEditingController();
   TagType _selectedTag = TagType.all;
 
@@ -23,16 +26,19 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
       source: ImageSource.gallery,
     );
     if (pickedFile != null) {
-      setState(() {
-        _images.add(File(pickedFile.path));
-      });
+      setState(() => _images.add(File(pickedFile.path)));
     }
   }
 
   void _removeImage(int index) {
-    setState(() {
-      _images.removeAt(index);
-    });
+    setState(() => _images.removeAt(index));
+  }
+
+  void _onSearch() {
+    final query = _searchController.text.trim();
+    if (query.isNotEmpty) {
+      widget.onLocationSelected?.call(query);
+    }
   }
 
   @override
@@ -40,6 +46,27 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // 검색창
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: '주소나 매장명 검색',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(onPressed: _onSearch, child: const Text('검색')),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
         // 이미지 선택
         Row(
           children: [
@@ -96,7 +123,7 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
 
         const SizedBox(height: 8),
 
-        // 텍스트 입력 (200자)
+        // 텍스트 입력
         SizedBox(
           height: 150,
           child: TextField(
@@ -117,7 +144,7 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
 
         const SizedBox(height: 8),
 
-        //  태그 선택
+        // 태그 선택
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
@@ -137,9 +164,7 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
               }).toList(),
               onChanged: (value) {
                 if (value != null) {
-                  setState(() {
-                    _selectedTag = value;
-                  });
+                  setState(() => _selectedTag = value);
                 }
               },
             ),
