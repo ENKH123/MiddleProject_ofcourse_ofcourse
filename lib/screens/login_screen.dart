@@ -1,74 +1,46 @@
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_router/go_router.dart';
+import 'package:of_course/viewmodels/login_viewmodel.dart';
+import 'package:provider/provider.dart';
 
-import '../main.dart';
-
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
-
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
-  GoogleSignInAccount? _user;
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  Future<void> _initializeGoogleSignIn() async {
-    final scopes = ['email', 'profile'];
-    final googleSignIn = GoogleSignIn.instance;
-    await GoogleSignIn.instance.initialize(
-      serverClientId:
-          '263065720661-k84n73rspv3unh1v4o9s7i38epccj93p.apps.googleusercontent.com',
-      clientId:
-          '263065720661-jc08s65ja8u56o77hrv9samvc8srjg7m.apps.googleusercontent.com',
-    );
-    final googleUser = await googleSignIn.attemptLightweightAuthentication();
-    if (googleUser == null) {
-      throw AuthException('Failed to sign in with Google.');
-    }
-
-    final authorization =
-        await googleUser.authorizationClient.authorizationForScopes(scopes) ??
-        await googleUser.authorizationClient.authorizeScopes(scopes);
-    final idToken = googleUser.authentication.idToken;
-    if (idToken == null) {
-      throw AuthException('No ID Token found.');
-    }
-    await supabase.auth.signInWithIdToken(
-      provider: OAuthProvider.google,
-      idToken: idToken,
-      accessToken: authorization.accessToken,
-    );
-  }
-
-  Future<void> _signOut() async {
-    await supabase.auth.signOut(scope: SignOutScope.global);
-    await GoogleSignIn.instance.signOut();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xffFAFAFA),
       body: SafeArea(
-        child: Stack(
-          children: [
-            // 로그인 버튼
-            GoogleLoginButton(clickEvent: _initializeGoogleSignIn),
-            // 앱 로고
-            AppLogo(),
-            TextButton(
-              onPressed: () {
-                _signOut();
-              },
-              child: Text("로그아웃"),
-            ),
-          ],
+        child: Consumer<LoginViewModel>(
+          builder: (context, viewmodel, child) {
+            void navigateOnSignIn() {
+              if (viewmodel.userAccount != null) {
+                // 로그인 성공 후 userAccount가 있으면 '/home'으로 이동
+                context.go('/home'); // context.go를 사용하여 이전 스택을 지웁니다.
+              } else {
+                // userAccount가 없으면 (예: 신규 사용자) '/register'로 이동
+                context.push('/register');
+              }
+            }
+
+            return Stack(
+              children: [
+                // 로그인 버튼
+                GoogleLoginButton(
+                  clickEvent: viewmodel.googleSignIn,
+                  onSignInSuccess: navigateOnSignIn,
+                ),
+                // 앱 로고
+                AppLogo(),
+                TextButton(
+                  onPressed: () {
+                    viewmodel.signOut;
+                  },
+                  child: Text("로그아웃"),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -100,7 +72,12 @@ class AppLogo extends StatelessWidget {
 
 class GoogleLoginButton extends StatelessWidget {
   final Future<void> Function() clickEvent;
-  const GoogleLoginButton({super.key, required this.clickEvent});
+  final void Function() onSignInSuccess;
+  const GoogleLoginButton({
+    super.key,
+    required this.clickEvent,
+    required this.onSignInSuccess, // 새로운 필드
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -117,6 +94,7 @@ class GoogleLoginButton extends StatelessWidget {
           ),
           onPressed: () async {
             await clickEvent();
+            onSignInSuccess();
           },
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
