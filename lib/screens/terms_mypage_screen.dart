@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// 약관 확인 팝업 화면
 class TermsOfUseScreen extends StatelessWidget {
@@ -51,10 +52,26 @@ class TermsOfUseScreen extends StatelessWidget {
                 shrinkWrap: true,
                 padding: const EdgeInsets.all(16),
                 children: [
-                  _buildTermsItem(context, '약관 1'),
-                  _buildTermsItem(context, '약관 2'),
-                  _buildTermsItem(context, '약관 3'),
-                  _buildTermsItem(context, '약관 4'),
+                  _buildTermsItem(
+                    context,
+                    '서비스 이용약관(필수)',
+                    'https://www.notion.so/2a373873401a806bbd50c722ce583383?source=copy_link',
+                  ),
+                  _buildTermsItem(
+                    context,
+                    '개인정보 처리 방침(필수)',
+                    'https://www.notion.so/2a373873401a80d4af70c36bfa4ce66a?source=copy_link',
+                  ),
+                  _buildTermsItem(
+                    context,
+                    '위치 기반 서비스 이용약관(필수)',
+                    'https://www.notion.so/2a373873401a80b580eeefcb509a369b?source=copy_link',
+                  ),
+                  _buildTermsItem(
+                    context,
+                    '커뮤니티 운영정책(필수)',
+                    'https://www.notion.so/2a373873401a80b1aefdde811dfc7ecf?source=copy_link',
+                  ),
                 ],
               ),
             ),
@@ -65,25 +82,33 @@ class TermsOfUseScreen extends StatelessWidget {
   }
 
   /// 약관 항목 빌드
-  Widget _buildTermsItem(BuildContext context, String title) {
+  Widget _buildTermsItem(BuildContext context, String title, String url) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           TextButton(
-            onPressed: () {
-              // TODO: 외부 URL로 연결
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('$title 전체보기 - URL 연결 기능 추가 예정')),
-              );
+            onPressed: () async {
+              final uri = Uri.parse(url);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              } else {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('링크를 열 수 없습니다')),
+                  );
+                }
+              }
             },
             child: const Text(
               '전체보기',
