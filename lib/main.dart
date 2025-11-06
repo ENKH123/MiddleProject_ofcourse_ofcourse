@@ -14,6 +14,7 @@ import 'package:of_course/screens/terms_mypage_screen.dart';
 import 'package:of_course/screens/view_my_post_page.dart';
 import 'package:of_course/screens/write_course_page.dart';
 import 'package:of_course/viewmodels/login_viewmodel.dart';
+import 'package:of_course/viewmodels/terms_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -30,6 +31,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => LoginViewModel()),
+        ChangeNotifierProvider(create: (context) => TermsViewModel()),
       ],
       child: const MyApp(),
     ),
