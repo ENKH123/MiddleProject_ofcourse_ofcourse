@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:of_course/components/post_component.dart';
+import 'package:of_course/core/components/post_component.dart';
 
 class ViewMyPostPage extends StatelessWidget {
   const ViewMyPostPage({super.key});

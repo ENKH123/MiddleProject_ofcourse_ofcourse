@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:of_course/models/supabase_user_model.dart';
+import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/models/supabase_user_model.dart';
+import 'package:of_course/main.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../main.dart';
-import '../managers/supabase_manager.dart';
 
 class LoginViewModel extends ChangeNotifier {
   GoogleSignInAccount? _googleUser;

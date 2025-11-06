@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import 'package:of_course/components/course_set.dart';
+import 'package:of_course/feature/course/components/course_set.dart';
 
 // 전체 페이지
 

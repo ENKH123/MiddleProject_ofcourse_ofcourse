@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:of_course/components/navigation_bar.dart';
-import 'package:of_course/components/post_component.dart';
-import 'package:of_course/data/enum_data.dart';
+import 'package:of_course/core/components/navigation_bar.dart';
+import 'package:of_course/core/components/post_component.dart';
+import 'package:of_course/core/data/enum_data.dart';
 
 class LikedCoursePage extends StatefulWidget {
   const LikedCoursePage({super.key});
