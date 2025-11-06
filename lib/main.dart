@@ -30,6 +30,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => LoginViewModel()),
+        ChangeNotifierProvider(create: (context) => TermsViewModel()),
       ],
       child: const MyApp(),
     ),
