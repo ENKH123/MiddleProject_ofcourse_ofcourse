@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:of_course/viewmodels/terms_viewmodel.dart';
+import 'package:of_course/feature/auth/viewmodels/terms_viewModel.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
