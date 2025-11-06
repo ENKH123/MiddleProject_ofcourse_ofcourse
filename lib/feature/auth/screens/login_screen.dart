@@ -19,7 +19,7 @@ class LoginScreen extends StatelessWidget {
                 context.go('/home'); // context.go를 사용하여 이전 스택을 지웁니다.
               } else {
                 // userAccount가 없으면 (예: 신규 사용자) '/register'로 이동
-                context.push('/register');
+                context.push('/terms');
               }
             }
 
