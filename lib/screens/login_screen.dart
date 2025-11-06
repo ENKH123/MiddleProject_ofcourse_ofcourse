@@ -15,7 +15,6 @@ class _LoginScreenState extends State<LoginScreen> {
   GoogleSignInAccount? _user;
   @override
   void initState() {
-    _initializeGoogleSignIn();
     super.initState();
   }
 
@@ -47,6 +46,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> _signOut() async {
+    await supabase.auth.signOut(scope: SignOutScope.global);
+    await GoogleSignIn.instance.signOut();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,6 +62,12 @@ class _LoginScreenState extends State<LoginScreen> {
             GoogleLoginButton(clickEvent: _initializeGoogleSignIn),
             // 앱 로고
             AppLogo(),
+            TextButton(
+              onPressed: () {
+                _signOut();
+              },
+              child: Text("로그아웃"),
+            ),
           ],
         ),
       ),
