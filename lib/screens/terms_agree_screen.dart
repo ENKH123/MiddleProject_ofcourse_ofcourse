@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:of_course/viewmodels/terms_viewmodel.dart';
-import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class TermsAgreeScreen extends StatelessWidget {
   const TermsAgreeScreen({super.key});
@@ -10,65 +6,26 @@ class TermsAgreeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "약관 동의",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
+      appBar: AppBar(title: TermsAgreeAppBar()),
       body: SafeArea(
-        child: Consumer<TermsViewModel>(
-          builder: (context, viewmodel, child) {
-            return Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                spacing: 12,
                 children: [
-                  Column(
-                    spacing: 12,
-                    children: [
-                      TermBox(
-                        termsName: '서비스 이용약관 (필수)',
-                        term: viewmodel.term01,
-                        onClick: () => viewmodel.termClick(1),
-                        termsLink:
-                            'https://mammoth-sassafras-ff5.notion.site/2a373873401a806bbd50c722ce583383?source=copy_link',
-                      ),
-                      TermBox(
-                        termsName: '개인정보 처리 방침 (필수)',
-                        term: viewmodel.term02,
-                        onClick: () => viewmodel.termClick(2),
-                        termsLink:
-                            'https://mammoth-sassafras-ff5.notion.site/2a373873401a80d4af70c36bfa4ce66a?source=copy_link',
-                      ),
-                      TermBox(
-                        termsName: '위치 기반 서비스 이용약관 (필수)',
-                        term: viewmodel.term03,
-                        onClick: () => viewmodel.termClick(3),
-                        termsLink:
-                            'https://mammoth-sassafras-ff5.notion.site/2a373873401a80b580eeefcb509a369b?source=copy_link',
-                      ),
-                      TermBox(
-                        termsName: '커뮤니티 운영정책 (필수)',
-                        term: viewmodel.term04,
-                        onClick: () => viewmodel.termClick(4),
-                        termsLink:
-                            'https://mammoth-sassafras-ff5.notion.site/2a373873401a80b1aefdde811dfc7ecf?source=copy_link',
-                      ),
-                    ],
-                  ),
-                  NextButton(
-                    allCheck: viewmodel.allTermsAgreed
-                        ? () {
-                            context.push('/register');
-                            // viewmodel.DisAgree();
-                          }
-                        : null,
-                  ),
+                  TermBox(),
+                  TermBox(),
+                  TermBox(),
+                  TermBox(),
+                  TermBox(),
                 ],
               ),
-            );
-          },
+              NextButton(),
+            ],
+          ),
         ),
       ),
     );
@@ -76,17 +33,7 @@ class TermsAgreeScreen extends StatelessWidget {
 }
 
 class TermBox extends StatelessWidget {
-  final String termsName;
-  final bool term;
-  final String termsLink;
-  final VoidCallback onClick;
-  const TermBox({
-    super.key,
-    required this.termsLink,
-    required this.termsName,
-    required this.term,
-    required this.onClick,
-  });
+  const TermBox({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -97,35 +44,29 @@ class TermBox extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
-            spacing: 12,
+            spacing: 16,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               GestureDetector(
-                onTap: onClick,
-                child: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Icon(
-                    term ? Icons.check_circle : Icons.circle_outlined,
-                    color: Color(0xff003366),
-                    size: 28,
-                  ),
+                onTap: () {
+                  print("아이콘 눌림");
+                },
+                child: Icon(
+                  Icons.check_circle,
+                  color: Color(0xff003366),
+                  size: 32,
                 ),
               ),
 
               Text(
-                termsName,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                "개인정보 ~~~ 약관",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
             ],
           ),
           GestureDetector(
-            onTap: () async {
+            onTap: () {
               print("전체보기 눌림");
-              final uri = Uri.parse(termsLink);
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri);
-              }
             },
             // 버튼 영역 확장을 위해 SizedBox 사용
             child: SizedBox(
@@ -151,8 +92,7 @@ class TermBox extends StatelessWidget {
 }
 
 class NextButton extends StatelessWidget {
-  final VoidCallback? allCheck;
-  const NextButton({super.key, required this.allCheck});
+  const NextButton({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -160,9 +100,43 @@ class NextButton extends StatelessWidget {
       width: double.maxFinite,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(backgroundColor: Color(0xff003366)),
-        onPressed: allCheck,
+        onPressed: () {
+          print("다음 버튼 눌림");
+        },
         child: Text("다음", style: TextStyle(color: Colors.white)),
       ),
+    );
+  }
+}
+
+class TermsAgreeAppBar extends StatelessWidget {
+  const TermsAgreeAppBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: IconButton(
+              onPressed: () {
+                print("뒤로가기 버튼 눌림");
+              },
+              icon: Icon(Icons.arrow_back_ios_new),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Center(
+            child: const Text(
+              "약관 동의",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+        Expanded(child: SizedBox()),
+      ],
     );
   }
 }

@@ -7,7 +7,6 @@ class RegisterScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xffFAFAFA),
-      appBar: AppBar(),
       body: SafeArea(
         child: Stack(
           children: [
