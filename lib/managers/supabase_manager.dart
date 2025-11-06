@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:of_course/models/supabase_user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseManager {
@@ -10,5 +11,16 @@ class SupabaseManager {
 
   SupabaseManager() {
     debugPrint("SupabaseManager init");
+  }
+  Future<SupabaseUserModel?> getPublicUser(String gmail) async {
+    final Map<String, dynamic>? data = await supabase
+        .from("users")
+        .select()
+        .eq('email', gmail)
+        .maybeSingle();
+    if (data == null) {
+      return null;
+    }
+    return SupabaseUserModel.fromJson(data);
   }
 }

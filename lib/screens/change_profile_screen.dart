@@ -52,6 +52,19 @@ class ChangeProfileScreen extends StatelessWidget {
               height: 48,
               child: ElevatedButton(
                 onPressed: () async {
+                  // 프로필 변경 확인 팝업
+                  // final ok = await showConfirmDialog(
+                  //   context,
+                  //   title: 'Do you really want to change?',
+                  //   message: 'Your profile information will be updated.',
+                  //   cancelText: 'Cancel',
+                  //   confirmText: 'Change',
+                  //   destructive: false,
+                  // );
+                  // if (ok == true) {
+                  //   // 저장 로직… (예: Supabase 업데이트)
+                  //   Navigator.pop(context); // 성공 후 뒤로
+                  // }
                   // Supabase 업데이트 로직 연결 시 여기서 처리
 
                   ScaffoldMessenger.of(
