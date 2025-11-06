@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:of_course/feature/auth/viewmodels/terms_viewmodel.dart';
 import 'package:of_course/screens/alert_screen.dart';
 import 'package:of_course/screens/change_profile_screen.dart';
 import 'package:of_course/screens/course_detail_screen.dart';
@@ -30,6 +31,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => LoginViewModel()),
+        ChangeNotifierProvider(create: (context) => TermsViewModel()),
       ],
       child: const MyApp(),
     ),
