@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:of_course/components/navigation_bar.dart';
-import 'package:of_course/components/post_component.dart';
-import 'package:of_course/data/enum_data.dart';
+import 'package:of_course/core/components/navigation_bar.dart';
+import 'package:of_course/core/components/post_component.dart';
+import 'package:of_course/core/data/enum_data.dart' hide SeoulDistrict;
+
+import '../../../core/components/my_courses_app_bar.dart';
 
 class OfcourseHomePage extends StatefulWidget {
   const OfcourseHomePage({super.key});

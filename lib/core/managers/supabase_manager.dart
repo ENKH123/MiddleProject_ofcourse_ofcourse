@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:of_course/models/supabase_user_model.dart';
+import 'package:of_course/core/models/supabase_user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseManager {
