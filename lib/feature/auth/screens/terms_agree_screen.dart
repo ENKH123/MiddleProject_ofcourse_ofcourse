@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:of_course/feature/auth/viewmodels/terms_viewModel.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../viewmodels/terms_viewmodel.dart';
 
 class TermsAgreeScreen extends StatelessWidget {
   const TermsAgreeScreen({super.key});
@@ -10,7 +11,9 @@ class TermsAgreeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xffFAFAFA),
       appBar: AppBar(
+        backgroundColor: Color(0xffFAFAFA),
         title: const Text(
           "약관 동의",
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -115,7 +118,7 @@ class TermBox extends StatelessWidget {
 
               Text(
                 termsName,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
               ),
             ],
           ),
