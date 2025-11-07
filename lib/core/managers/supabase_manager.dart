@@ -23,4 +23,21 @@ class SupabaseManager {
     }
     return SupabaseUserModel.fromJson(data);
   }
+
+  Future<void> createUserProfile(String userEmail, String userNickname) async {
+    await supabase.from('users').insert({
+      'email': userEmail,
+      'nickname': userNickname,
+    });
+  }
+
+  Future<bool> isDuplicatedNickname(String value) async {
+    final Map<String, dynamic>? isDuplicated = await supabase
+        .from("users")
+        .select()
+        .eq('nickname', value)
+        .maybeSingle();
+
+    return isDuplicated == null ? true : false;
+  }
 }

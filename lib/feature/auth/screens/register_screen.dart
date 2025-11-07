@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:of_course/feature/auth/viewmodels/register_viewmodel.dart';
+import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
@@ -7,36 +10,41 @@ class RegisterScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xffFAFAFA),
-      appBar: AppBar(),
+      appBar: AppBar(backgroundColor: Color(0xffFAFAFA)),
       body: SafeArea(
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
+        child: Consumer<RegisterViewModel>(
+          builder: (context, viewmodel, child) {
+            return Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      SizedBox(height: 40), //상단 여백
-                      Text(
-                        "프로필 정보 입력",
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Column(
+                        children: [
+                          SizedBox(height: 40), //상단 여백
+                          Text(
+                            "프로필 정보 입력",
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          ProfileImage(), //TODO: 이미지 피커 적용
+                          NicknameTextField(
+                            controller: viewmodel.controller,
+                            onChanged: viewmodel.updatedNickname,
+                          ),
+                        ],
                       ),
-                      ProfileImage(), //TODO: 이미지 피커 적용
-                      NicknameTextField(), //TODO: 텍스트필드 컨트롤러
+                      CompleteButton(),
                     ],
                   ),
-                  CompleteButton(
-                    nickname: "닉네임",
-                  ), //TODO: 텍스트필드 컨트롤러로 버튼 enable/disable, 텍스트 필드 글자 가져오기
-                ],
-              ),
-            ),
-          ],
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -46,7 +54,13 @@ class RegisterScreen extends StatelessWidget {
 //TODO: 분기점 적용
 /// 닉네임 중복시
 /// 정상 생성시
-void _showRegisterComplePopup(BuildContext context, String nickname) {
+void _showRegisterComplePopup(
+  BuildContext context,
+  String nickname,
+  RegisterResult result,
+  RegisterViewModel viewmodelR,
+) {
+  final isSuccess = result == RegisterResult.success;
   showDialog(
     context: context,
     // 다이얼로그 외부를 탭해도 닫히지 않게 설정 (배경 클릭 방지)
@@ -70,34 +84,40 @@ void _showRegisterComplePopup(BuildContext context, String nickname) {
                 spacing: 12,
                 children: [
                   Icon(
-                    Icons.check_circle_outline,
-                    color: Color(0xff003366),
-                    //TODO: 닉네임 중복시
-                    // Icons.close,
-                    // color: Colors.red,
+                    isSuccess ? Icons.check_circle_outline : Icons.close,
+                    color: isSuccess ? Color(0xff003366) : Colors.red,
                     size: 40,
                   ),
-                  Column(
-                    children: [
-                      Text("계정 생성 완료"),
-                      Text.rich(
-                        TextSpan(
-                          children: <TextSpan>[
-                            TextSpan(text: "닉네임 : "),
-                            TextSpan(
-                              text: "\"$nickname\"",
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                  isSuccess
+                      ? Column(
+                          children: [
+                            Text("계정 생성 완료"),
+                            Text.rich(
+                              TextSpan(
+                                children: <TextSpan>[
+                                  TextSpan(text: "닉네임 : "),
+                                  TextSpan(
+                                    text: "\"$nickname\"",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
+                        )
+                      : const Text(
+                          "이미 존재하는 닉네임입니다.",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-
-                  //TODO: 닉네임 중복시
-                  // Text("이미 있는 닉네임 입니다."),
                   SizedBox(
                     width: double.maxFinite,
                     child: ElevatedButton(
@@ -107,11 +127,13 @@ void _showRegisterComplePopup(BuildContext context, String nickname) {
                       onPressed: () {
                         print("로그인 하러 가기 버튼 눌림");
                         Navigator.of(context).pop();
+                        if (isSuccess) {
+                          context.go('/home');
+                          viewmodelR.registerSuccess();
+                        }
                       },
                       child: Text(
-                        "로그인 하러 가기",
-                        //TODO: 닉네임 중복시
-                        // "확인"
+                        isSuccess ? "로그인" : "다시 입력",
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
@@ -149,28 +171,47 @@ class ProfileImage extends StatelessWidget {
 }
 
 class CompleteButton extends StatelessWidget {
-  final String nickname;
-  const CompleteButton({super.key, required this.nickname});
+  const CompleteButton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.maxFinite,
-      //TODO: 최소 글자 수 못 채우면 버튼 비활성화
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(backgroundColor: Color(0xff003366)),
-        onPressed: () {
-          print("입력 완료 버튼 눌림");
-          _showRegisterComplePopup(context, nickname);
-        },
-        child: Text("입력 완료", style: TextStyle(color: Colors.white)),
-      ),
+    return Consumer<RegisterViewModel>(
+      builder: (context, viewmodel, child) {
+        final bool isEnabled = viewmodel.isNicknameValid;
+        return SizedBox(
+          width: double.maxFinite,
+          //TODO: 최소 글자 수 못 채우면 버튼 비활성화
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Color(0xff003366)),
+            onPressed: isEnabled
+                ? () async {
+                    print("입력 완료 버튼 눌림");
+                    final RegisterResult rgResult = await viewmodel
+                        .isDuplicatedNickname();
+                    _showRegisterComplePopup(
+                      context,
+                      viewmodel.controller.text,
+                      rgResult,
+                      viewmodel,
+                    );
+                  }
+                : null,
+            child: Text("입력 완료", style: TextStyle(color: Colors.white)),
+          ),
+        );
+      },
     );
   }
 }
 
 class NicknameTextField extends StatelessWidget {
-  const NicknameTextField({super.key});
+  final TextEditingController controller;
+  final void Function(String)? onChanged;
+  const NicknameTextField({
+    super.key,
+    required this.controller,
+    this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -185,6 +226,8 @@ class NicknameTextField extends StatelessWidget {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           TextField(
+            controller: controller,
+            onChanged: onChanged,
             decoration: InputDecoration(
               hintText: 'Enter your nickname',
               focusedBorder: OutlineInputBorder(
