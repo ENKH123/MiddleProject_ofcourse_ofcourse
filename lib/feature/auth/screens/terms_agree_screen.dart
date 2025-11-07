@@ -11,7 +11,9 @@ class TermsAgreeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xffFAFAFA),
       appBar: AppBar(
+        backgroundColor: Color(0xffFAFAFA),
         title: const Text(
           "약관 동의",
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -116,7 +118,7 @@ class TermBox extends StatelessWidget {
 
               Text(
                 termsName,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
               ),
             ],
           ),

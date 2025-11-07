@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
 import 'package:provider/provider.dart';
+
+import '../viewmodels/login_viewmodel.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -101,7 +102,10 @@ class GoogleLoginButton extends StatelessWidget {
             spacing: 16,
             children: [
               Image.asset('assets/googleLogo.png', width: 20, height: 20),
-              const Text("Sign in with another provider"),
+              const Text(
+                "구글 로그인",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ],
           ),
         ),

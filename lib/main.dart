@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:of_course/feature/auth/viewmodels/register_viewmodel.dart';
 import 'package:of_course/feature/auth/viewmodels/terms_viewmodel.dart';
-import 'package:of_course/screens/alert_screen.dart';
-import 'package:of_course/screens/change_profile_screen.dart';
-import 'package:of_course/screens/course_detail_screen.dart';
-import 'package:of_course/screens/liked_course_page.dart';
-import 'package:of_course/screens/login_screen.dart';
-import 'package:of_course/screens/ofCourse_home_page.dart';
-import 'package:of_course/screens/profile_screen.dart';
-import 'package:of_course/screens/register_screen.dart';
-import 'package:of_course/screens/report_screen.dart';
-import 'package:of_course/screens/terms_agree_screen.dart';
-import 'package:of_course/screens/terms_mypage_screen.dart';
-import 'package:of_course/screens/view_my_post_page.dart';
-import 'package:of_course/screens/write_course_page.dart';
-import 'package:of_course/viewmodels/login_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'feature/auth/screens/login_screen.dart';
+import 'feature/auth/screens/register_screen.dart';
+import 'feature/auth/screens/terms_agree_screen.dart';
+import 'feature/auth/viewmodels/login_viewmodel.dart';
+import 'feature/course/screens/course_detail_screen.dart';
+import 'feature/course/screens/liked_course_page.dart';
+import 'feature/course/screens/write_course_page.dart';
+import 'feature/home/screens/alert_screen.dart';
+import 'feature/home/screens/ofCourse_home_page.dart';
+import 'feature/profile/screens/change_profile_screen.dart';
+import 'feature/profile/screens/profile_screen.dart';
+import 'feature/profile/screens/terms_mypage_screen.dart';
+import 'feature/profile/screens/view_my_post_page.dart';
+import 'feature/report/screens/report_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +34,7 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (context) => LoginViewModel()),
         ChangeNotifierProvider(create: (context) => TermsViewModel()),
+        ChangeNotifierProvider(create: (context) => RegisterViewModel(context)),
       ],
       child: const MyApp(),
     ),
