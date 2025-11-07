@@ -1,38 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:of_course/core/models/gu_model.dart';
 
-enum SeoulDistrict {
-  gangnam,
-  gangdong,
-  gangbuk,
-  gangseo,
-  gwanak,
-  gwangjin,
-}
-
-extension SeoulDistrictExtension on SeoulDistrict {
-  String get displayName {
-    switch (this) {
-      case SeoulDistrict.gangnam:
-        return '강남구';
-      case SeoulDistrict.gangdong:
-        return '강동구';
-      case SeoulDistrict.gangbuk:
-        return '강북구';
-      case SeoulDistrict.gangseo:
-        return '강서구';
-      case SeoulDistrict.gwanak:
-        return '관악구';
-      case SeoulDistrict.gwangjin:
-        return '광진구';
-    }
-  }
-}
-
-/// 홈화면 앱바 컴포넌트
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
-  /// 현재 선택된 지역
-  final SeoulDistrict selectedDistrict;
-  final Function(SeoulDistrict)? onDistrictChanged;
+  final GuModel selectedGu;
+  final List<GuModel> guList;
+  final Function(GuModel)? onGuChanged;
   final VoidCallback? onRandomPressed;
   final VoidCallback? onNotificationPressed;
   final int? unreadAlertCount;
@@ -40,8 +12,9 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   const HomeAppBar({
     super.key,
-    required this.selectedDistrict,
-    this.onDistrictChanged,
+    required this.selectedGu,
+    required this.guList,
+    this.onGuChanged,
     this.onRandomPressed,
     this.onNotificationPressed,
     this.unreadAlertCount,
@@ -58,79 +31,52 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
               _buildRegionSelector(context),
               const SizedBox(width: 8),
               _buildRandomButton(context),
             ],
           ),
-
           _buildNotificationIcon(context),
         ],
       ),
     );
   }
 
-  /// 지역 선택 드롭다운 빌드
+  /// ✅ 지역 선택 드롭다운
   Widget _buildRegionSelector(BuildContext context) {
     return Container(
       height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey[300]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey[200]!,
-            blurRadius: 2,
-            offset: const Offset(0, 1),
-          ),
-        ],
       ),
-      child: Center(
-        child: PopupMenuButton<SeoulDistrict>(
-          offset: const Offset(0, 50),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                selectedDistrict.displayName,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Icon(
-                Icons.keyboard_arrow_down,
-                size: 20,
-                color: Colors.grey[700],
-              ),
-            ],
-          ),
-          itemBuilder: (context) => SeoulDistrict.values.map((district) {
-            return PopupMenuItem<SeoulDistrict>(
-              value: district,
-              child: Text(district.displayName),
-            );
-          }).toList(),
-          onSelected: (value) {
-            if (onDistrictChanged != null) {
-              onDistrictChanged!(value);
-            }
-          },
-        ),
+      child: DropdownButton<GuModel>(
+        value: selectedGu,
+        underline: const SizedBox(),
+        icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[700]),
+        items: guList.map((gu) {
+          return DropdownMenuItem(
+            value: gu,
+            child: Text(
+              gu.name,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+          );
+        }).toList(),
+        onChanged: (value) {
+          if (value != null && onGuChanged != null) {
+            onGuChanged!(value);
+          }
+        },
       ),
     );
   }
 
-  // todo 랜덤 버튼 연결
   Widget _buildRandomButton(BuildContext context) {
     return SizedBox(
       height: 36,
@@ -140,116 +86,51 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           backgroundColor: const Color(0xFF003366),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           elevation: 0,
         ),
         child: const Text(
           'random',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
     );
   }
 
-  // todo 알림 아이콘 빌드 (배지 포함)
   Widget _buildNotificationIcon(BuildContext context) {
-    return SizedBox(
-      height: 36,
-      width: 36,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Center(
-            child: IconButton(
-              icon: Icon(
-                Icons.notifications_outlined,
-                color: Colors.grey[700],
-                size: 24,
+    return Stack(
+      children: [
+        IconButton(
+          icon: Icon(Icons.notifications_outlined, color: Colors.grey[700]),
+          onPressed: onNotificationPressed,
+        ),
+        if (unreadAlertCount != null && unreadAlertCount! > 0)
+          Positioned(
+            right: 4,
+            top: 4,
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
               ),
-              onPressed: onNotificationPressed,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-            ),
-          ),
-          // 배지 표시 (미확인 알림이 있을 때만)
-          if (unreadAlertCount != null && unreadAlertCount! > 0)
-            Positioned(
-              top: 4,
-              right: 4,
-              child: Container(
-                padding: const EdgeInsets.all(3),
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                ),
-                constraints: const BoxConstraints(
-                  minWidth: 18,
-                  minHeight: 18,
-                ),
-                child: Center(
-                  child: Text(
-                    unreadAlertCount! > 99 ? '99+' : unreadAlertCount.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
+              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+              child: Center(
+                child: Text(
+                  unreadAlertCount! > 99 ? '99+' : unreadAlertCount.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
-
-
-// 더미 데이터 - 테스트 화면
-class HomeAppBarTestScreen extends StatefulWidget {
-  const HomeAppBarTestScreen({super.key});
-
-  @override
-  State<HomeAppBarTestScreen> createState() => _HomeAppBarTestScreenState();
-}
-
-class _HomeAppBarTestScreenState extends State<HomeAppBarTestScreen> {
-  // 현재 선택된 지역
-  SeoulDistrict _selectedDistrict = SeoulDistrict.gangnam;
-
-  // 미확인 알림 수
-  int _unreadAlertCount = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
-      appBar: HomeAppBar(
-        selectedDistrict: _selectedDistrict,
-        unreadAlertCount: _unreadAlertCount,
-        onDistrictChanged: (district) {
-          setState(() {
-            _selectedDistrict = district;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${district.displayName} 선택됨')),
-          );
-        },
-        onRandomPressed: () {
-          // 랜덤 추천 기능
-        },
-      ),
-      body: const SizedBox.shrink(),
-    );
-  }
-}
-

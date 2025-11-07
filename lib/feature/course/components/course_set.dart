@@ -2,12 +2,23 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:of_course/core/data/enum_data.dart';
+import 'package:of_course/core/models/tags_moedl.dart';
 
 class WriteCourseSet extends StatefulWidget {
-  final Function(String query)? onLocationSelected; // 콜백 추가
+  final Function(String query)? onSearchRequested; // 검색 요청 콜백
+  final Function(double lat, double lng)? onLocationSaved; // 좌표 저장 콜백
 
-  const WriteCourseSet({super.key, this.onLocationSelected});
+  // ✅ DB 에서 가져온 태그 리스트 전달받기
+  final List<TagModel> tagList;
+  final Function(TagModel)? onTagChanged; // 선택된 태그 반환 콜백
+
+  const WriteCourseSet({
+    super.key,
+    required this.tagList,
+    this.onTagChanged,
+    this.onSearchRequested,
+    this.onLocationSaved,
+  });
 
   @override
   State<WriteCourseSet> createState() => _WriteCourseSetState();
@@ -18,7 +29,11 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
   final List<File> _images = [];
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _textController = TextEditingController();
-  TagType _selectedTag = TagType.all;
+
+  TagModel? _selectedTag; // ✅ 변경됨
+
+  double? lat;
+  double? lng;
 
   Future<void> _pickImage() async {
     if (_images.length >= 3) return;
@@ -37,8 +52,17 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
   void _onSearch() {
     final query = _searchController.text.trim();
     if (query.isNotEmpty) {
-      widget.onLocationSelected?.call(query);
+      widget.onSearchRequested?.call(query);
     }
+  }
+
+  // 부모에서 위도/경도 전달받을 때 호출
+  void updateLocation(double newLat, double newLng) {
+    setState(() {
+      lat = newLat;
+      lng = newLng;
+    });
+    widget.onLocationSaved?.call(newLat, newLng);
   }
 
   @override
@@ -65,9 +89,17 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
           ],
         ),
 
+        const SizedBox(height: 8),
+
+        if (lat != null && lng != null)
+          Text(
+            '📍 위치 저장됨: ($lat, $lng)',
+            style: const TextStyle(color: Colors.green, fontSize: 14),
+          ),
+
         const SizedBox(height: 12),
 
-        // 이미지 선택
+        // 이미지 선택 영역
         Row(
           children: [
             for (int i = 0; i < _images.length; i++)
@@ -121,7 +153,7 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
           ],
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
 
         // 텍스트 입력
         SizedBox(
@@ -142,9 +174,9 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
           ),
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
 
-        // 태그 선택
+        // ✅ 태그 선택 (DB 기반 드롭다운)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
@@ -152,20 +184,16 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: DropdownButtonHideUnderline(
-            child: DropdownButton<TagType>(
+            child: DropdownButton<TagModel>(
               value: _selectedTag,
-              icon: const Icon(Icons.arrow_drop_down),
+              hint: const Text("태그 선택"),
               isExpanded: true,
-              items: TagType.values.map((tag) {
-                return DropdownMenuItem<TagType>(
-                  value: tag,
-                  child: Text(tag.displayName),
-                );
+              items: widget.tagList.map((tag) {
+                return DropdownMenuItem(value: tag, child: Text(tag.name));
               }).toList(),
               onChanged: (value) {
-                if (value != null) {
-                  setState(() => _selectedTag = value);
-                }
+                setState(() => _selectedTag = value);
+                if (value != null) widget.onTagChanged?.call(value);
               },
             ),
           ),
