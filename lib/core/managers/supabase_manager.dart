@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
+import 'package:of_course/core/models/gu_model.dart';
 import 'package:of_course/core/models/supabase_user_model.dart';
+import 'package:of_course/core/models/tags_moedl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseManager {
@@ -24,6 +26,17 @@ class SupabaseManager {
     return SupabaseUserModel.fromJson(data);
   }
 
+  // 구 목록 가져오기
+  Future<List<GuModel>> getGuList() async {
+    final data = await supabase.from("gu").select();
+    return (data as List).map((e) => GuModel.fromJson(e)).toList();
+  }
+
+  //  태그 목록 가져오기
+  Future<List<TagModel>> getTags() async {
+    final data = await supabase.from("tags").select();
+    return (data as List).map((e) => TagModel.fromJson(e)).toList();
+    
   Future<void> createUserProfile(String userEmail, String userNickname) async {
     await supabase.from('users').insert({
       'email': userEmail,
