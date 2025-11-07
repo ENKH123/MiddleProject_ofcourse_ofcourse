@@ -36,5 +36,21 @@ class SupabaseManager {
   Future<List<TagModel>> getTags() async {
     final data = await supabase.from("tags").select();
     return (data as List).map((e) => TagModel.fromJson(e)).toList();
+    
+  Future<void> createUserProfile(String userEmail, String userNickname) async {
+    await supabase.from('users').insert({
+      'email': userEmail,
+      'nickname': userNickname,
+    });
+  }
+
+  Future<bool> isDuplicatedNickname(String value) async {
+    final Map<String, dynamic>? isDuplicated = await supabase
+        .from("users")
+        .select()
+        .eq('nickname', value)
+        .maybeSingle();
+
+    return isDuplicated == null ? true : false;
   }
 }
