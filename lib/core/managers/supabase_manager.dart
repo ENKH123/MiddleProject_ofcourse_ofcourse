@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseManager {
   static final SupabaseManager _shared = SupabaseManager();
+
   static SupabaseManager get shared => _shared;
 
   // Get a reference your Supabase client
@@ -14,6 +15,7 @@ class SupabaseManager {
   SupabaseManager() {
     debugPrint("SupabaseManager init");
   }
+
   Future<SupabaseUserModel?> getPublicUser(String gmail) async {
     final Map<String, dynamic>? data = await supabase
         .from("users")
@@ -36,7 +38,8 @@ class SupabaseManager {
   Future<List<TagModel>> getTags() async {
     final data = await supabase.from("tags").select();
     return (data as List).map((e) => TagModel.fromJson(e)).toList();
-    
+  }
+
   Future<void> createUserProfile(String userEmail, String userNickname) async {
     await supabase.from('users').insert({
       'email': userEmail,
