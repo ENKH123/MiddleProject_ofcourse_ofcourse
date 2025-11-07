@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 class TermsViewModel with ChangeNotifier {
   bool _term01 = false;
