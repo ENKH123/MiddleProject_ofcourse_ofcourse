@@ -5,10 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/models/tags_moedl.dart';
 import 'package:of_course/feature/course/components/course_set.dart';
 
-// 전체 페이지
-
+// --------------------------------------
+//  코스 작성 페이지
+// --------------------------------------
 class WriteCoursePage extends StatefulWidget {
   const WriteCoursePage({super.key});
 
@@ -16,30 +19,93 @@ class WriteCoursePage extends StatefulWidget {
   State<WriteCoursePage> createState() => _WriteCoursePageState();
 }
 
+//  세트 데이터 모델
+
+class CourseSetData {
+  String? query;
+  double? lat;
+  double? lng;
+  int? tagId;
+
+  CourseSetData({this.query, this.lat, this.lng, this.tagId});
+
+  Map<String, dynamic> toJson() => {
+    'query': query,
+    'lat': lat,
+    'lng': lng,
+    'tag_id': tagId,
+  };
+}
+
+// --------------------------------------
+//  메인 페이지
+// --------------------------------------
 class _WriteCoursePageState extends State<WriteCoursePage> {
-  final List<Widget> _sets = [];
+  final List<WriteCourseSet> _sets = [];
+  final List<CourseSetData> _courseSetDataList = [];
+  List<TagModel> tagList = [];
+
   File? _mainImage;
   final ImagePicker _picker = ImagePicker();
   NaverMapController? _mapController;
 
-  //  네이버 지도 API 키
+  //  API Key
   static const _naverClientId = 'sr1eyuomlk';
   static const _naverClientSecret = 'XtMhndnqfc7MFpLU81jxfzvivP0LNJbSIu2wphec';
-
-  //  카카오 REST API Key
   static const _kakaoRestKey = '05df8363e23a77cc74e7c20a667b6c7e';
 
   @override
   void initState() {
     super.initState();
-    _sets.addAll([
-      WriteCourseSet(onLocationSelected: _handleLocationSelected),
-      WriteCourseSet(onLocationSelected: _handleLocationSelected),
-    ]);
+    _loadTags();
+
+    // 기본 세트 2개 생성
+    for (int i = 0; i < 2; i++) {
+      _addNewSet();
+    }
   }
 
-  // 세트에서 전달받은 위치로 지도에 마커 표시
-  Future<void> _handleLocationSelected(String query) async {
+  Future<void> _loadTags() async {
+    final list = await SupabaseManager.shared.getTags();
+    setState(() {
+      tagList = list;
+    });
+  }
+
+  void _addNewSet() {
+    final index = _courseSetDataList.length;
+
+    _courseSetDataList.add(CourseSetData());
+
+    _sets.add(
+      WriteCourseSet(
+        tagList: tagList,
+        onTagChanged: (tag) {
+          _courseSetDataList[index].tagId = tag.id;
+        },
+        onSearchRequested: (query) => _handleLocationSelected(index, query),
+        onLocationSaved: (lat, lng) {
+          _courseSetDataList[index].lat = lat;
+          _courseSetDataList[index].lng = lng;
+        },
+      ),
+    );
+
+    setState(() {});
+  }
+
+  // 세트 제거
+  void _removeSet() {
+    if (_sets.length > 2) {
+      setState(() {
+        _sets.removeLast();
+        _courseSetDataList.removeLast();
+      });
+    }
+  }
+
+  // 검색 처리
+  Future<void> _handleLocationSelected(int index, String query) async {
     NLatLng? location = await _getLatLngFromAddress(query);
     location ??= await _getLatLngFromKakao(query);
 
@@ -52,8 +118,12 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
       return;
     }
 
+    _courseSetDataList[index].query = query;
+    _courseSetDataList[index].lat = location.latitude;
+    _courseSetDataList[index].lng = location.longitude;
+
     final marker = NMarker(
-      id: 'marker_${DateTime.now().millisecondsSinceEpoch}',
+      id: 'marker_$index',
       position: location,
       caption: NOverlayCaption(text: query),
     );
@@ -64,7 +134,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
     );
   }
 
-  //  네이버 주소검색
+  // 네이버 지오코딩 API
   Future<NLatLng?> _getLatLngFromAddress(String query) async {
     try {
       final encodedQuery = Uri.encodeQueryComponent(query);
@@ -85,18 +155,14 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
         final data = jsonDecode(response.body);
         if ((data['addresses'] as List).isNotEmpty) {
           final first = (data['addresses'] as List).first;
-          final lat = double.parse(first['y']);
-          final lng = double.parse(first['x']);
-          return NLatLng(lat, lng);
+          return NLatLng(double.parse(first['y']), double.parse(first['x']));
         }
       }
-    } catch (e) {
-      debugPrint('주소 변환 오류: $e');
-    }
+    } catch (_) {}
     return null;
   }
 
-  // 카카오 키워드 검색
+  // 카카오 키워드 검색 API
   Future<NLatLng?> _getLatLngFromKakao(String query) async {
     try {
       final encodedQuery = Uri.encodeQueryComponent(query);
@@ -114,18 +180,14 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
         final documents = data['documents'] as List;
         if (documents.isNotEmpty) {
           final first = documents.first;
-          final lat = double.parse(first['y']);
-          final lng = double.parse(first['x']);
-          return NLatLng(lat, lng);
+          return NLatLng(double.parse(first['y']), double.parse(first['x']));
         }
       }
-    } catch (e) {
-      debugPrint('카카오 장소 검색 오류: $e');
-    }
+    } catch (_) {}
     return null;
   }
 
-  // 이미지 선택
+  // 메인 이미지 선택
   Future<void> _pickMainImage() async {
     final XFile? pickedFile = await _picker.pickImage(
       source: ImageSource.gallery,
@@ -135,20 +197,11 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
     }
   }
 
-  // 세트 추가 / 제거
-  void _addSet() {
-    setState(() {
-      if (_sets.length < 5) {
-        _sets.add(WriteCourseSet(onLocationSelected: _handleLocationSelected));
-      }
-    });
-  }
-
-  void _removeSet() {
-    if (_sets.length > 2) {
-      setState(() {
-        _sets.removeLast();
-      });
+  //  업로드 테스트
+  void _onUpload() {
+    debugPrint("========= 업로드 데이터 =========");
+    for (var set in _courseSetDataList) {
+      debugPrint(set.toJson().toString());
     }
   }
 
@@ -162,17 +215,6 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 상단 버튼
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton(onPressed: () {}, child: const Text("임시저장")),
-                  TextButton(onPressed: () {}, child: const Text("취소")),
-                ],
-              ),
-              const SizedBox(height: 8),
-
-              // 제목 입력
               TextField(
                 decoration: InputDecoration(
                   hintText: '제목을 입력해주세요',
@@ -181,32 +223,19 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
 
               const SizedBox(height: 16),
 
-              //  지도 표시
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  height: 300,
-                  child: NaverMap(
-                    options: const NaverMapViewOptions(
-                      initialCameraPosition: NCameraPosition(
-                        target: NLatLng(37.5666, 126.9784),
-                        zoom: 13,
-                      ),
-                    ),
-                    onMapReady: (controller) {
-                      _mapController = controller;
-                    },
-                  ),
+              // 지도
+              SizedBox(
+                height: 300,
+                child: NaverMap(
+                  onMapReady: (controller) => _mapController = controller,
                 ),
               ),
 
               const SizedBox(height: 16),
 
-              // 세트 목록
               ..._sets.map(
                 (set) => Padding(
                   padding: const EdgeInsets.only(bottom: 16),
@@ -214,38 +243,21 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                 ),
               ),
 
-              // 세트 추가/삭제
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: _addSet,
-                    icon: const Icon(Icons.add),
-                    label: const Text('세트 추가'),
-                  ),
-                  const SizedBox(width: 12),
-                  if (_sets.length > 2)
-                    ElevatedButton.icon(
-                      onPressed: _removeSet,
-                      icon: const Icon(Icons.remove),
-                      label: const Text('세트 삭제'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                      ),
-                    ),
-                ],
-              ),
-
-              const SizedBox(height: 30),
-
-              // 업로드 버튼
               Center(
                 child: ElevatedButton(
-                  onPressed: () {},
-                  child: const Text('코스 업로드'),
+                  onPressed: () => _addNewSet(),
+                  child: const Text("세트 추가"),
                 ),
               ),
-              const SizedBox(height: 60),
+
+              const SizedBox(height: 24),
+
+              Center(
+                child: ElevatedButton(
+                  onPressed: _onUpload,
+                  child: const Text("코스 업로드"),
+                ),
+              ),
             ],
           ),
         ),
