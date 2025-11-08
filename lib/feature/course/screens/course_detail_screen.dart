@@ -210,16 +210,24 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   /// 신고 화면으로 이동
-  void _navigateToReport(String targetId, ReportTargetType targetType) {
+  void _navigateToReport(String targetId, ReportTargetType targetType, {String? commentAuthor}) {
+    String reportingUserNickname = '';
+
+    if (targetType == ReportTargetType.course) {
+      // 코스 신고: 코스 작성자 닉네임
+      reportingUserNickname = _courseDetail?.authorName ?? '';
+    } else if (targetType == ReportTargetType.comment) {
+      // 댓글 신고: 댓글 작성자 닉네임
+      reportingUserNickname = commentAuthor ?? '';
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ReportScreen(
           targetId: targetId,
           reportTargetType: targetType,
-          reportingUser: targetType == ReportTargetType.course
-              ? (_courseDetail?.authorName ?? '')
-              : '',
+          reportingUser: reportingUserNickname,
         ),
       ),
     );
@@ -752,6 +760,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               onPressed: () => _navigateToReport(
                 comment.commentId,
                 ReportTargetType.comment,
+                commentAuthor: comment.commentAuthor,
               ),
               child: const Text('신고', style: TextStyle(fontSize: 12)),
             ),

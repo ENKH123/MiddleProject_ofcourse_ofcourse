@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:of_course/core/models/gu_model.dart';
 import 'package:of_course/core/models/supabase_user_model.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
+import 'package:of_course/feature/report/models/report_models.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseManager {
@@ -53,6 +56,79 @@ class SupabaseManager {
         .maybeSingle();
 
     return isDuplicated == null ? true : false;
+  }
+
+  // 코스 목록 가져오기
+  Future<List<Map<String, dynamic>>> getCourseList({
+    int? guId,
+    List<int>? tagIds,
+    int? limit,
+    int? offset,
+  }) async {
+    var query = supabase
+        .from('courses')
+        .select('''
+          id,
+          title,
+          marker_image,
+          created_at,
+          author:users!courses_author_id_fkey(nickname)
+        ''')
+        .order('created_at', ascending: false);
+
+    if (guId != null) {
+      // TODO: gu 필터링 로직 추가 필요
+    }
+
+    if (tagIds != null && tagIds.isNotEmpty) {
+      // TODO: 태그 필터링 로직 추가 필요
+    }
+
+    if (limit != null) {
+      query = query.limit(limit);
+    }
+    if (offset != null && limit != null) {
+      query = query.range(offset, offset + limit - 1);
+    }
+
+    final courses = await query;
+
+    // 각 코스의 태그와 좋아요/댓글 수 가져오기
+    final List<Map<String, dynamic>> processedCourses = [];
+    for (var course in courses) {
+      final courseId = course['id'] as int;
+
+      // 코스 세트에서 태그 수집
+      final sets = await supabase
+          .from('course_sets')
+          .select('tag, tag_info:tags!course_sets_tag_fkey(type)')
+          .eq('course_id', courseId);
+
+      final Set<String> tags = {};
+      for (var set in sets) {
+        if (set['tag_info'] != null) {
+          final tagName = set['tag_info']['type'] as String?;
+          if (tagName != null) {
+            tags.add(tagName);
+          }
+        }
+      }
+
+      // TODO: 좋아요 개수 가져오기
+      // TODO: 댓글 개수 가져오기
+
+      processedCourses.add({
+        'id': courseId,
+        'title': course['title'] ?? '',
+        'marker_image': course['marker_image'] ?? '',
+        'tags': tags.toList(),
+        'like_count': 0, // TODO: 실제 좋아요 개수
+        'comment_count': 0, // TODO: 실제 댓글 개수
+        'created_at': course['created_at'],
+      });
+    }
+
+    return processedCourses;
   }
 
   // 코스 상세 정보 가져오기
@@ -135,6 +211,7 @@ class SupabaseManager {
       final user = comment['user'] as Map<String, dynamic>?;
       processedComments.add({
         'id': comment['id'],
+        'user_id': comment['user_id'],
         'author': user?['nickname'] ?? '',
         'avatar': user?['profile_img'] ?? '',
         'body': comment['comment'] ?? '',
@@ -150,6 +227,7 @@ class SupabaseManager {
       'id': course['id'],
       'title': course['title'] ?? '',
       'marker_image': course['marker_image'] ?? '',
+      'author_id': course['author_id'], // 신고 시 사용할 author_id
       'author_name': author?['nickname'] ?? '',
       'author_profile': author?['profile_img'] ?? '',
       'tags': allTags.toList(), // 중복 제거된 태그 목록
@@ -162,5 +240,64 @@ class SupabaseManager {
       'comment_count': processedComments.length,
       'comments': processedComments,
     };
+  }
+
+  // 신고 제출
+  Future<void> submitReport({
+    required String targetId,
+    required ReportTargetType targetType,
+    required ReportReason reportReason,
+    required String reason,
+    required List<String> imagePaths,
+  }) async {
+    try {
+      // 현재 사용자 ID 가져오기
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('로그인이 필요합니다.');
+      }
+
+      // 이미지 업로드 및 URL 가져오기
+      final List<String> imageUrls = [];
+      for (int i = 0; i < imagePaths.length && i < 3; i++) {
+        final imageFile = File(imagePaths[i]);
+        if (await imageFile.exists()) {
+          final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
+          final filePath = '$userId/$fileName';
+
+          // Supabase Storage에 이미지 업로드
+          await supabase.storage
+              .from('reports')
+              .upload(filePath, imageFile);
+
+          // 공개 URL 가져오기
+          final imageUrl = supabase.storage
+              .from('reports')
+              .getPublicUrl(filePath);
+
+          imageUrls.add(imageUrl);
+        }
+      }
+
+      // target_type을 문자열로 변환
+      final targetTypeString = targetType == ReportTargetType.course
+          ? 'course'
+          : 'comment';
+
+      // 신고 데이터 삽입
+      await supabase.from('reports').insert({
+        'user_id': userId, // 신고를 제출한 사용자 ID
+        'target_id': targetId,
+        'target_type': targetTypeString,
+        'report_type': reportReason.label,
+        'reason': reason,
+        'img_01': imageUrls.isNotEmpty ? imageUrls[0] : null,
+        'img_02': imageUrls.length > 1 ? imageUrls[1] : null,
+        'img_03': imageUrls.length > 2 ? imageUrls[2] : null,
+      });
+    } catch (e) {
+      debugPrint('신고 제출 오류: $e');
+      rethrow;
+    }
   }
 }
