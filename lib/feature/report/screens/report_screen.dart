@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:of_course/core/components/custom_app_bar.dart';
+import 'package:of_course/core/managers/supabase_manager.dart';
 
 import '../models/report_models.dart';
 
@@ -37,6 +38,9 @@ class _ReportScreenState extends State<ReportScreen> {
 
   /// 이미지 피커 인스턴스
   final ImagePicker _picker = ImagePicker();
+
+  /// 신고 제출 중 로딩 상태
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -79,28 +83,48 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   /// 신고 제출 처리
-  void _submitReport() {
-    if (!_isFormValid) return;
+  Future<void> _submitReport() async {
+    if (!_isFormValid || _isSubmitting) return;
 
-    // 신고 데이터 객체 생성
-    final reportData = ReportData(
-      reportTargetType: widget.reportTargetType,
-      targetId: widget.targetId,
-      reportTitle: '${widget.targetId}를 신고합니다',
-      reportReason: _selectedReason,
-      reportDetails: _detailsController.text,
-      reportImages: _reportImages.map((file) => file.path).toList(),
-    );
+    setState(() {
+      _isSubmitting = true;
+    });
 
-    // TODO: 실제 API 호출로 변경 필요
-    print('신고 데이터 준비 완료:');
-    print('제목: ${reportData.reportTitle}');
-    print('사유: ${reportData.reportReason?.label}');
-    print('상세: ${reportData.reportDetails}');
-    print('이미지 개수: ${reportData.reportImages.length}');
+    try {
+      if (_selectedReason == null) {
+        throw Exception('신고 사유를 선택해주세요.');
+      }
 
-    // 성공 시 완료 팝업 표시
-    _showCompletionDialog();
+      // Supabase에 신고 제출
+      await SupabaseManager.shared.submitReport(
+        targetId: widget.targetId,
+        targetType: widget.reportTargetType,
+        reportReason: _selectedReason!,
+        reason: _detailsController.text,
+        imagePaths: _reportImages.map((file) => file.path).toList(),
+      );
+
+      // 성공 시 완료 팝업 표시
+      if (mounted) {
+        _showCompletionDialog();
+      }
+    } catch (e) {
+      // 에러 발생 시 스낵바 표시
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('신고 제출 중 오류가 발생했습니다: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   /// 취소 확인 다이얼로그 표시
@@ -310,11 +334,11 @@ class _ReportScreenState extends State<ReportScreen> {
                   maxLength: 1000,
                   buildCounter:
                       (
-                        context, {
-                        required currentLength,
-                        required isFocused,
-                        maxLength,
-                      }) => null,
+                      context, {
+                    required currentLength,
+                    required isFocused,
+                    maxLength,
+                  }) => null,
                   decoration: InputDecoration(
                     hintText: '신고 사유를 작성해주세요',
                     border: OutlineInputBorder(
@@ -427,7 +451,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
             // 신고 제출 버튼
             ElevatedButton(
-              onPressed: _isFormValid ? _submitReport : null,
+              onPressed: (_isFormValid && !_isSubmitting) ? _submitReport : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
@@ -436,7 +460,16 @@ class _ReportScreenState extends State<ReportScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text(
+              child: _isSubmitting
+                  ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+                  : const Text(
                 '신고하기',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
