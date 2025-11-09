@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:of_course/core/components/home_app_bar.dart'; // ✅ HomeAppBar 임포트
 import 'package:of_course/core/components/navigation_bar.dart';
 import 'package:of_course/core/components/post_component.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
@@ -13,13 +15,12 @@ class OfcourseHomePage extends StatefulWidget {
 }
 
 class _OfcourseHomePageState extends State<OfcourseHomePage> {
-  GuModel? selectedGu; // ✅ 선택된 지역
-  List<GuModel> guList = []; // ✅ DB 지역 목록
+  GuModel? selectedGu;
+  List<GuModel> guList = [];
 
-  List<TagModel> tagList = []; // ✅ DB 태그 목록
-  Set<TagModel> selectedCategories = {}; // ✅ 선택된 태그들
+  List<TagModel> tagList = [];
+  Set<TagModel> selectedCategories = {};
 
-  // 더미 게시물
   final List<Map<String, dynamic>> posts = List.generate(10, (index) {
     return {
       'title': '게시물 제목 $index',
@@ -41,7 +42,7 @@ class _OfcourseHomePageState extends State<OfcourseHomePage> {
     final list = await SupabaseManager.shared.getGuList();
     setState(() {
       guList = list;
-      selectedGu = list.first; // ✅ 기본 선택값
+      selectedGu = list.first;
     });
   }
 
@@ -54,45 +55,25 @@ class _OfcourseHomePageState extends State<OfcourseHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: const Color(0xFFFAFAFA),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // ✅ 지역 드롭다운
-            if (selectedGu != null)
-              DropdownButtonHideUnderline(
-                child: DropdownButton<GuModel>(
-                  value: selectedGu,
-                  onChanged: (v) => setState(() => selectedGu = v),
-                  items: guList.map((gu) {
-                    return DropdownMenuItem(value: gu, child: Text(gu.name));
-                  }).toList(),
-                ),
-              ),
 
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF6B6B),
-                shape: const StadiumBorder(),
-                elevation: 0,
-              ),
-              child: const Text("random"),
+      /// ✅ HomeAppBar 적용
+      appBar: selectedGu == null
+          ? null
+          : HomeAppBar(
+              selectedGu: selectedGu!,
+              guList: guList,
+              onGuChanged: (gu) => setState(() => selectedGu = gu),
+              onRandomPressed: () {
+                // 랜덤 추천 기능 필요 시 여기에 로직
+              },
+              onNotificationPressed: () {
+                context.push('/alert'); // ✅ 화면 이동
+              },
+              unreadAlertCount: 3, // ✅ 필요하면 count 넣기
             ),
-
-            IconButton(
-              icon: const Icon(Icons.notifications_none_rounded),
-              onPressed: () {},
-            ),
-          ],
-        ),
-      ),
 
       body: Column(
         children: [
-          // ✅ 태그 토글 바 (DB 기반)
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -107,11 +88,9 @@ class _OfcourseHomePageState extends State<OfcourseHomePage> {
                     child: GestureDetector(
                       onTap: () {
                         setState(() {
-                          if (isSelected) {
-                            selectedCategories.remove(tag);
-                          } else {
-                            selectedCategories.add(tag);
-                          }
+                          isSelected
+                              ? selectedCategories.remove(tag)
+                              : selectedCategories.add(tag);
                         });
                       },
                       child: AnimatedContainer(
