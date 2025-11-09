@@ -66,6 +66,30 @@ class CourseDetail {
     required this.createdAt,
     required this.isAuthor,
   });
+
+  factory CourseDetail.fromJson(Map<String, dynamic> json) {
+    final sets = (json['sets'] as List)
+        .map((set) => CourseSet.fromJson(set))
+        .toList();
+
+    return CourseDetail(
+      courseId: json['id'].toString(),
+      title: json['title'] as String,
+      markerImage: json['marker_image'] as String? ?? '',
+      sets: sets,
+      tags: (json['tags'] as List).map((e) => e as String).toList(),
+      authorName: json['author_name'] as String? ?? '',
+      authorProfile: json['author_profile'] as String? ?? '',
+      likeCount: json['like_count'] as int? ?? 0,
+      isLiked: json['is_liked'] as bool? ?? false,
+      commentCount: json['comment_count'] as int? ?? 0,
+      comments: (json['comments'] as List)
+          .map((comment) => Comment.fromJson(comment))
+          .toList(),
+      createdAt: DateTime.parse(json['created_at'] as String),
+      isAuthor: json['is_author'] as bool? ?? false,
+    );
+  }
 }
 
 // ============================================================================
@@ -97,6 +121,16 @@ class CourseSet {
     required this.setDescription,
     required this.tag,
   });
+
+  factory CourseSet.fromJson(Map<String, dynamic> json) {
+    return CourseSet(
+      setId: json['id'].toString(),
+      setImages: (json['images'] as List).map((e) => e as String).toList(),
+      setAddress: json['address'] as String? ?? '',
+      setDescription: json['description'] as String? ?? '',
+      tag: json['tag'] as String? ?? '',
+    );
+  }
 }
 
 // ============================================================================
@@ -131,6 +165,17 @@ class Comment {
     required this.commentTime,
     required this.isCommentAuthor,
   });
+
+  factory Comment.fromJson(Map<String, dynamic> json) {
+    return Comment(
+      commentId: json['id'].toString(),
+      commentAuthor: json['author'] as String? ?? '',
+      commentAvatar: json['avatar'] as String? ?? '',
+      commentBody: json['body'] as String? ?? '',
+      commentTime: DateTime.parse(json['time'] as String),
+      isCommentAuthor: json['is_author'] as bool? ?? false,
+    );
+  }
 
   String getRelativeTime() {
     final now = DateTime.now();
