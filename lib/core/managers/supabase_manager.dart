@@ -58,6 +58,76 @@ class SupabaseManager {
     return isDuplicated == null ? true : false;
   }
 
+  // 이미지 업로드 (세트 이미지용)
+  Future<String?> uploadCourseSetImage(File file) async {
+    try {
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
+
+      await supabase.storage.from('course_set_image').upload(fileName, file);
+
+      return supabase.storage.from('course_set_image').getPublicUrl(fileName);
+    } catch (e) {
+      debugPrint('Course set image upload error: $e');
+      return null;
+    }
+  }
+
+  //  세트 DB 삽입
+  Future<int?> insertCourseSet({
+    String? img1,
+    String? img2,
+    String? img3,
+    required String address,
+    required double lat,
+    required double lng,
+    int? tagId,
+    int? gu,
+    String? description,
+  }) async {
+    try {
+      final inserted = await supabase
+          .from('course_sets')
+          .insert({
+            'img_01': img1,
+            'img_02': img2,
+            'img_03': img3,
+            'address': address,
+            'lat': lat,
+            'lng': lng,
+            'tag': tagId,
+            'gu': gu,
+            'description': description,
+          })
+          .select()
+          .single();
+      return inserted['id'] as int;
+    } catch (e) {
+      debugPrint('insertCourseSet error: $e');
+      return null;
+    }
+  }
+
+  //주소 가져와서 지역비교 후 지역id부여
+  Future<int?> getGuIdFromName(String guName) async {
+    // 공백 제거
+    guName = guName.replaceAll(" ", "").replaceAll("시", "").replaceAll("청", "");
+
+    final guList = await supabase.from('gu').select('id, gu_name');
+
+    for (final row in guList) {
+      final dbGuName = row['gu_name']
+          .toString()
+          .replaceAll(" ", "")
+          .replaceAll("시", "")
+          .replaceAll("청", "");
+
+      if (guName.contains(dbGuName) || dbGuName.contains(guName)) {
+        return row['id'] as int;
+      }
+    }
+
+    return null;
   // 코스 목록 가져오기
   Future<List<Map<String, dynamic>>> getCourseList({
     int? guId,

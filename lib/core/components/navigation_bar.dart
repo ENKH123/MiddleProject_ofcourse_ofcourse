@@ -1,13 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class OfcourseBottomNavBarUI extends StatelessWidget {
   const OfcourseBottomNavBarUI({super.key});
 
+  int _getIndex(String location) {
+    if (location.startsWith('/home')) return 0;
+    if (location.startsWith('/write')) return 1;
+    if (location.startsWith('/liked')) return 2;
+    if (location.startsWith('/profile')) return 3;
+    return 0;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final currentLocation = GoRouterState.of(context).uri.toString();
+    final index = _getIndex(currentLocation);
+
     return BottomNavigationBar(
-      currentIndex: 0, // 기본 선택 인덱스
-      onTap: (_) {}, // 아무 기능 없음
+      currentIndex: index,
+      onTap: (i) {
+        switch (i) {
+          case 0:
+            context.go('/home');
+            break;
+          case 1:
+            context.go('/write');
+            break;
+          case 2:
+            context.go('/liked');
+            break;
+          case 3:
+            context.go('/profile');
+            break;
+        }
+      },
       type: BottomNavigationBarType.fixed,
       selectedItemColor: const Color(0xFF003366),
       unselectedItemColor: Colors.grey,
