@@ -64,7 +64,6 @@ class TermsAgreeScreen extends StatelessWidget {
                     allCheck: viewmodel.allTermsAgreed
                         ? () {
                             context.push('/register');
-                            // viewmodel.DisAgree();
                           }
                         : null,
                   ),
