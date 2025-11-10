@@ -14,6 +14,19 @@ Future<ThemeMode?> showThemeModeDialog(
     builder: (context) {
       ThemeMode selected = initial;
 
+      Widget radioItem(String label, ThemeMode value, void Function() onPick) {
+        return RadioListTile<ThemeMode>(
+          value: value,
+          groupValue: selected,
+          onChanged: (_) => onPick(),
+          title: Text(label),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        );
+      }
+
       return Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
@@ -30,49 +43,23 @@ Future<ThemeMode?> showThemeModeDialog(
                   ),
                   const SizedBox(height: 12),
 
-                  RadioGroup<ThemeMode>(
-                    groupValue: selected,
-                    onChanged: (value) {
-                      if (value == null) return;
-                      setState(() => selected = value);
-                      Navigator.pop(context, value);
-                    },
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        RadioListTile<ThemeMode>(
-                          value: ThemeMode.system,
-                          title: const Text('시스템 모드 따라가기'),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                          ),
-                        ),
-                        RadioListTile<ThemeMode>(
-                          value: ThemeMode.light,
-                          title: const Text('라이트 모드'),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                          ),
-                        ),
-                        RadioListTile<ThemeMode>(
-                          value: ThemeMode.dark,
-                          title: const Text('다크 모드'),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // 시스템 모드
+                  radioItem('시스템 모드 따라가기', ThemeMode.system, () {
+                    setState(() => selected = ThemeMode.system);
+                    Navigator.pop(context, ThemeMode.system);
+                  }),
+
+                  // 라이트 모드
+                  radioItem('라이트 모드', ThemeMode.light, () {
+                    setState(() => selected = ThemeMode.light);
+                    Navigator.pop(context, ThemeMode.light);
+                  }),
+
+                  // 다크 모드
+                  radioItem('다크 모드', ThemeMode.dark, () {
+                    setState(() => selected = ThemeMode.dark);
+                    Navigator.pop(context, ThemeMode.dark);
+                  }),
 
                   const SizedBox(height: 4),
                 ],
