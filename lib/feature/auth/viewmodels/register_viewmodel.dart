@@ -1,9 +1,14 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_progress_uploads/supabase_progress_uploads.dart';
+
+import '../../../main.dart';
 
 enum RegisterResult { success, duplicate }
 
@@ -28,6 +33,20 @@ class RegisterViewModel extends ChangeNotifier {
   ImagePicker _picker = ImagePicker();
   ImagePicker get picker => _picker;
 
+  // 선택된 프로필 사진
+  XFile? _pickedImg;
+  XFile? get pickedImg => _pickedImg;
+
+  XFile? _image;
+  XFile? get image => _image;
+
+  // 수파베이스 이미지 업로드 서비스
+  SupabaseUploadService _uploadService = SupabaseUploadService(
+    supabase,
+    'profile',
+  );
+  SupabaseUploadService get uploadService => _uploadService;
+
   //TODO: Provider에서 context로 LoginViewModel의 email 가져오기
   Future<void> registerSuccess() async {
     SupabaseManager.shared.createUserProfile(
@@ -36,16 +55,30 @@ class RegisterViewModel extends ChangeNotifier {
     );
   }
 
-  // Future<void> _handleImageUpload() async {
-  //   try {
-  //     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-  //
-  //   } catch (e) {
-  //     ScaffoldMessenger.of(
-  //       context,
-  //     ).showSnackBar(SnackBar(content: Text('이미지를 선택하는 중 오류가 발생했습니다: $e')));
-  //   }
-  // }
+  Future<void> pickProfileImage(BuildContext context) async {
+    _image = await _picker.pickImage(source: ImageSource.gallery);
+    if (_image != null) {
+      _pickedImg = XFile(_image!.path);
+    }
+    notifyListeners();
+  }
+
+  Future<void> uploadSingleFile() async {
+    if (_image != null) {
+      String? url = await _uploadService.uploadFile(_image!);
+    }
+  }
+
+  Future<void> uploadProfileImage() async {
+    final profileFile = File(_image!.path);
+    final String fullPath = await supabase.storage
+        .from('profile')
+        .upload(
+          'public/${_controller.text}/${_image!.name}',
+          profileFile,
+          fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+        );
+  }
 
   void updatedNickname(String value) {
     _isNicknameValid = value.length >= 2;
