@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class AlertScreen extends StatelessWidget {
   const AlertScreen({super.key});
@@ -7,7 +8,11 @@ class AlertScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xffFAFAFA),
-      appBar: AppBar(backgroundColor: Color(0xffFAFAFA), title: AlertAppBar()),
+      appBar: AppBar(
+        backgroundColor: Color(0xffFAFAFA),
+        automaticallyImplyLeading: false,
+        title: AlertAppBar(),
+      ),
       body: SafeArea(
         child: Stack(
           children: [
@@ -106,20 +111,19 @@ class AlertAppBar extends StatelessWidget {
           child: Align(
             alignment: Alignment.centerLeft,
             child: IconButton(
-              onPressed: () {},
-              icon: Icon(Icons.arrow_back_ios_new),
+              onPressed: () {
+                context.push('/home'); // ✅ 홈으로 이동
+              },
+              icon: const Icon(Icons.arrow_back_ios_new),
             ),
           ),
         ),
-        Expanded(
+        const Expanded(
           child: Center(
-            child: const Text(
-              "알림",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            child: Text("알림", style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ),
-        Expanded(child: SizedBox()),
+        const Expanded(child: SizedBox()),
       ],
     );
   }

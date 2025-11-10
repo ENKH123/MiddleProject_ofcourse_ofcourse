@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/core/viewmodels/auth_viewmodel.dart';
 import 'package:of_course/feature/auth/screens/login_screen.dart';
@@ -29,21 +28,7 @@ Future<void> main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiaGVjb2x6bGpmcm1ndGRqd2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNzc2MTQsImV4cCI6MjA3NzY1MzYxNH0.BsKpELVM0vmihAPd37CDs-fm0sdaVZGeNuBaGlgFOac',
   );
-  await FlutterNaverMap().init(
-    clientId: 'sr1eyuomlk',
-    onAuthFailed: (ex) {
-      switch (ex) {
-        case NQuotaExceededException(:final message):
-          print("사용량 초과 (message: $message)");
-          break;
-        case NUnauthorizedClientException() ||
-            NClientUnspecifiedException() ||
-            NAnotherAuthFailedException():
-          print("인증 실패: $ex");
-          break;
-      }
-    },
-  );
+
   runApp(
     MultiProvider(
       providers: [
