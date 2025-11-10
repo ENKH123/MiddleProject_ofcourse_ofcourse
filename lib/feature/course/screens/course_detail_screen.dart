@@ -66,19 +66,176 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     });
 
     try {
-      final currentUserId = Supabase.instance.client.auth.currentUser?.id;
-      final data = await SupabaseManager.shared.getCourseDetail(
-        widget.courseId!,
-        currentUserId,
-      );
+      final supabase = Supabase.instance.client;
+      final currentUserId = supabase.auth.currentUser?.id;
+      final courseId = widget.courseId!;
 
-      if (data == null) {
+      // 코스 기본 정보 가져오기 (외래 키 힌트 없이)
+      final course = await supabase
+          .from('courses')
+          .select('*')
+          .eq('id', courseId)
+          .maybeSingle();
+
+      if (course == null) {
         setState(() {
           _isLoading = false;
           _errorMessage = '코스를 찾을 수 없습니다.';
         });
         return;
       }
+
+      // 작성자 정보 별도 쿼리로 가져오기
+      final authorId = course['author_id'] as String?;
+      String authorName = '';
+      String authorProfile = '';
+
+      if (authorId != null) {
+        final author = await supabase
+            .from('users')
+            .select('nickname, profile_img')
+            .eq('id', authorId)
+            .maybeSingle();
+
+        if (author != null) {
+          authorName = author['nickname'] as String? ?? '';
+          authorProfile = author['profile_img'] as String? ?? '';
+        }
+      }
+
+      // 코스 세트들 가져오기 (courses 테이블의 set_01~set_05를 통해)
+      final List<int> setIds = [];
+      if (course['set_01'] != null) setIds.add(course['set_01'] as int);
+      if (course['set_02'] != null) setIds.add(course['set_02'] as int);
+      if (course['set_03'] != null) setIds.add(course['set_03'] as int);
+      if (course['set_04'] != null) setIds.add(course['set_04'] as int);
+      if (course['set_05'] != null) setIds.add(course['set_05'] as int);
+
+      // 세트 데이터 변환
+      final List<Map<String, dynamic>> processedSets = [];
+      final Set<String> allTags = {};
+
+      // 각 세트 ID에 대해 개별 조회 (성능 최적화: 고유 ID만 조회)
+      final Map<int, Map<String, dynamic>> setMap = {};
+      for (final setId in setIds) {
+        if (setMap.containsKey(setId)) continue; // 이미 조회한 세트는 스킵
+
+        final set = await supabase
+            .from('course_sets')
+            .select('''
+              *,
+              tag_info:tags!course_sets_tag_fkey(id, type)
+            ''')
+            .eq('id', setId)
+            .maybeSingle();
+
+        if (set != null) {
+          setMap[setId] = set;
+        }
+      }
+
+      // 세트 ID 순서대로 처리
+      for (final setId in setIds) {
+        final set = setMap[setId];
+        if (set == null) continue;
+
+        final List<String> images = [];
+        if (set['img_01'] != null && (set['img_01'] as String).isNotEmpty) {
+          images.add(set['img_01'] as String);
+        }
+        if (set['img_02'] != null && (set['img_02'] as String).isNotEmpty) {
+          images.add(set['img_02'] as String);
+        }
+        if (set['img_03'] != null && (set['img_03'] as String).isNotEmpty) {
+          images.add(set['img_03'] as String);
+        }
+
+        if (set['tag_info'] != null) {
+          final tagName = set['tag_info']['type'] as String?;
+          if (tagName != null) {
+            allTags.add(tagName);
+          }
+        }
+
+        processedSets.add({
+          'id': set['id'],
+          'images': images,
+          'address': set['address'] ?? '',
+          'description': set['description'] ?? '',
+          'tag': set['tag_info'] != null ? (set['tag_info']['type'] as String) : '',
+        });
+      }
+
+      // 댓글 가져오기 (외래 키 힌트 없이)
+      final allComments = await supabase
+          .from('comments')
+          .select('*')
+          .eq('course_id', courseId)
+          .order('created_at', ascending: false)
+          .limit(50);
+
+      final comments = (allComments as List)
+          .where((comment) => comment['deleted_at'] == null)
+          .toList();
+
+      // 댓글 작성자 정보 별도 쿼리로 가져오기 (성능 최적화: 고유 사용자 ID 수집 후 개별 조회)
+      final Set<String> userIds = {};
+      for (var comment in comments) {
+        final userId = comment['user_id'] as String?;
+        if (userId != null) {
+          userIds.add(userId);
+        }
+      }
+
+      // 모든 댓글 작성자 정보 가져오기 (고유 ID에 대해서만 조회)
+      final Map<String, Map<String, dynamic>> userMap = {};
+      for (final userId in userIds) {
+        final user = await supabase
+            .from('users')
+            .select('id, nickname, profile_img')
+            .eq('id', userId)
+            .maybeSingle();
+
+        if (user != null) {
+          userMap[userId] = {
+            'nickname': user['nickname'] as String? ?? '',
+            'profile_img': user['profile_img'] as String? ?? '',
+          };
+        }
+      }
+
+      final List<Map<String, dynamic>> processedComments = [];
+      for (var comment in comments) {
+        final userId = comment['user_id'] as String?;
+        final userInfo = userId != null ? userMap[userId] : null;
+
+        processedComments.add({
+          'id': comment['id'],
+          'user_id': userId,
+          'author': userInfo?['nickname'] ?? '',
+          'avatar': userInfo?['profile_img'] ?? '',
+          'body': comment['comment'] ?? '',
+          'time': comment['created_at'],
+          'is_author': userId == currentUserId,
+        });
+      }
+
+      // 최종 데이터 구성
+      final data = {
+        'id': course['id'],
+        'title': course['title'] ?? '',
+        'marker_image': course['marker_image'] ?? '',
+        'author_name': authorName,
+        'author_profile': authorProfile,
+        'tags': allTags.toList(),
+        'sets': processedSets,
+        'created_at': course['created_at'],
+        'is_author': course['author_id'] == currentUserId,
+        'like_count': 0,
+        'is_liked': false,
+        'comment_count': processedComments.length,
+        'comments': processedComments,
+      };
 
       final courseDetail = CourseDetail.fromJson(data);
       setState(() {
