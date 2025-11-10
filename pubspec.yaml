@@ -45,6 +45,7 @@ dependencies:
   dio: ^5.9.0
   http: ^1.5.0
   google_sign_in: ^7.2.0
+  supabase_progress_uploads: ^1.0.4
 
 
 dev_dependencies:

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/feature/auth/viewmodels/register_viewmodel.dart';
@@ -14,14 +16,14 @@ class RegisterScreen extends StatelessWidget {
       body: SafeArea(
         child: Consumer<RegisterViewModel>(
           builder: (context, viewmodel, child) {
-            return Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
+            return Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
                         children: [
                           SizedBox(height: 40), //상단 여백
                           Text(
@@ -31,18 +33,18 @@ class RegisterScreen extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          ProfileImage(), //TODO: 이미지 피커 적용
+                          ProfileImage(viewmodel: viewmodel),
                           NicknameTextField(
                             controller: viewmodel.controller,
                             onChanged: viewmodel.updatedNickname,
                           ),
                         ],
                       ),
-                      CompleteButton(),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                  CompleteButton(),
+                ],
+              ),
             );
           },
         ),
@@ -54,7 +56,7 @@ class RegisterScreen extends StatelessWidget {
 //TODO: 분기점 적용
 /// 닉네임 중복시
 /// 정상 생성시
-void _showRegisterComplePopup(
+void _showRegisterCompletePopup(
   BuildContext context,
   String nickname,
   RegisterResult result,
@@ -125,11 +127,11 @@ void _showRegisterComplePopup(
                         backgroundColor: Color(0xff003366),
                       ),
                       onPressed: () {
-                        print("로그인 하러 가기 버튼 눌림");
                         Navigator.of(context).pop();
                         if (isSuccess) {
                           context.go('/home');
                           viewmodelR.registerSuccess();
+                          viewmodelR.uploadProfileImage();
                         }
                       },
                       child: Text(
@@ -149,22 +151,33 @@ void _showRegisterComplePopup(
 }
 
 class ProfileImage extends StatelessWidget {
-  const ProfileImage({super.key});
+  final RegisterViewModel viewmodel;
+  const ProfileImage({super.key, required this.viewmodel});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        print('프로필 사진 눌림');
+      onTap: () async {
+        print("프로필 클릭");
+        viewmodel.pickProfileImage(context);
       },
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(50),
-        child: Icon(
-          Icons.account_circle_sharp,
-          size: 120,
-          color: Color(0xff003366),
-          fill: 1.0,
-        ),
+        borderRadius: BorderRadius.circular(60),
+        child: viewmodel.pickedImg != null
+            ? Container(
+                width: 120,
+                height: 120,
+                child: Image.file(
+                  File(viewmodel.pickedImg!.path),
+                  fit: BoxFit.cover,
+                ), //가져온 이미지
+              )
+            : Icon(
+                Icons.account_circle_sharp,
+                size: 120,
+                color: Color(0xff003366),
+                fill: 1.0,
+              ), // 이미지가 없으면 아이콘
       ),
     );
   }
@@ -188,7 +201,7 @@ class CompleteButton extends StatelessWidget {
                     print("입력 완료 버튼 눌림");
                     final RegisterResult rgResult = await viewmodel
                         .isDuplicatedNickname();
-                    _showRegisterComplePopup(
+                    _showRegisterCompletePopup(
                       context,
                       viewmodel.controller.text,
                       rgResult,
