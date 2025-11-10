@@ -6,7 +6,7 @@ import 'package:of_course/core/models/tags_moedl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final GuModel selectedGu;
+  final GuModel? selectedGu;
   final List<GuModel> guList;
   final Function(GuModel)? onGuChanged;
   final VoidCallback? onRandomPressed;
@@ -51,7 +51,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  /// ✅ 지역 선택 드롭다운
+  /// 지역 선택 드롭다운
   Widget _buildRegionSelector(BuildContext context) {
     return Container(
       height: 36,
@@ -115,19 +115,23 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       // 현재 사용자 ID 가져오기
       final currentUser = Supabase.instance.client.auth.currentUser;
       if (currentUser == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('오류')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('오류')));
         return;
       }
 
       // 좋아요한 코스 목록 가져오기
-      final likedCourseIds = await SupabaseManager.shared.getLikedCourseIds(currentUser.id);
+      final likedCourseIds = await SupabaseManager.shared.getLikedCourseIds(
+        currentUser.id,
+      );
 
       // 선택된 태그가 있으면 태그 기반 랜덤, 없으면 완전 랜덤
       int? randomCourseId;
       if (selectedCategories != null && selectedCategories!.isNotEmpty) {
-        final selectedTagNames = selectedCategories!.map((tag) => tag.name).toList();
+        final selectedTagNames = selectedCategories!
+            .map((tag) => tag.name)
+            .toList();
         randomCourseId = await SupabaseManager.shared.getRandomCourseByTags(
           selectedTagNames,
           likedCourseIds,
@@ -146,16 +150,16 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         context.push('/detail?id=$randomCourseId');
       } else {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('랜덤 코스를 찾을 수 없습니다.')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('랜덤 코스를 찾을 수 없습니다.')));
         }
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('랜덤 코스 가져오기 오류: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('랜덤 코스 가져오기 오류: $e')));
       }
     }
   }
