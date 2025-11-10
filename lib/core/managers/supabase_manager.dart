@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseManager {
   static final SupabaseManager _shared = SupabaseManager();
+
   static SupabaseManager get shared => _shared;
 
   // Get a reference your Supabase client
@@ -17,6 +18,7 @@ class SupabaseManager {
   SupabaseManager() {
     debugPrint("SupabaseManager init");
   }
+
   Future<SupabaseUserModel?> getPublicUser(String gmail) async {
     final Map<String, dynamic>? data = await supabase
         .from("users")
