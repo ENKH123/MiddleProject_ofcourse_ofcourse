@@ -28,7 +28,7 @@ class ProfileScreen extends StatelessWidget {
               '닉네임',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 15),
 
             // 프로필 수정 → /change_profile
             _menuButton(
@@ -55,9 +55,9 @@ class ProfileScreen extends StatelessWidget {
               onTap: () => context.push('/check_thrms'),
             ),
 
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             SizedBox(
-              height: 52,
+              height: 48,
               child: ElevatedButton(
                 onPressed: () {
                   // 로그아웃 처리 연결 예정이면 여기에
@@ -92,14 +92,14 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _menuButton(
-      BuildContext context, {
-        required String label,
-        required VoidCallback onTap,
-      }) {
+    BuildContext context, {
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: SizedBox(
-        height: 52,
+        height: 48,
         width: double.infinity,
         child: ElevatedButton(
           onPressed: onTap,
