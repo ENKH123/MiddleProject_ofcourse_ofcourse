@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/models/tag_color_model.dart';
 import 'package:of_course/feature/report/models/report_models.dart';
 import 'package:of_course/feature/report/screens/report_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -305,7 +306,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: widget.courseId != null ? _loadCourseFromSupabase : null,
+                onPressed: () => _loadCourseFromSupabase(),
                 child: const Text('다시 시도'),
               ),
             ],
@@ -423,9 +424,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               spacing: _spacingSmall,
               runSpacing: _spacingSmall,
               children: _courseDetail!.tags.map((tag) {
+                final colorHex = TagColorModel.getColorHex(tag);
+                final backgroundColor = colorHex != null
+                    ? Color(int.parse(colorHex.replaceFirst('#', ''), radix: 16) + 0xFF000000)
+                    : Colors.grey[200];
                 return Chip(
                   label: Text(tag),
-                  backgroundColor: Colors.grey[200],
+                  backgroundColor: backgroundColor,
                   padding: EdgeInsets.zero,
                 );
               }).toList(),
@@ -466,6 +471,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
+
+
+
   /// 세트 섹션 빌드
   Widget _buildSetsSection() {
     return Column(
@@ -490,6 +498,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   /// 세트 카드 빌드
   Widget _buildSetCard(CourseSet set) {
     return Card(
+      color: Colors.white,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(_borderRadius),
@@ -617,12 +626,21 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             Text(set.setDescription, style: const TextStyle(fontSize: 14)),
             const SizedBox(height: _spacingSmall),
             // 태그
-            if (set.tag.isNotEmpty)
-              Chip(
-                label: Text(set.tag),
-                backgroundColor: Colors.blue[50],
-                padding: EdgeInsets.zero,
+            if (set.tag.isNotEmpty) ...[
+              Builder(
+                builder: (context) {
+                  final colorHex = TagColorModel.getColorHex(set.tag);
+                  final backgroundColor = colorHex != null
+                      ? Color(int.parse(colorHex.replaceFirst('#', ''), radix: 16) + 0xFF000000)
+                      : Colors.blue[50];
+                  return Chip(
+                    label: Text(set.tag),
+                    backgroundColor: backgroundColor,
+                    padding: EdgeInsets.zero,
+                  );
+                },
               ),
+            ],
           ],
         ),
       ),
