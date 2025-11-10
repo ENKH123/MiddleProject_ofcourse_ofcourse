@@ -9,6 +9,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   final GuModel selectedGu;
   final List<GuModel> guList;
   final Function(GuModel)? onGuChanged;
+  final VoidCallback? onRandomPressed;
   final VoidCallback? onNotificationPressed;
   final int? unreadAlertCount;
   final Color? backgroundColor;
@@ -19,6 +20,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.selectedGu,
     required this.guList,
     this.onGuChanged,
+    this.onRandomPressed,
     this.onNotificationPressed,
     this.unreadAlertCount,
     this.backgroundColor,
@@ -85,7 +87,13 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     return SizedBox(
       height: 36,
       child: ElevatedButton(
-        onPressed: () => _handleRandomPressed(context),
+        onPressed: () {
+          if (onRandomPressed != null) {
+            onRandomPressed!();
+          } else {
+            _handleRandomPressed(context);
+          }
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF003366),
           foregroundColor: Colors.white,
