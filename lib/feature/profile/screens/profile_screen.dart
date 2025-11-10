@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:of_course/core/app_theme.dart';
+import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -7,7 +10,18 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('마이페이지'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('마이페이지'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_none_rounded),
+            onPressed: () {
+              context.push('/alert');
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
@@ -25,18 +39,16 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             const Text(
-              '닉네임',
+              '닉네임', //데이터 가져올 예정
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
 
-            // 프로필 수정 → /change_profile
             _menuButton(
               context,
               label: '프로필 수정',
               onTap: () => context.push('/change_profile'),
             ),
-
             _menuButton(
               context,
               label: '내가 만든 코스',
@@ -45,8 +57,14 @@ class ProfileScreen extends StatelessWidget {
             _menuButton(
               context,
               label: '테마 선택',
-              onTap: () {
-                /* 팝업 연결 예정이면 여기서 호출 */
+              onTap: () async {
+                final picked = await showThemeModeDialog(
+                  context,
+                  current: themeModeNotifier.value,
+                );
+                if (picked != null) {
+                  themeModeNotifier.value = picked;
+                }
               },
             ),
             _menuButton(
@@ -59,11 +77,15 @@ class ProfileScreen extends StatelessWidget {
             SizedBox(
               height: 52,
               child: ElevatedButton(
-                onPressed: () {
-                  // 로그아웃 처리 연결 예정이면 여기에
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Log Out tapped')),
-                  );
+                onPressed: () async {
+                  try {
+                    await context.read<LoginViewModel>().signOut();
+                    context.go('/login');
+                  } catch (e) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('로그아웃 실패: $e')));
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade100,
@@ -92,10 +114,10 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _menuButton(
-      BuildContext context, {
-        required String label,
-        required VoidCallback onTap,
-      }) {
+    BuildContext context, {
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: SizedBox(
