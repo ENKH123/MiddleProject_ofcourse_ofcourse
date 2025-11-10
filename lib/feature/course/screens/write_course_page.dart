@@ -9,8 +9,6 @@ import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
 import 'package:of_course/feature/course/components/course_set.dart';
 
-//  세트 데이터 모델
-
 class CourseSetData {
   String? query;
   double? lat;
@@ -22,8 +20,6 @@ class CourseSetData {
 
   CourseSetData();
 }
-
-//  코스 작성 페이지
 
 class WriteCoursePage extends StatefulWidget {
   const WriteCoursePage({super.key});
@@ -37,7 +33,10 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
 
   final List<WriteCourseSet> _sets = [];
   final List<CourseSetData> _courseSetDataList = [];
-  final List<bool> _highlightList = []; //  흔들림 / 강조 상태 저장
+  final List<bool> _highlightList = [];
+
+  // 🔹 세트 인덱스별 마커 ID 관리용 (세트마다 1개만 유지)
+  final Map<int, String> _markerIdBySet = {};
 
   List<TagModel> tagList = [];
 
@@ -162,15 +161,31 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
     return null;
   }
 
+  // 🔹 세트 인덱스에 해당하는 기존 마커 제거 (NOverlayInfo 사용)
+  Future<void> _removeMarkerIfExists(int setIndex) async {
+    final oldId = _markerIdBySet[setIndex];
+    if (oldId == null || _mapController == null) return;
+
+    // deleteOverlay는 NOverlayInfo를 받음
+    final info = NOverlayInfo(type: NOverlayType.marker, id: oldId);
+    await _mapController!.deleteOverlay(info);
+    _markerIdBySet.remove(setIndex);
+  }
+
   Future<void> _handleLocationSelected(int index, String query) async {
     NLatLng? location = await _getLatLngFromAddress(query);
     location ??= await _getLatLngFromKakao(query);
-    if (location == null) return;
+    if (location == null) {
+      _showMessage("위치를 찾을 수 없어요.");
+      return;
+    }
 
+    // 세트 데이터 갱신
     _courseSetDataList[index].query = query;
     _courseSetDataList[index].lat = location.latitude;
     _courseSetDataList[index].lng = location.longitude;
 
+    // 구 매핑
     final guName = await _getGuFromLatLng(
       location.latitude,
       location.longitude,
@@ -180,14 +195,22 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
           .getGuIdFromName(guName);
     }
 
+    // 🔹 기존 마커가 있으면 지우고 (세트당 1개 유지)
+    await _removeMarkerIfExists(index);
+
+    // 🔹 새 마커 추가 — 세트 인덱스를 id로 사용하면 관리가 쉬움
+    final markerId = 'set_marker_$index';
     final marker = NMarker(
-      id: 'marker_$index',
+      id: markerId,
       position: location,
       caption: NOverlayCaption(text: query),
     );
 
-    _mapController?.addOverlay(marker);
-    _mapController?.updateCamera(
+    await _mapController?.addOverlay(marker);
+    _markerIdBySet[index] = markerId;
+
+    // 카메라 이동
+    await _mapController?.updateCamera(
       NCameraUpdate.scrollAndZoomTo(target: location, zoom: 15),
     );
   }
@@ -244,18 +267,23 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
   }
 
   Future<void> _saveCourse(bool isDone) async {
+    final userID = SupabaseManager.shared.supabase.auth.currentUser?.id;
+
     List<int?> setIds = [];
 
     for (var set in _courseSetDataList) {
       if (set.lat == null || set.lng == null) continue;
 
       String? img1, img2, img3;
-      if (set.images.isNotEmpty)
+      if (set.images.isNotEmpty) {
         img1 = await SupabaseManager.shared.uploadCourseSetImage(set.images[0]);
-      if (set.images.length > 1)
+      }
+      if (set.images.length > 1) {
         img2 = await SupabaseManager.shared.uploadCourseSetImage(set.images[1]);
-      if (set.images.length > 2)
+      }
+      if (set.images.length > 2) {
         img3 = await SupabaseManager.shared.uploadCourseSetImage(set.images[2]);
+      }
 
       final id = await SupabaseManager.shared.insertCourseSet(
         img1: img1,
@@ -274,6 +302,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
 
     await SupabaseManager.shared.supabase.from('courses').insert({
       'title': _titleController.text,
+      'user_id': userID, // 🔹 로그인 유저 ID 저장
       'set_01': setIds.length > 0 ? setIds[0] : null,
       'set_02': setIds.length > 1 ? setIds[1] : null,
       'set_03': setIds.length > 2 ? setIds[2] : null,
@@ -282,6 +311,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
       'is_done': isDone,
     });
 
+    if (!mounted) return;
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(isDone ? "코스 저장 완료" : "임시 저장 완료")));
@@ -320,17 +350,31 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 16),
 
               SizedBox(
                 height: 300,
-                child: NaverMap(onMapReady: (c) => _mapController = c),
+                child: NaverMap(
+                  onMapReady: (c) => _mapController = c,
+                  options: const NaverMapViewOptions(
+                    scrollGesturesEnable: true,
+                    zoomGesturesEnable: true,
+                    rotationGesturesEnable: true,
+                    tiltGesturesEnable: true,
+                    initialCameraPosition: NCameraPosition(
+                      target: NLatLng(37.5665, 126.9780),
+                      zoom: 12,
+                    ),
+                  ),
+                ),
               ),
+
               const SizedBox(height: 16),
 
+              // ✅ 세트 UI 반복
               ..._sets.asMap().entries.map((entry) {
-                int index = entry.key;
-                WriteCourseSet setWidget = entry.value;
+                final index = entry.key;
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 20),
                   child: WriteCourseSet(
@@ -364,6 +408,8 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                   if (_sets.length > 2)
                     ElevatedButton(
                       onPressed: () {
+                        final lastIndex = _courseSetDataList.length - 1;
+                        _removeMarkerIfExists(lastIndex);
                         setState(() {
                           _sets.removeLast();
                           _courseSetDataList.removeLast();
