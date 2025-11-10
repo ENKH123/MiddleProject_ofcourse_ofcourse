@@ -49,6 +49,16 @@ class LoginViewModel extends ChangeNotifier {
     );
     // 무슨 코드??
 
+    supabase.auth.currentUser;
+    supabase.auth.onAuthStateChange;
+
+    /// 토큰에 대한 정보는 currentUser가 가지고 있고
+    /// currentUser가 null이 아니라면 로그인 되어 있는 상태로 볼 수 있음
+    /// onAuthStateChange로 로그인 상태(로그아웃)에 대한 상태를 감지하여 로그인 되어있지 않다고 판단하고
+    /// 로그인 화면으로 보낼 수 있음
+    /// 전역 프로바이더로 만들어서 관리
+    /// 홈 화면에서 로그인 상태 확인 가능해야 함
+
     // supabase public 테이블에 _googleUser로 받은 이메일이 있는지 확인
     userAccount = await SupabaseManager.shared.getPublicUser(
       _googleUser!.email,
