@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:go_router/go_router.dart';
-import 'package:of_course/core/components/navigation_bar.dart';
 import 'package:of_course/core/app_theme.dart';
+import 'package:of_course/core/components/navigation_bar.dart';
 import 'package:of_course/core/viewmodels/auth_viewmodel.dart';
 import 'package:of_course/feature/auth/screens/login_screen.dart';
 import 'package:of_course/feature/auth/screens/register_screen.dart';
 import 'package:of_course/feature/auth/screens/terms_agree_screen.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
+import 'package:of_course/feature/auth/viewmodels/register_viewmodel.dart';
 import 'package:of_course/feature/auth/viewmodels/terms_viewmodel.dart';
 import 'package:of_course/feature/course/screens/course_detail_screen.dart';
 import 'package:of_course/feature/course/screens/liked_course_page.dart';
@@ -48,8 +49,18 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => LoginViewModel()),
-        ChangeNotifierProvider(create: (context) => TermsViewModel()),
+        ChangeNotifierProvider(
+          create: (context) => LoginViewModel(),
+        ), //TODO: 지역 프로바이더로 변경
+        ChangeNotifierProvider(
+          create: (context) => TermsViewModel(),
+        ), //TODO: 지역 프로바이더로 변경
+        ChangeNotifierProvider(
+          create: (context) => RegisterViewModel(context),
+        ), //TODO: 지역 프로바이더로 변경
+        ChangeNotifierProvider(
+          create: (context) => AuthViewModel(),
+        ), //TODO: 전역 프로바이더로 로그인 세션 체크
       ],
       child: const MyApp(),
     ),
@@ -67,8 +78,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    /* final authViewModel = context.watch<AuthViewModel>();*/
     final GoRouter router = GoRouter(
-      initialLocation: '/login',
+      initialLocation: /*authViewModel.user != null ? '/profile' : '/login',*/
+          '/home',
       routes: [
         GoRoute(
           path: '/login',
