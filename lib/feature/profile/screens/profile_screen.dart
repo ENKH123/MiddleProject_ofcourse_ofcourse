@@ -42,7 +42,7 @@ class ProfileScreen extends StatelessWidget {
               '닉네임', //데이터 가져올 예정
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 15),
 
             _menuButton(
               context,
@@ -73,9 +73,9 @@ class ProfileScreen extends StatelessWidget {
               onTap: () => context.push('/check_thrms'),
             ),
 
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             SizedBox(
-              height: 52,
+              height: 48,
               child: ElevatedButton(
                 onPressed: () async {
                   try {
@@ -121,7 +121,7 @@ class ProfileScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: SizedBox(
-        height: 52,
+        height: 48,
         width: double.infinity,
         child: ElevatedButton(
           onPressed: onTap,
