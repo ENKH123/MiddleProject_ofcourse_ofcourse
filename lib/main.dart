@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/core/components/navigation_bar.dart';
+import 'package:of_course/core/app_theme.dart';
+import 'package:of_course/core/viewmodels/auth_viewmodel.dart';
 import 'package:of_course/feature/auth/screens/login_screen.dart';
 import 'package:of_course/feature/auth/screens/register_screen.dart';
 import 'package:of_course/feature/auth/screens/terms_agree_screen.dart';
@@ -137,15 +139,31 @@ class MyApp extends StatelessWidget {
       ],
     );
 
-    return MaterialApp.router(
-      title: 'Of Course',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      // home: const LoginScreen(),
-      routerConfig: router,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeModeNotifier, // ★
+      builder: (_, mode, __) {
+        return MaterialApp.router(
+          title: 'Of Course',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.light,
+            ),
+            useMaterial3: true,
+            // ★
+          ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+          ),
+          themeMode: mode, // 선택된 모드 적용
+          routerConfig: router,
+        );
+      },
     );
   }
 }
