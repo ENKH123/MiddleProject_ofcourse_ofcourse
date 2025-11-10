@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/core/app_theme.dart';
+import 'package:of_course/core/viewmodels/auth_viewmodel.dart';
 import 'package:of_course/feature/auth/screens/login_screen.dart';
 import 'package:of_course/feature/auth/screens/register_screen.dart';
 import 'package:of_course/feature/auth/screens/terms_agree_screen.dart';
@@ -31,8 +32,18 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => LoginViewModel()),
-        ChangeNotifierProvider(create: (context) => TermsViewModel()),
+        ChangeNotifierProvider(
+          create: (context) => LoginViewModel(),
+        ), //TODO: 지역 프로바이더로 변경
+        ChangeNotifierProvider(
+          create: (context) => TermsViewModel(),
+        ), //TODO: 지역 프로바이더로 변경
+        ChangeNotifierProvider(
+          create: (context) => RegisterViewModel(context),
+        ), //TODO: 지역 프로바이더로 변경
+        ChangeNotifierProvider(
+          create: (context) => AuthViewModel(),
+        ), //TODO: 전역 프로바이더로 로그인 세션 체크
       ],
       child: const MyApp(),
     ),
@@ -50,8 +61,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authViewModel = context.watch<AuthViewModel>();
     final GoRouter router = GoRouter(
-      initialLocation: '/profile',
+      initialLocation: authViewModel.user != null ? '/profile' : '/login',
       routes: [
         GoRoute(
           path: '/login',
