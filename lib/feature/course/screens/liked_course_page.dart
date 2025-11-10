@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:of_course/core/components/navigation_bar.dart';
 import 'package:of_course/core/components/post_component.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LikedCoursePage extends StatefulWidget {
   const LikedCoursePage({super.key});
@@ -12,13 +12,15 @@ class LikedCoursePage extends StatefulWidget {
 }
 
 class _LikedCoursePageState extends State<LikedCoursePage> {
-  List<TagModel> tagList = []; // ✅ DB에서 가져온 태그 리스트
-  Set<TagModel> selectedCategories = {}; // ✅ 선택된 태그들
+  List<TagModel> tagList = [];
+  Set<TagModel> selectedCategories = {};
+  List<Map<String, dynamic>> courseList = [];
 
   @override
   void initState() {
     super.initState();
     _loadTags();
+    _loadLikedCourses();
   }
 
   Future<void> _loadTags() async {
@@ -28,16 +30,34 @@ class _LikedCoursePageState extends State<LikedCoursePage> {
     });
   }
 
+  Future<void> _loadLikedCourses() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      debugPrint("⚠️ 로그인된 유저 없음");
+      return;
+    }
+
+    final selectedTagNames = selectedCategories.map((t) => t.name).toList();
+
+    final data = await SupabaseManager.shared.getLikedCourses(
+      selectedTagNames: selectedTagNames,
+    );
+
+    setState(() {
+      courseList = data;
+    });
+  }
+
   bool _isSelected(TagModel tag) => selectedCategories.contains(tag);
 
   void _toggleCategory(TagModel tag) {
     setState(() {
-      if (_isSelected(tag)) {
-        selectedCategories.remove(tag);
-      } else {
-        selectedCategories.add(tag);
-      }
+      _isSelected(tag)
+          ? selectedCategories.remove(tag)
+          : selectedCategories.add(tag);
     });
+
+    _loadLikedCourses(); // ✅ 태그 선택 시 즉시 필터 반영
   }
 
   @override
@@ -82,7 +102,7 @@ class _LikedCoursePageState extends State<LikedCoursePage> {
                             ],
                           ),
                           child: Text(
-                            tag.name, // ✅ DB에서 가져온 태그명
+                            tag.name,
                             style: TextStyle(
                               color: isSelected ? Colors.white : Colors.black,
                               fontWeight: FontWeight.bold,
@@ -99,22 +119,30 @@ class _LikedCoursePageState extends State<LikedCoursePage> {
 
             const SizedBox(height: 12),
 
-            /// ✅ 코스 리스트
+            /// ✅ 좋아요한 코스 리스트 출력
             Expanded(
-              child: ListView(
+              child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: const [
-                  PostCard(title: '예시 코스1', tags: ['맛집', '데이트']),
-                  PostCard(title: '예시 코스2', tags: ['오락', '데이트']),
-                  PostCard(title: '예시 코스3', tags: ['산책', '데이트']),
-                  PostCard(title: '예시 코스4', tags: ['드라이브', '데이트']),
-                ],
+                itemCount: courseList.length,
+                itemBuilder: (_, index) {
+                  final course = courseList[index];
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: PostCard(
+                      title: course['title'],
+                      tags: List<String>.from(course['tags']),
+                      imageUrls: List<String>.from(course['images']),
+                      likeCount: course['like_count'],
+                      commentCount: course['comment_count'],
+                    ),
+                  );
+                },
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: OfcourseBottomNavBarUI(),
     );
   }
 }

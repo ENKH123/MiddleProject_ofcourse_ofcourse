@@ -6,7 +6,6 @@ import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:supabase_progress_uploads/supabase_progress_uploads.dart';
 
 import '../../../main.dart';
 
@@ -40,13 +39,6 @@ class RegisterViewModel extends ChangeNotifier {
   XFile? _image;
   XFile? get image => _image;
 
-  // 수파베이스 이미지 업로드 서비스
-  SupabaseUploadService _uploadService = SupabaseUploadService(
-    supabase,
-    'profile',
-  );
-  SupabaseUploadService get uploadService => _uploadService;
-
   //TODO: Provider에서 context로 LoginViewModel의 email 가져오기
   Future<void> registerSuccess() async {
     SupabaseManager.shared.createUserProfile(
@@ -61,12 +53,6 @@ class RegisterViewModel extends ChangeNotifier {
       _pickedImg = XFile(_image!.path);
     }
     notifyListeners();
-  }
-
-  Future<void> uploadSingleFile() async {
-    if (_image != null) {
-      String? url = await _uploadService.uploadFile(_image!);
-    }
   }
 
   Future<void> uploadProfileImage() async {
