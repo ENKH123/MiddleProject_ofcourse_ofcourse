@@ -130,6 +130,8 @@ class SupabaseManager {
     }
 
     return null;
+  }
+
   // 코스 목록 가져오기
   Future<List<Map<String, dynamic>>> getCourseList({
     int? guId,
@@ -370,6 +372,101 @@ class SupabaseManager {
     } catch (e) {
       debugPrint('신고 제출 오류: $e');
       rethrow;
+    }
+  }
+
+  // 좋아요한 코스 ID 목록 가져오기
+  Future<List<int>> getLikedCourseIds(String userId) async {
+    try {
+      final likedCourses = await supabase
+          .from('liked_courses')
+          .select('course_id')
+          .eq('user_id', userId);
+
+      return (likedCourses as List)
+          .map((item) => item['course_id'] as int)
+          .toList();
+    } catch (e) {
+      debugPrint('좋아요한 코스 목록 가져오기 오류: $e');
+      return [];
+    }
+  }
+
+  // 태그 기반 랜덤 코스 가져오기
+  Future<int?> getRandomCourseByTags(
+    List<String> tagNames,
+    List<int> excludeCourseIds,
+  ) async {
+    try {
+      // 태그 이름으로 태그 ID 찾기 (각 태그에 대해 개별 쿼리)
+      final List<int> tagIds = [];
+      for (final tagName in tagNames) {
+        final tag = await supabase
+            .from('tags')
+            .select('id')
+            .eq('type', tagName)
+            .maybeSingle();
+        if (tag != null) {
+          tagIds.add(tag['id'] as int);
+        }
+      }
+
+      if (tagIds.isEmpty) return null;
+
+      // 해당 태그를 가진 코스 세트 찾기 (각 태그 ID에 대해 개별 쿼리)
+      final Set<int> courseIdSet = {};
+      for (final tagId in tagIds) {
+        final sets = await supabase
+            .from('course_sets')
+            .select('course_id')
+            .eq('tag', tagId);
+        for (final set in sets as List) {
+          courseIdSet.add(set['course_id'] as int);
+        }
+      }
+
+      if (courseIdSet.isEmpty) return null;
+
+      // 제외할 코스 ID 필터링
+      final courseIds = courseIdSet
+          .where((id) => !excludeCourseIds.contains(id))
+          .toList();
+
+      if (courseIds.isEmpty) return null;
+
+      // 랜덤으로 하나 선택
+      courseIds.shuffle();
+      return courseIds.first;
+    } catch (e) {
+      debugPrint('태그 기반 랜덤 코스 가져오기 오류: $e');
+      return null;
+    }
+  }
+
+  // 완전 랜덤 코스 가져오기
+  Future<int?> getRandomCourse({required List<int> excludeCourseIds}) async {
+    try {
+      // 모든 코스 가져오기
+      final courses = await supabase
+          .from('courses')
+          .select('id');
+
+      if (courses.isEmpty) return null;
+
+      // 제외할 코스 ID 필터링
+      final availableCourseIds = (courses as List)
+          .map((course) => course['id'] as int)
+          .where((id) => !excludeCourseIds.contains(id))
+          .toList();
+
+      if (availableCourseIds.isEmpty) return null;
+
+      // 랜덤으로 하나 선택
+      availableCourseIds.shuffle();
+      return availableCourseIds.first;
+    } catch (e) {
+      debugPrint('랜덤 코스 가져오기 오류: $e');
+      return null;
     }
   }
 }
