@@ -420,7 +420,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      //backgroundColor: const Color(0xFFFAFAFA), 자체 배경 제거
       body: SafeArea(
         child: SingleChildScrollView(
           controller: _scrollController,

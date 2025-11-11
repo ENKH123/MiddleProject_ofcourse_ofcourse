@@ -159,12 +159,12 @@ final ThemeData darkTheme = ThemeData(
     onError: const Color(0xFFFAFAFA),
     //background: const Color(0xFF003366), // 전체 배경색
     //onBackground: const Color(0xFFFAFAFA), // 기본 글자색
-    surface: const Color(0xFF003366),
+    surface: const Color(0xFF002245),
     onSurface: const Color(0xFFFAFAFA),
   ),
 
-  scaffoldBackgroundColor: const Color(0xFF003366),
-  canvasColor: const Color(0xFF003366),
+  scaffoldBackgroundColor: const Color(0xFF002245),
+  canvasColor: const Color(0xFF002245),
 
   //surfaceTintColor: Colors.transparent,
   textTheme: const TextTheme(
@@ -193,10 +193,11 @@ final ThemeData darkTheme = ThemeData(
   ),
 
   appBarTheme: const AppBarTheme(
-    backgroundColor: Color(0xFF003366),
+    backgroundColor: Color(0xFF002245),
     foregroundColor: Color(0xFFFAFAFA),
     elevation: 0,
   ),
+
   filledButtonTheme: FilledButtonThemeData(
     style: FilledButton.styleFrom(
       backgroundColor: const Color(0xFFC5D5E4),
