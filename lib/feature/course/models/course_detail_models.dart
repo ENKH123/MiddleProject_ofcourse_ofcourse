@@ -12,9 +12,6 @@ class CourseDetail {
   /// 게시글 제목 (최대 20자) 2번 항목
   final String title;
 
-  /// 대표 마커 이미지 URL 3번 항목
-  final String markerImage;
-
   /// 세트 목록 4번 항목
   final List<CourseSet> sets;
 
@@ -54,7 +51,6 @@ class CourseDetail {
   CourseDetail({
     required this.courseId,
     required this.title,
-    required this.markerImage,
     required this.sets,
     required this.tags,
     required this.authorName,
@@ -75,7 +71,6 @@ class CourseDetail {
     return CourseDetail(
       courseId: json['id'].toString(),
       title: json['title'] as String,
-      markerImage: json['marker_image'] as String? ?? '',
       sets: sets,
       tags: (json['tags'] as List).map((e) => e as String).toList(),
       authorName: json['author_name'] as String? ?? '',
@@ -86,7 +81,7 @@ class CourseDetail {
       comments: (json['comments'] as List)
           .map((comment) => Comment.fromJson(comment))
           .toList(),
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: DateTime.parse(json['created_at'].toString()),
       isAuthor: json['is_author'] as bool? ?? false,
     );
   }
@@ -114,12 +109,18 @@ class CourseSet {
   /// 세트별 단일 태그 (최대 20자) 8번 항목
   final String tag;
 
+  /// 지도에 마커 찍을 위도 경도
+  final double lat;
+  final double lng;
+
   CourseSet({
     required this.setId,
     required this.setImages,
     required this.setAddress,
     required this.setDescription,
     required this.tag,
+    required this.lat,
+    required this.lng,
   });
 
   factory CourseSet.fromJson(Map<String, dynamic> json) {
@@ -129,6 +130,8 @@ class CourseSet {
       setAddress: json['address'] as String? ?? '',
       setDescription: json['description'] as String? ?? '',
       tag: json['tag'] as String? ?? '',
+      lat: json['lat'] != null ? (json['lat'] as num).toDouble() : 0.0,
+      lng: json['lng'] != null ? (json['lng'] as num).toDouble() : 0.0,
     );
   }
 }
@@ -183,17 +186,13 @@ class Comment {
 
     if (difference.inMinutes < 1) {
       return '방금 전';
-    }
-    else if (difference.inMinutes < 60) {
+    } else if (difference.inMinutes < 60) {
       return '${difference.inMinutes}분 전';
-    }
-    else if (difference.inHours < 24) {
+    } else if (difference.inHours < 24) {
       return '${difference.inHours}시간 전';
-    }
-    else if (difference.inDays < 7) {
+    } else if (difference.inDays < 7) {
       return '${difference.inDays}일 전';
-    }
-    else {
+    } else {
       return '${commentTime.year}/${commentTime.month.toString().padLeft(2, '0')}/${commentTime.day.toString().padLeft(2, '0')}';
     }
   }

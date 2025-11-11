@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:of_course/core/components/post_component.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
@@ -135,6 +136,15 @@ class _LikedCoursePageState extends State<LikedCoursePage> {
                       imageUrls: List<String>.from(course['images']),
                       likeCount: course['like_count'],
                       commentCount: course['comment_count'],
+                      onTap: () async {
+                        final userId = await SupabaseManager.shared
+                            .getMyUserRowId();
+                        if (userId == null) return;
+                        context.push(
+                          '/detail',
+                          extra: {'courseId': course['id'], 'userId': userId},
+                        );
+                      },
                     ),
                   );
                 },
