@@ -9,6 +9,18 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => LoginViewModel(),
+      child: _LoginScreen(),
+    );
+  }
+}
+
+class _LoginScreen extends StatelessWidget {
+  const _LoginScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xffFAFAFA),
       body: SafeArea(
@@ -33,12 +45,6 @@ class LoginScreen extends StatelessWidget {
                 ),
                 // 앱 로고
                 AppLogo(),
-                TextButton(
-                  onPressed: () {
-                    viewmodel.signOut;
-                  },
-                  child: Text("로그아웃"),
-                ),
               ],
             );
           },

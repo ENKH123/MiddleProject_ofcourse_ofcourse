@@ -10,6 +10,18 @@ class RegisterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (context) => RegisterViewModel(context),
+      child: _RegisterScreen(),
+    );
+  }
+}
+
+class _RegisterScreen extends StatelessWidget {
+  const _RegisterScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xffFAFAFA),
       appBar: AppBar(backgroundColor: Color(0xffFAFAFA)),
