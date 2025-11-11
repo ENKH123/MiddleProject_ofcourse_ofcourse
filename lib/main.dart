@@ -9,6 +9,7 @@ import 'package:of_course/feature/auth/screens/register_screen.dart';
 import 'package:of_course/feature/auth/screens/terms_agree_screen.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
 import 'package:of_course/feature/course/screens/course_detail_screen.dart';
+import 'package:of_course/feature/course/screens/edit_course_page.dart';
 import 'package:of_course/feature/course/screens/liked_course_page.dart';
 import 'package:of_course/feature/course/screens/write_course_page.dart';
 import 'package:of_course/feature/home/screens/alert_screen.dart';
@@ -62,7 +63,7 @@ final supabase = Supabase.instance.client;
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  get courseDetail => null;
+  get courseId => 16;
 
   get reportTargetType => null;
 
@@ -70,7 +71,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final GoRouter router = GoRouter(
-      initialLocation: authProvider.user != null ? '/home' : '/login',
+      initialLocation: '/home',
+      /*      initialLocation: authProvider.user != null ? '/home' : '/login',*/
       routes: [
         GoRoute(
           path: '/login',
@@ -86,8 +88,12 @@ class MyApp extends StatelessWidget {
         ),
         GoRoute(
           path: '/detail',
-          builder: (context, state) =>
-              CourseDetailScreen(courseDetail: courseDetail), // 임시 수정
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>;
+            final courseId = int.parse(extra['courseId'].toString());
+            final userId = extra['userId'].toString();
+            return CourseDetailScreen(courseId: courseId, userId: userId);
+          },
         ),
         GoRoute(
           path: '/change_profile',
@@ -113,6 +119,16 @@ class MyApp extends StatelessWidget {
           builder: (context, state) {
             final userId = state.extra as String;
             return ViewMyPostPage(userId: userId);
+          },
+        ),
+        GoRoute(
+          path: '/editcourse',
+          pageBuilder: (context, state) {
+            final courseId = state.extra as int;
+            return MaterialPage(
+              key: ValueKey("editcourse_$courseId"),
+              child: EditCoursePage(courseId: courseId),
+            );
           },
         ),
         ShellRoute(
