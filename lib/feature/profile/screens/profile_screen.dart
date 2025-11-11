@@ -98,12 +98,17 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
+           
+             
+
             Container(
               alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {
-                  // 회원탈퇴 팝업/라우팅 연결 예정
-                },
+              child:  TextButton(
+              onPressed: () async {
+                await context.read<LoginViewModel>().resign();
+                context.go('/login');
+                // 회원탈퇴 팝업/라우팅 연결 예정
+              },
                 child: const Text(
                   '회원탈퇴',
                   style: TextStyle(
@@ -112,6 +117,7 @@ class ProfileScreen extends StatelessWidget {
                     decorationColor: Colors.red,
                   ),
                 ),
+ 
               ),
             ),
           ],

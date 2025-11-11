@@ -7,9 +7,7 @@ class AlertScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xffFAFAFA),
       appBar: AppBar(
-        backgroundColor: Color(0xffFAFAFA),
         automaticallyImplyLeading: false,
         title: AppBar(title: const Text("알림"), centerTitle: true),
       ),
@@ -80,9 +78,6 @@ void _showAlertErrorPopup(BuildContext context) {
                   SizedBox(
                     width: double.maxFinite,
                     child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xff003366),
-                      ),
                       onPressed: () {
                         print("닫기 버튼 눌림");
                         Navigator.of(context).pop(); // 팝업 닫기

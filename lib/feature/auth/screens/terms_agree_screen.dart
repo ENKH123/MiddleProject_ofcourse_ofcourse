@@ -23,9 +23,7 @@ class _TermsAgreeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xffFAFAFA),
       appBar: AppBar(
-        backgroundColor: Color(0xffFAFAFA),
         title: const Text(
           "약관 동의",
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -173,7 +171,7 @@ class NextButton extends StatelessWidget {
     return SizedBox(
       width: double.maxFinite,
       child: ElevatedButton(
-        style: ElevatedButton.styleFrom(backgroundColor: Color(0xff003366)),
+        style: ElevatedButton.styleFrom(),
         onPressed: allCheck,
         child: Text("다음", style: TextStyle(color: Colors.white)),
       ),
