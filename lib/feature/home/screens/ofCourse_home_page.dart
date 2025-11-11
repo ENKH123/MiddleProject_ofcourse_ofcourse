@@ -95,6 +95,15 @@ class _OfcourseHomePageState extends State<OfcourseHomePage> {
                   imageUrls: (course['images'] as List).cast<String>(),
                   likeCount: course['like_count'],
                   commentCount: course['comment_count'],
+                  onTap: () async {
+                    final userId = await SupabaseManager.shared
+                        .getMyUserRowId();
+                    if (userId == null) return;
+                    context.push(
+                      '/detail',
+                      extra: {'courseId': course['id'], 'userId': userId},
+                    );
+                  },
                 );
               },
             ),
