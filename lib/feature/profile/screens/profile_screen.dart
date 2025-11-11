@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/core/app_theme.dart';
+import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -52,7 +53,11 @@ class ProfileScreen extends StatelessWidget {
             _menuButton(
               context,
               label: '내가 만든 코스',
-              onTap: () => context.push('/mypost'),
+              onTap: () async {
+                final userId = await SupabaseManager.shared.getMyUserRowId();
+                if (userId == null) return;
+                context.push('/mypost', extra: userId);
+              },
             ),
             _menuButton(
               context,
@@ -98,17 +103,15 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-           
-             
 
             Container(
               alignment: Alignment.centerRight,
-              child:  TextButton(
-              onPressed: () async {
-                await context.read<LoginViewModel>().resign();
-                context.go('/login');
-                // 회원탈퇴 팝업/라우팅 연결 예정
-              },
+              child: TextButton(
+                onPressed: () async {
+                  await context.read<LoginViewModel>().resign();
+                  context.go('/login');
+                  // 회원탈퇴 팝업/라우팅 연결 예정
+                },
                 child: const Text(
                   '회원탈퇴',
                   style: TextStyle(
@@ -117,7 +120,6 @@ class ProfileScreen extends StatelessWidget {
                     decorationColor: Colors.red,
                   ),
                 ),
- 
               ),
             ),
           ],
