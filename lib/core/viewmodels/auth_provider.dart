@@ -2,21 +2,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:gotrue/src/types/user.dart';
 import 'package:of_course/main.dart';
 
-class AuthViewModel extends ChangeNotifier {
+class AuthProvider extends ChangeNotifier {
   User? _user;
   User? get user => _user;
 
-  AuthViewModel() {
+  AuthProvider() {
     _fetchCurrentUser();
   }
 
   Future<void> _fetchCurrentUser() async {
     _user = supabase.auth.currentUser;
   }
-
-  // bool isLoggedIn() {
-  //   return _user != null ? true : false;
-  // }
 }
 
 /// 토큰에 대한 정보는 currentUser가 가지고 있고
