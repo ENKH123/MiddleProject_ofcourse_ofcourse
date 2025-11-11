@@ -344,7 +344,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
   }
 
   Future<void> _saveCourse(bool isDone) async {
-    final userID = SupabaseManager.shared.supabase.auth.currentUser?.id;
+    final userID = await SupabaseManager.shared.getMyUserRowId();
 
     List<int?> setIds = [];
 
