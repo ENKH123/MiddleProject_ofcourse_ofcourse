@@ -43,10 +43,15 @@ class SupabaseManager {
     return (data as List).map((e) => TagModel.fromJson(e)).toList();
   }
 
-  Future<void> createUserProfile(String userEmail, String userNickname) async {
+  Future<void> createUserProfile(
+    String userEmail,
+    String userNickname,
+    String userProfileImage,
+  ) async {
     await supabase.from('users').insert({
       'email': userEmail,
       'nickname': userNickname,
+      'profile_img': userProfileImage,
     });
   }
 

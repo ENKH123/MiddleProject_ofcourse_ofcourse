@@ -142,7 +142,6 @@ void _showRegisterCompletePopup(
                         Navigator.of(context).pop();
                         if (isSuccess) {
                           context.go('/home');
-                          viewmodelR.registerSuccess();
                           viewmodelR.uploadProfileImage();
                         }
                       },
@@ -175,12 +174,12 @@ class ProfileImage extends StatelessWidget {
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(60),
-        child: viewmodel.pickedImg != null
+        child: viewmodel.image != null
             ? Container(
                 width: 120,
                 height: 120,
                 child: Image.file(
-                  File(viewmodel.pickedImg!.path),
+                  File(viewmodel.image!.path),
                   fit: BoxFit.cover,
                 ), //가져온 이미지
               )
