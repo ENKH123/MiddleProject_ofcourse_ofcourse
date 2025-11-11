@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:of_course/core/components/post_component.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
 
@@ -35,11 +36,19 @@ class _ViewMyPostPageState extends State<ViewMyPostPage> {
           itemCount: myPosts.length,
           separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (_, index) {
-            final post = myPosts[index];
+            final course = myPosts[index];
             return PostCard(
-              title: post['title'],
-              tags: post['tags'],
-              imageUrls: post['images'],
+              title: course['title'],
+              tags: course['tags'],
+              imageUrls: course['images'],
+              onTap: () async {
+                final userId = await SupabaseManager.shared.getMyUserRowId();
+                if (userId == null) return;
+                context.push(
+                  '/detail',
+                  extra: {'courseId': course['id'], 'userId': userId},
+                );
+              },
             );
           },
         ),

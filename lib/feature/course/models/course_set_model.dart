@@ -5,6 +5,8 @@ class CourseSetData {
   double? lat;
   double? lng;
   int? tagId;
+  int? gu;
+  List<String> existingImages = []; // ← 추가
   List<File> images = [];
   String? description;
 
