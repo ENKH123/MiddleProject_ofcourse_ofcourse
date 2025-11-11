@@ -150,21 +150,8 @@ class MyApp extends StatelessWidget {
         return MaterialApp.router(
           title: 'Of Course',
           debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.deepPurple,
-              brightness: Brightness.light,
-            ),
-            useMaterial3: true,
-            // ★
-          ),
-          darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.deepPurple,
-              brightness: Brightness.dark,
-            ),
-            useMaterial3: true,
-          ),
+          theme: lightTheme, //라이트 모드
+          darkTheme: darkTheme, //다크 모드
           themeMode: mode, // 선택된 모드 적용
           routerConfig: router,
         );
