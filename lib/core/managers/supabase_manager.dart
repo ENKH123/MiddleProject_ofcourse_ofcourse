@@ -32,63 +32,67 @@ class SupabaseManager {
     return SupabaseUserModel.fromJson(data);
   }
 
+  // 회원탈퇴
   Future<void> resign() async {
-    /// TODO 지울 것: 유저, 좋아요, 댓글, 알림, 코스, 코스 세트
-
-    // 현재 로그인 된 유저 이메일 가져옴
+    // 지울 것: 유저, 좋아요, 댓글, 알림, 코스, 코스 세트
+    //
+    // // 현재 로그인 된 유저 이메일 가져옴
     final String userEmail = supabase.auth.currentUser?.email ?? "";
+    //
+    // // 이메일로 아이디 가져옴
+    // final idResult = await supabase
+    //     .from("users")
+    //     .select('id')
+    //     .eq('email', userEmail)
+    //     .maybeSingle();
+    //
+    //
+    // // 아이디 값만 할당
+    // final String userId = idResult?['id'];
 
-    // 이메일로 아이디 가져옴
-    final idResult = await supabase
-        .from("users")
-        .select('id')
-        .eq('email', userEmail)
-        .maybeSingle();
-
-    // 아이디 값만 할당
-    final String userId = idResult?['id'];
-
-    // 유저 아이디랑 코스 작성자 아이디랑 일치하는 코스 아이디 리스트 아이디 가져옴
-    final List<Map<String, dynamic>> courseResults = await supabase
-        .from("courses")
-        .select('id')
-        .eq('user_id', userId);
-
-    final List<String> courseIds = courseResults.map((resultData) {
-      return resultData['id'].toString();
-    }).toList();
-
-    // 코스 리스트의 각 코스 세트 id들을 가져옴
-    final List<Map<String, dynamic>?> courseSetResults = await supabase
-        .from("courses")
-        .select('set_01, set_02, set_03, set_04, set_05')
-        .inFilter('id', courseIds);
-
-    print('courseSetResults: $courseSetResults');
-
+    await supabase.from("users").delete().eq('email', userEmail);
+    //
+    // // 유저 아이디랑 코스 작성자 아이디랑 일치하는 코스 아이디 리스트 아이디 가져옴
+    // final List<Map<String, dynamic>> courseResults = await supabase
+    //     .from("courses")
+    //     .select('id')
+    //     .eq('user_id', userId);
+    //
     // final List<String> courseIds = courseResults.map((resultData) {
     //   return resultData['id'].toString();
     // }).toList();
-
-    // 유저 아이디랑 댓글 작성자 아이디랑 일치하는 리스트 가져옴
-    final List<Map<String, dynamic>> commentIds = await supabase
-        .from("comments")
-        .select('id')
-        .eq('user_id', userId);
-
-    // 유저 아이디랑 좋아요 작성자 아이디랑 일치하는 리스트 가져옴
-    final List<Map<String, dynamic>> likedIds = await supabase
-        .from("liked_courses")
-        .select('id')
-        .eq('user_id', userId);
-
-    // 유저 아이디랑 알림 작성자 아이디랑 일치하는 리스트 가져옴
-    final List<Map<String, dynamic>> alertIds = await supabase
-        .from("alert")
-        .select('id')
-        .eq('user_id', userId);
-
-    // supabase.from('users').delete().eq('email', userEmail);
+    //
+    // // 코스 리스트의 각 코스 세트 id들을 가져옴
+    // final List<Map<String, dynamic>?> courseSetResults = await supabase
+    //     .from("courses")
+    //     .select('set_01, set_02, set_03, set_04, set_05')
+    //     .inFilter('id', courseIds);
+    //
+    // print('courseSetResults: $courseSetResults');
+    //
+    // // final List<String> courseIds = courseResults.map((resultData) {
+    // //   return resultData['id'].toString();
+    // // }).toList();
+    //
+    // // 유저 아이디랑 댓글 작성자 아이디랑 일치하는 리스트 가져옴
+    // final List<Map<String, dynamic>> commentIds = await supabase
+    //     .from("comments")
+    //     .select('id')
+    //     .eq('user_id', userId);
+    //
+    // // 유저 아이디랑 좋아요 작성자 아이디랑 일치하는 리스트 가져옴
+    // final List<Map<String, dynamic>> likedIds = await supabase
+    //     .from("liked_courses")
+    //     .select('id')
+    //     .eq('user_id', userId);
+    //
+    // // 유저 아이디랑 알림 작성자 아이디랑 일치하는 리스트 가져옴
+    // final List<Map<String, dynamic>> alertIds = await supabase
+    //     .from("alert")
+    //     .select('id')
+    //     .eq('user_id', userId);
+    //
+    // // supabase.from('users').delete().eq('email', userEmail);
   }
 
   // 구 목록 가져오기
