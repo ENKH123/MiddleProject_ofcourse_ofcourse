@@ -121,7 +121,10 @@ class MyApp extends StatelessWidget {
         ),
         GoRoute(
           path: '/mypost',
-          builder: (context, state) => const ViewMyPostPage(),
+          builder: (context, state) {
+            final userId = state.extra as String;
+            return ViewMyPostPage(userId: userId);
+          },
         ),
         ShellRoute(
           builder: (context, state, child) {
