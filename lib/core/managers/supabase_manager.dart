@@ -220,6 +220,7 @@ class SupabaseManager {
 
     return processedCourses;
   }*/
+
   //기본 코스 가져오기
   Future<List<Map<String, dynamic>>> getCourseList({
     int? guId,
@@ -304,6 +305,7 @@ class SupabaseManager {
     return result;
   }
 
+  //좋아요한 코스 가져오기
   Future<List<Map<String, dynamic>>> getLikedCourses({
     List<String>? selectedTagNames,
   }) async {
@@ -376,6 +378,57 @@ class SupabaseManager {
     return result;
   }
 
+  //내가 쓴 코스 가져오기
+  Future<List<Map<String, dynamic>>> getMyCourses(String userId) async {
+    final courses = await supabase
+        .from('courses')
+        .select('id, title, set_01, set_02, set_03, set_04, set_05')
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+
+    List<Map<String, dynamic>> result = [];
+
+    for (final course in courses) {
+      final setIds = [
+        course['set_01'],
+        course['set_02'],
+        course['set_03'],
+        course['set_04'],
+        course['set_05'],
+      ].where((id) => id != null).toList();
+
+      if (setIds.isEmpty) continue;
+
+      final sets = await supabase
+          .from('course_sets')
+          .select('img_01, img_02, img_03, tags(type)')
+          .filter('id', 'in', '(${setIds.join(',')})');
+
+      final List<String> images = [];
+      final Set<String> tags = {};
+
+      for (final s in sets) {
+        for (final img in [s['img_01'], s['img_02'], s['img_03']]) {
+          if (img != null && img.toString().isNotEmpty) {
+            images.add(img.toString());
+          }
+        }
+        final tag = s['tags']?['type'];
+        if (tag != null) tags.add(tag);
+      }
+
+      result.add({
+        'id': course['id'],
+        'title': course['title'],
+        'images': images.take(3).toList(),
+        'tags': tags.toList(),
+      });
+    }
+
+    return result;
+  }
+
+  //로그인한 유저의 user.id 가져오기
   Future<String?> getMyUserRowId() async {
     final authUser = supabase.auth.currentUser;
     if (authUser == null) return null;
