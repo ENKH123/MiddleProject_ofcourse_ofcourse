@@ -296,7 +296,8 @@ class SupabaseManager {
 
     final courses = await supabase
         .from('courses')
-        .select('id, title, created_at, set_01, set_02, set_03, set_04, set_05')
+        .select('*')
+        .eq('is_done', true)
         .order('created_at', ascending: false);
 
     List<Map<String, dynamic>> result = [];
@@ -391,7 +392,7 @@ class SupabaseManager {
 
     final courses = await supabase
         .from('courses')
-        .select('id, title, set_01, set_02, set_03, set_04, set_05')
+        .select('*')
         .inFilter('id', likedCourseIds)
         .order('created_at', ascending: false);
 
@@ -448,7 +449,7 @@ class SupabaseManager {
   Future<List<Map<String, dynamic>>> getMyCourses(String userId) async {
     final courses = await supabase
         .from('courses')
-        .select('id, title, set_01, set_02, set_03, set_04, set_05')
+        .select('*')
         .eq('user_id', userId)
         .order('created_at', ascending: false);
 
@@ -494,6 +495,51 @@ class SupabaseManager {
     return result;
   }
 
+  Future<Map<String, dynamic>?> getCourseForEdit(int courseId) async {
+    final supabase = Supabase.instance.client;
+
+    final course = await supabase
+        .from('courses')
+        .select('*')
+        .eq('id', courseId)
+        .maybeSingle();
+
+    if (course == null) return null;
+
+    final setKeys = ['set_01', 'set_02', 'set_03', 'set_04', 'set_05'];
+    List<Map<String, dynamic>> sets = [];
+
+    for (final key in setKeys) {
+      final setId = course[key];
+      if (setId == null) continue;
+
+      final cs = await supabase
+          .from('course_sets')
+          .select('*')
+          .eq('id', setId)
+          .maybeSingle();
+
+      if (cs == null) continue;
+
+      sets.add({
+        "id": cs['id'],
+        "query": cs['address'] ?? "",
+        "lat": cs['lat'],
+        "lng": cs['lng'],
+        "gu": cs['gu'],
+        "tag_id": cs['tag'],
+        "description": cs['description'] ?? "",
+        "images": [
+          cs['img_01'],
+          cs['img_02'],
+          cs['img_03'],
+        ].where((e) => e != null && e.toString().isNotEmpty).toList(),
+      });
+    }
+
+    return {"title": course['title'], "sets": sets};
+  }
+
   //로그인한 유저의 user.id 가져오기
   Future<String?> getMyUserRowId() async {
     final authUser = supabase.auth.currentUser;
@@ -516,51 +562,55 @@ class SupabaseManager {
     int courseId,
     String? currentUserId,
   ) async {
-    // 코스 기본 정보 가져오기
+    // 1) 코스 기본 정보 + 작성자 조인
     final course = await supabase
         .from('courses')
         .select('''
-          *,
-          author:users!courses_author_id_fkey(nickname, profile_img)
-        ''')
+        *,
+        author:users!courses_user_id_fkey(nickname, profile_img)
+      ''')
         .eq('id', courseId)
         .maybeSingle();
 
     if (course == null) return null;
 
-    // 코스 세트들 가져오기 (created_at 순서로)
-    final sets = await supabase
-        .from('course_sets')
-        .select('''
-          *,
-          tag_info:tags!course_sets_tag_fkey(id, type)
-        ''')
-        .eq('course_id', courseId)
-        .order('created_at', ascending: true);
+    // 2) 세트 ID 목록 추출 (null 제거)
+    final List<int> setIds = [
+      course['set_01'],
+      course['set_02'],
+      course['set_03'],
+      course['set_04'],
+      course['set_05'],
+    ].where((id) => id != null).map((id) => id as int).toList();
 
-    // 세트 데이터 변환
+    // 세트가 없다면 그냥 빈 리스트
+    List<Map<String, dynamic>> sets = [];
+    if (setIds.isNotEmpty) {
+      sets = await supabase
+          .from('course_sets')
+          .select('''
+          *,
+          tag_info:tags!course_sets_tag_fkey(type)
+        ''')
+          .inFilter('id', setIds)
+          .order('created_at', ascending: true);
+    }
+
+    // 세트 데이터 변환 + 태그 수집
     final List<Map<String, dynamic>> processedSets = [];
-    final Set<String> allTags = {}; // 전체 태그 수집용
+    final Set<String> allTags = {};
 
     for (var set in sets) {
-      // 이미지 배열 생성 (null 제외)
       final List<String> images = [];
-      if (set['img_01'] != null && (set['img_01'] as String).isNotEmpty) {
-        images.add(set['img_01'] as String);
-      }
-      if (set['img_02'] != null && (set['img_02'] as String).isNotEmpty) {
-        images.add(set['img_02'] as String);
-      }
-      if (set['img_03'] != null && (set['img_03'] as String).isNotEmpty) {
-        images.add(set['img_03'] as String);
+
+      for (final key in ['img_01', 'img_02', 'img_03']) {
+        if (set[key] != null && (set[key] as String).isNotEmpty) {
+          images.add(set[key]);
+        }
       }
 
-      // 태그 이름 수집
       if (set['tag_info'] != null) {
-        final tagName = set['tag_info']['type'] as String?;
-        if (tagName != null) {
-          allTags.add(tagName);
-        }
+        allTags.add(set['tag_info']['type']);
       }
 
       processedSets.add({
@@ -568,60 +618,50 @@ class SupabaseManager {
         'images': images,
         'address': set['address'] ?? '',
         'description': set['description'] ?? '',
-        'tag': set['tag_info'] != null
-            ? (set['tag_info']['type'] as String)
-            : '',
+        'tag': set['tag_info']?['type'] ?? '',
+        'lat': set['lat'],
+        'lng': set['lng'],
       });
     }
 
-    // 댓글 가져오기 (deleted_at이 null인 것만, 최대 50개)
-    final allComments = await supabase
+    // 3) 댓글 가져오기
+    final rawComments = await supabase
         .from('comments')
         .select('''
-          *,
-          user:users!comments_user_id_fkey(nickname, profile_img)
-        ''')
+        *,
+        user:users!comments_user_id_fkey(nickname, profile_img)
+      ''')
         .eq('course_id', courseId)
+        .isFilter('deleted_at', null)
         .order('created_at', ascending: false)
         .limit(50);
 
-    // deleted_at이 null인 댓글만 필터링
-    final comments = (allComments as List)
-        .where((comment) => comment['deleted_at'] == null)
-        .toList();
-
-    // 댓글 데이터 변환
-    final List<Map<String, dynamic>> processedComments = [];
-    for (var comment in comments) {
-      final user = comment['user'] as Map<String, dynamic>?;
-      processedComments.add({
+    final processedComments = (rawComments as List).map((comment) {
+      final user = comment['user'] ?? {};
+      return {
         'id': comment['id'],
         'user_id': comment['user_id'],
-        'author': user?['nickname'] ?? '',
-        'avatar': user?['profile_img'] ?? '',
+        'author': user['nickname'] ?? '',
+        'avatar': user['profile_img'] ?? '',
         'body': comment['comment'] ?? '',
-        'time': comment['created_at'],
+        'time': comment['created_at'], //
         'is_author': comment['user_id'] == currentUserId,
-      });
-    }
-
-    // 작성자 정보
-    final author = course['author'] as Map<String, dynamic>?;
+      };
+    }).toList();
 
     return {
       'id': course['id'],
       'title': course['title'] ?? '',
       'marker_image': course['marker_image'] ?? '',
-      'author_id': course['author_id'], // 신고 시 사용할 author_id
-      'author_name': author?['nickname'] ?? '',
-      'author_profile': author?['profile_img'] ?? '',
-      'tags': allTags.toList(), // 중복 제거된 태그 목록
+      'author_id': course['user_id'],
+      'author_name': course['author']?['nickname'] ?? '',
+      'author_profile': course['author']?['profile_img'] ?? '',
+      'tags': allTags.toList(),
       'sets': processedSets,
-      'created_at': course['created_at'],
-      'is_author': course['author_id'] == currentUserId,
-      // TODO: liked_courses 테이블에서 좋아요 개수 및 사용자 좋아요 여부 조회
-      'like_count': 0,
-      'is_liked': false,
+      'created_at': course['created_at'].toString(), //
+      'is_author': course['user_id'] == currentUserId,
+      'like_count': 0, // TODO: 좋아요 수 연동 시 변경
+      'is_liked': false, // TODO: 좋아요 상태 연동 시 변경
       'comment_count': processedComments.length,
       'comments': processedComments,
     };

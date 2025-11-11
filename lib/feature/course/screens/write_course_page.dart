@@ -30,6 +30,7 @@ class WriteCoursePage extends StatefulWidget {
 
 class _WriteCoursePageState extends State<WriteCoursePage> {
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey _mapKey = GlobalKey(debugLabel: "write_map_key");
 
   final List<WriteCourseSet> _sets = [];
   final List<CourseSetData> _courseSetDataList = [];
@@ -82,6 +83,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
           onImagesChanged: (imgs) => _courseSetDataList[index].images = imgs,
           onDescriptionChanged: (text) =>
               _courseSetDataList[index].description = text,
+          onShowMapRequested: _scrollToMap,
         ),
       );
     });
@@ -396,6 +398,25 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
     context.push('/home');
   }
 
+  void _scrollToMap() {
+    final ctx = _mapKey.currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
+        alignment: 0.0, // 맵이 화면 상단에 오도록
+      );
+    } else {
+      // fallback: 대략적인 오프셋
+      _scrollController.animateTo(
+        300,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -435,6 +456,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
 
               // 지도
               SizedBox(
+                key: _mapKey,
                 height: 300,
                 child: NaverMap(
                   onMapReady: (c) => _mapController = c,
@@ -458,7 +480,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 20),
                   child: WriteCourseSet(
-                    key: ValueKey(index),
+                    key: ValueKey("write_set_$index"),
                     tagList: tagList,
                     highlight: _highlightList[index],
                     onTagChanged: (tag) =>
@@ -473,6 +495,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                         _courseSetDataList[index].images = imgs,
                     onDescriptionChanged: (text) =>
                         _courseSetDataList[index].description = text,
+                    onShowMapRequested: _scrollToMap,
                   ),
                 );
               }),

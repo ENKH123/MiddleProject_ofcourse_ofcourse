@@ -12,6 +12,12 @@ class WriteCourseSet extends StatefulWidget {
   final Function(TagModel)? onTagChanged;
   final List<TagModel> tagList;
   final bool highlight;
+  final VoidCallback? onShowMapRequested;
+
+  final List<String>? existingImageUrls;
+  final String? initialQuery;
+  final String? initialDescription;
+  final int? initialTagId;
 
   const WriteCourseSet({
     super.key,
@@ -22,6 +28,11 @@ class WriteCourseSet extends StatefulWidget {
     this.onImagesChanged,
     this.onDescriptionChanged,
     this.highlight = false,
+    this.onShowMapRequested,
+    this.existingImageUrls,
+    this.initialQuery,
+    this.initialDescription,
+    this.initialTagId,
   });
 
   @override
@@ -31,6 +42,7 @@ class WriteCourseSet extends StatefulWidget {
 class _WriteCourseSetState extends State<WriteCourseSet> {
   final ImagePicker _picker = ImagePicker();
   final List<File> _images = [];
+  late List<String> _existingImages;
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _textController = TextEditingController();
   TagModel? _selectedTag;
@@ -38,6 +50,27 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
   @override
   void initState() {
     super.initState();
+
+    _searchController.text = widget.initialQuery ?? "";
+    _textController.text = widget.initialDescription ?? "";
+
+    // 태그 초기 선택
+    if (widget.initialTagId != null) {
+      try {
+        _selectedTag = widget.tagList.firstWhere(
+          (t) => t.id == widget.initialTagId,
+        );
+      } catch (_) {
+        _selectedTag = null;
+      }
+    }
+
+    // 이미지 초기값
+    _existingImages = widget.existingImageUrls != null
+        ? List<String>.from(widget.existingImageUrls!)
+        : [];
+
+    // 설명 입력 변경 → 부모에게 전달
     _textController.addListener(() {
       widget.onDescriptionChanged?.call(_textController.text);
     });
@@ -45,13 +78,50 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
 
   Future<void> _pickImage() async {
     if (_images.length >= 3) return;
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text("앨범에서 선택"),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final XFile? picked = await _picker.pickImage(
+                    source: ImageSource.gallery,
+                  );
+                  if (picked != null) {
+                    setState(() => _images.add(File(picked.path)));
+                    widget.onImagesChanged?.call(_images);
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text("사진 촬영"),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final XFile? picked = await _picker.pickImage(
+                    source: ImageSource.camera,
+                  );
+                  if (picked != null) {
+                    setState(() => _images.add(File(picked.path)));
+                    widget.onImagesChanged?.call(_images);
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
-    if (pickedFile != null) {
-      setState(() => _images.add(File(pickedFile.path)));
-      widget.onImagesChanged?.call(_images);
-    }
   }
 
   void _removeImage(int index) {
@@ -61,7 +131,11 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
 
   void _onSearch() {
     final query = _searchController.text.trim();
-    if (query.isNotEmpty) widget.onSearchRequested?.call(query);
+    if (query.isEmpty) return;
+
+    FocusScope.of(context).unfocus(); // ✅ 키보드 내림
+    widget.onSearchRequested?.call(query); // ✅ 위치 검색
+    widget.onShowMapRequested?.call(); // ✅ 지도 스크롤 요청
   }
 
   @override
@@ -107,6 +181,46 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
           // 이미지
           Row(
             children: [
+              // 기존 이미지 표시
+              for (int i = 0; i < _existingImages.length; i++)
+                Stack(
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 100,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        image: DecorationImage(
+                          image: NetworkImage(_existingImages[i]),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() => _existingImages.removeAt(i));
+                        },
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black54,
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+              // 새로 추가한 이미지 표시
               for (int i = 0; i < _images.length; i++)
                 Stack(
                   children: [
@@ -142,7 +256,9 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
                     ),
                   ],
                 ),
-              if (_images.length < 3)
+
+              // 추가 버튼
+              if (_existingImages.length + _images.length < 3)
                 GestureDetector(
                   onTap: _pickImage,
                   child: Container(
