@@ -23,8 +23,7 @@ class _RegisterScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xffFAFAFA),
-      appBar: AppBar(backgroundColor: Color(0xffFAFAFA)),
+      appBar: AppBar(),
       body: SafeArea(
         child: Consumer<RegisterViewModel>(
           builder: (context, viewmodel, child) {
@@ -135,9 +134,7 @@ void _showRegisterCompletePopup(
                   SizedBox(
                     width: double.maxFinite,
                     child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xff003366),
-                      ),
+                      style: ElevatedButton.styleFrom(),
                       onPressed: () {
                         Navigator.of(context).pop();
                         if (isSuccess) {
