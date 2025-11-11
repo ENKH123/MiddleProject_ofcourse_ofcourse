@@ -62,6 +62,11 @@ class LoginViewModel extends ChangeNotifier {
     await GoogleSignIn.instance.signOut();
     notifyListeners();
   }
+
+  Future<void> resign() async {
+    await SupabaseManager.shared.resign();
+    notifyListeners();
+  }
 }
 
 /// 호출

@@ -105,7 +105,9 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
+                await context.read<LoginViewModel>().resign();
+                context.go('/login');
                 // 회원탈퇴 팝업/라우팅 연결 예정
               },
               child: const Text(
