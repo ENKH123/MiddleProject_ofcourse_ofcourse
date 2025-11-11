@@ -10,6 +10,18 @@ class RegisterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (context) => RegisterViewModel(context),
+      child: _RegisterScreen(),
+    );
+  }
+}
+
+class _RegisterScreen extends StatelessWidget {
+  const _RegisterScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xffFAFAFA),
       appBar: AppBar(backgroundColor: Color(0xffFAFAFA)),
@@ -130,7 +142,6 @@ void _showRegisterCompletePopup(
                         Navigator.of(context).pop();
                         if (isSuccess) {
                           context.go('/home');
-                          viewmodelR.registerSuccess();
                           viewmodelR.uploadProfileImage();
                         }
                       },
@@ -163,12 +174,12 @@ class ProfileImage extends StatelessWidget {
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(60),
-        child: viewmodel.pickedImg != null
+        child: viewmodel.image != null
             ? Container(
                 width: 120,
                 height: 120,
                 child: Image.file(
-                  File(viewmodel.pickedImg!.path),
+                  File(viewmodel.image!.path),
                   fit: BoxFit.cover,
                 ), //가져온 이미지
               )

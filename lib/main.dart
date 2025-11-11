@@ -3,6 +3,7 @@ import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/core/app_theme.dart';
 import 'package:of_course/core/components/navigation_bar.dart';
+import 'package:of_course/core/viewmodels/auth_provider.dart';
 import 'package:of_course/core/viewmodels/auth_viewmodel.dart';
 import 'package:of_course/feature/auth/screens/login_screen.dart';
 import 'package:of_course/feature/auth/screens/register_screen.dart';
@@ -49,6 +50,10 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => LoginViewModel()),
+        ChangeNotifierProvider(
+          create: (context) => AuthProvider(),
+        ), // 전역 프로바이더 // 로그인 상태 감지
         ChangeNotifierProvider(
           create: (context) => LoginViewModel(),
         ), //TODO: 지역 프로바이더로 변경
@@ -78,10 +83,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    /* final authViewModel = context.watch<AuthViewModel>();*/
+    final authProvider = context.watch<AuthProvider>();
     final GoRouter router = GoRouter(
-      initialLocation: /*authViewModel.user != null ? '/profile' : '/login',*/
-          '/home',
+      initialLocation: authProvider.user != null ? '/home' : '/login',
       routes: [
         GoRoute(
           path: '/login',
