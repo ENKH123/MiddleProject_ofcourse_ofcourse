@@ -10,6 +10,18 @@ class TermsAgreeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => TermsViewModel(),
+      child: _TermsAgreeScreen(),
+    );
+  }
+}
+
+class _TermsAgreeScreen extends StatelessWidget {
+  const _TermsAgreeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xffFAFAFA),
       appBar: AppBar(

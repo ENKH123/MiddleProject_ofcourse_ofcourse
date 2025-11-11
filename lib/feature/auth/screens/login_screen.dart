@@ -33,12 +33,6 @@ class LoginScreen extends StatelessWidget {
                 ),
                 // 앱 로고
                 AppLogo(),
-                TextButton(
-                  onPressed: () {
-                    viewmodel.signOut;
-                  },
-                  child: Text("로그아웃"),
-                ),
               ],
             );
           },

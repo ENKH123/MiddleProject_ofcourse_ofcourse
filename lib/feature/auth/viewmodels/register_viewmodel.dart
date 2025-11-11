@@ -33,44 +33,55 @@ class RegisterViewModel extends ChangeNotifier {
   ImagePicker get picker => _picker;
 
   // 선택된 프로필 사진
-  XFile? _pickedImg;
-  XFile? get pickedImg => _pickedImg;
+  String _pickedImgPath = "";
+  String get pickedImgPath => _pickedImgPath;
 
   XFile? _image;
   XFile? get image => _image;
 
-  //TODO: Provider에서 context로 LoginViewModel의 email 가져오기
-  Future<void> registerSuccess() async {
+  // 회원가입(계정생성)
+  Future<void> registerSuccess(String filePath) async {
+    String userProfileImage = supabase.storage
+        .from('profile')
+        .getPublicUrl(filePath);
     SupabaseManager.shared.createUserProfile(
       _loginViewModel.googleUser?.email ?? "",
       _controller.text,
+      userProfileImage,
     );
   }
 
+  // 프로필 이미지 선택
   Future<void> pickProfileImage(BuildContext context) async {
     _image = await _picker.pickImage(source: ImageSource.gallery);
     if (_image != null) {
-      _pickedImg = XFile(_image!.path);
+      _pickedImgPath = _image!.path;
     }
     notifyListeners();
   }
 
+  // 프로필 이미지 Bucket 업로드
   Future<void> uploadProfileImage() async {
-    final profileFile = File(_image!.path);
+    final profileFile = File(_pickedImgPath);
+    final profileFullPath =
+        'public/${_loginViewModel.googleUser?.email}/${_image!.name}';
     final String fullPath = await supabase.storage
         .from('profile')
         .upload(
-          'public/${_controller.text}/${_image!.name}',
+          profileFullPath,
           profileFile,
           fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
         );
+    await registerSuccess(profileFullPath);
   }
 
+  // 닉네임 2글자 이상 체크
   void updatedNickname(String value) {
     _isNicknameValid = value.length >= 2;
     notifyListeners();
   }
 
+  // 닉네임 중복 체크
   Future<RegisterResult> isDuplicatedNickname() async {
     if (await SupabaseManager.shared.isDuplicatedNickname(_controller.text)) {
       await Future.delayed(const Duration(milliseconds: 1000));

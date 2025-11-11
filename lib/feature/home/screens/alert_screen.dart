@@ -11,7 +11,7 @@ class AlertScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Color(0xffFAFAFA),
         automaticallyImplyLeading: false,
-        title: AlertAppBar(),
+        title: AppBar(title: const Text("알림"), centerTitle: true),
       ),
       body: SafeArea(
         child: Stack(
