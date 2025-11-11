@@ -7,6 +7,7 @@ import 'package:of_course/core/viewmodels/auth_provider.dart';
 import 'package:of_course/feature/auth/screens/login_screen.dart';
 import 'package:of_course/feature/auth/screens/register_screen.dart';
 import 'package:of_course/feature/auth/screens/terms_agree_screen.dart';
+import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
 import 'package:of_course/feature/course/screens/course_detail_screen.dart';
 import 'package:of_course/feature/course/screens/liked_course_page.dart';
 import 'package:of_course/feature/course/screens/write_course_page.dart';
@@ -46,6 +47,7 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => LoginViewModel()),
         ChangeNotifierProvider(
           create: (context) => AuthProvider(),
         ), // 전역 프로바이더 // 로그인 상태 감지
