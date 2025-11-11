@@ -4,10 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:of_course/core/app_theme.dart';
 import 'package:of_course/core/components/navigation_bar.dart';
 import 'package:of_course/core/viewmodels/auth_provider.dart';
+import 'package:of_course/core/viewmodels/auth_viewmodel.dart';
 import 'package:of_course/feature/auth/screens/login_screen.dart';
 import 'package:of_course/feature/auth/screens/register_screen.dart';
 import 'package:of_course/feature/auth/screens/terms_agree_screen.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
+import 'package:of_course/feature/auth/viewmodels/register_viewmodel.dart';
+import 'package:of_course/feature/auth/viewmodels/terms_viewmodel.dart';
 import 'package:of_course/feature/course/screens/course_detail_screen.dart';
 import 'package:of_course/feature/course/screens/liked_course_page.dart';
 import 'package:of_course/feature/course/screens/write_course_page.dart';
@@ -51,6 +54,18 @@ Future<void> main() async {
         ChangeNotifierProvider(
           create: (context) => AuthProvider(),
         ), // 전역 프로바이더 // 로그인 상태 감지
+        ChangeNotifierProvider(
+          create: (context) => LoginViewModel(),
+        ), //TODO: 지역 프로바이더로 변경
+        ChangeNotifierProvider(
+          create: (context) => TermsViewModel(),
+        ), //TODO: 지역 프로바이더로 변경
+        ChangeNotifierProvider(
+          create: (context) => RegisterViewModel(context),
+        ), //TODO: 지역 프로바이더로 변경
+        ChangeNotifierProvider(
+          create: (context) => AuthViewModel(),
+        ), //TODO: 전역 프로바이더로 로그인 세션 체크
       ],
       child: const MyApp(),
     ),
@@ -110,7 +125,10 @@ class MyApp extends StatelessWidget {
         ),
         GoRoute(
           path: '/mypost',
-          builder: (context, state) => const ViewMyPostPage(),
+          builder: (context, state) {
+            final userId = state.extra as String;
+            return ViewMyPostPage(userId: userId);
+          },
         ),
         ShellRoute(
           builder: (context, state, child) {

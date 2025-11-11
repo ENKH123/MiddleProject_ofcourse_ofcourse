@@ -35,11 +35,9 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
   final List<CourseSetData> _courseSetDataList = [];
   final List<bool> _highlightList = [];
 
-  // 🔹 세트 인덱스별 마커 ID 관리용 (세트마다 1개만 유지)
   final Map<int, String> _markerIdBySet = {};
 
   List<TagModel> tagList = [];
-
   final TextEditingController _titleController = TextEditingController();
   NaverMapController? _mapController;
 
@@ -87,6 +85,96 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
         ),
       );
     });
+  }
+
+  Future<bool> _showConfirmDialog(String title) async {
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: true,
+          useRootNavigator: false,
+          builder: (ctx) {
+            return Center(
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  width: 290,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 22,
+                    horizontal: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.edit, size: 40, color: Colors.orange),
+                      const SizedBox(height: 12),
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      //  OK 버튼
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx, true), //  다이얼로그만 닫힘
+                        child: Container(
+                          height: 44,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            "OK",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
+                      //  Cancel 버튼
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx, false), //  다이얼로그만 닫힘
+                        child: Container(
+                          height: 40,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Color(0xFFF2F2F2),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Text("Cancel"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ) ??
+        false;
+  }
+
+  // 임시저장 → 확인 팝업 후 실행
+  void _onTempSavePressed() async {
+    final ok = await _showConfirmDialog("임시저장하시겠습니까?");
+    if (ok && _validateBeforeUpload()) _saveCourse(false);
+  }
+
+  // 취소 → 확인 팝업 후 홈 이동
+  void _onCancelPressed() async {
+    final ok = await _showConfirmDialog("작성 중인 내용을 취소하시겠습니까?");
+    if (ok) context.push('/home');
   }
 
   void _highlightSet(int index) {
@@ -161,12 +249,10 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
     return null;
   }
 
-  // 🔹 세트 인덱스에 해당하는 기존 마커 제거 (NOverlayInfo 사용)
   Future<void> _removeMarkerIfExists(int setIndex) async {
     final oldId = _markerIdBySet[setIndex];
     if (oldId == null || _mapController == null) return;
 
-    // deleteOverlay는 NOverlayInfo를 받음
     final info = NOverlayInfo(type: NOverlayType.marker, id: oldId);
     await _mapController!.deleteOverlay(info);
     _markerIdBySet.remove(setIndex);
@@ -180,12 +266,10 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
       return;
     }
 
-    // 세트 데이터 갱신
     _courseSetDataList[index].query = query;
     _courseSetDataList[index].lat = location.latitude;
     _courseSetDataList[index].lng = location.longitude;
 
-    // 구 매핑
     final guName = await _getGuFromLatLng(
       location.latitude,
       location.longitude,
@@ -195,10 +279,8 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
           .getGuIdFromName(guName);
     }
 
-    // 🔹 기존 마커가 있으면 지우고 (세트당 1개 유지)
     await _removeMarkerIfExists(index);
 
-    // 🔹 새 마커 추가 — 세트 인덱스를 id로 사용하면 관리가 쉬움
     final markerId = 'set_marker_$index';
     final marker = NMarker(
       id: markerId,
@@ -209,7 +291,6 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
     await _mapController?.addOverlay(marker);
     _markerIdBySet[index] = markerId;
 
-    // 카메라 이동
     await _mapController?.updateCamera(
       NCameraUpdate.scrollAndZoomTo(target: location, zoom: 15),
     );
@@ -262,12 +343,8 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
     if (_validateBeforeUpload()) _saveCourse(true);
   }
 
-  void _onTempSave() {
-    if (_validateBeforeUpload()) _saveCourse(false);
-  }
-
   Future<void> _saveCourse(bool isDone) async {
-    final userID = SupabaseManager.shared.supabase.auth.currentUser?.id;
+    final userID = await SupabaseManager.shared.getMyUserRowId();
 
     List<int?> setIds = [];
 
@@ -302,7 +379,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
 
     await SupabaseManager.shared.supabase.from('courses').insert({
       'title': _titleController.text,
-      'user_id': userID, // 🔹 로그인 유저 ID 저장
+      'user_id': userID,
       'set_01': setIds.length > 0 ? setIds[0] : null,
       'set_02': setIds.length > 1 ? setIds[1] : null,
       'set_03': setIds.length > 2 ? setIds[2] : null,
@@ -332,9 +409,12 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  TextButton(onPressed: _onTempSave, child: const Text("임시저장")),
                   TextButton(
-                    onPressed: () => context.push('/home'),
+                    onPressed: _onTempSavePressed,
+                    child: const Text("임시저장"),
+                  ),
+                  TextButton(
+                    onPressed: _onCancelPressed,
                     child: const Text("취소"),
                   ),
                 ],
@@ -353,6 +433,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
 
               const SizedBox(height: 16),
 
+              // 지도
               SizedBox(
                 height: 300,
                 child: NaverMap(
@@ -372,7 +453,6 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
 
               const SizedBox(height: 16),
 
-              // ✅ 세트 UI 반복
               ..._sets.asMap().entries.map((entry) {
                 final index = entry.key;
                 return Padding(
