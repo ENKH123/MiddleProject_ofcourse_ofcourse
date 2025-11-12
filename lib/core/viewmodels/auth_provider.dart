@@ -1,17 +1,32 @@
 import 'package:flutter/cupertino.dart';
 import 'package:gotrue/src/types/user.dart';
+import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/main.dart';
 
+import '../models/supabase_user_model.dart';
+
 class AuthProvider extends ChangeNotifier {
-  User? _user;
-  User? get user => _user;
+  User? _currentUser;
+  User? get currentUser => _currentUser;
+
+  SupabaseUserModel? _userEmail;
+  SupabaseUserModel? get userEmail => _userEmail;
 
   AuthProvider() {
     _fetchCurrentUser();
+    _fetchUserEmail();
   }
 
+  // 로그인 세션 가져오기
   Future<void> _fetchCurrentUser() async {
-    _user = supabase.auth.currentUser;
+    _currentUser = supabase.auth.currentUser;
+  }
+
+  // 세션의 이메일이 실제 테이블에 있는지 추가 검증하여 예외 처리
+  Future<void> _fetchUserEmail() async {
+    _userEmail = await SupabaseManager.shared.getPublicUser(
+      _currentUser!.email!,
+    );
   }
 }
 
