@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:of_course/feature/auth/viewmodels/register_viewmodel.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/components/loading_dialog.dart';
+
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
 
@@ -205,7 +207,9 @@ class CompleteButton extends StatelessWidget {
             style: ElevatedButton.styleFrom(backgroundColor: Color(0xff003366)),
             onPressed: isEnabled
                 ? () async {
+                    showFullScreenLoading(context);
                     final RegisterResult rgResult = await viewmodel.isSucceed();
+                    Navigator.of(context).pop();
                     _showRegisterCompletePopup(
                       context,
                       viewmodel.controller.text,

@@ -101,10 +101,8 @@ class RegisterViewModel extends ChangeNotifier {
       _controller.text,
     );
     if (nicknameSucceed) {
-      await Future.delayed(const Duration(milliseconds: 1000));
       return RegisterResult.success;
     }
-    await Future.delayed(const Duration(milliseconds: 1000));
     return RegisterResult.duplicate;
   }
 }
