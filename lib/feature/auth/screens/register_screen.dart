@@ -138,8 +138,8 @@ void _showRegisterCompletePopup(
                       onPressed: () {
                         Navigator.of(context).pop();
                         if (isSuccess) {
-                          context.go('/home');
                           viewmodelR.uploadProfileImage();
+                          context.go('/home');
                         }
                       },
                       child: Text(
@@ -201,14 +201,11 @@ class CompleteButton extends StatelessWidget {
         final bool isEnabled = viewmodel.isNicknameValid;
         return SizedBox(
           width: double.maxFinite,
-          //TODO: 최소 글자 수 못 채우면 버튼 비활성화
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Color(0xff003366)),
             onPressed: isEnabled
                 ? () async {
-                    print("입력 완료 버튼 눌림");
-                    final RegisterResult rgResult = await viewmodel
-                        .isDuplicatedNickname();
+                    final RegisterResult rgResult = await viewmodel.isSucceed();
                     _showRegisterCompletePopup(
                       context,
                       viewmodel.controller.text,
