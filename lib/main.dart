@@ -136,9 +136,103 @@ class MyApp extends StatelessWidget {
         ),
         ShellRoute(
           builder: (context, state, child) {
+            Future<bool> handleNavAttempt(String route) async {
+              // 현재 페이지가 /write일 때만 경고창 표시
+              if (!state.uri.toString().startsWith('/write')) return true;
+
+              final ok =
+                  await showDialog<bool>(
+                    context: context,
+                    barrierDismissible: true,
+                    builder: (ctx) {
+                      return Center(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: Container(
+                            width: 290,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 22,
+                              horizontal: 16,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.warning_amber_rounded,
+                                  size: 42,
+                                  color: Colors.orange,
+                                ),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  "코스 작성을 취소하시겠습니까?",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  "저장되지 않은 내용이 사라집니다.",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                GestureDetector(
+                                  onTap: () => Navigator.pop(ctx, true),
+                                  child: Container(
+                                    height: 44,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: const Text(
+                                      "확인",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                GestureDetector(
+                                  onTap: () => Navigator.pop(ctx, false),
+                                  child: Container(
+                                    height: 40,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFF2F2F2),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: const Text("취소"),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ) ??
+                  false;
+
+              return ok;
+            }
+
             return Scaffold(
               body: child,
-              bottomNavigationBar: const OfcourseBottomNavBarUI(),
+              bottomNavigationBar: OfcourseBottomNavBarUI(
+                onNavigateAttempt: handleNavAttempt,
+              ),
             );
           },
           routes: [
