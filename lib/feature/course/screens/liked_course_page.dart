@@ -140,10 +140,15 @@ class _LikedCoursePageState extends State<LikedCoursePage> {
                         final userId = await SupabaseManager.shared
                             .getMyUserRowId();
                         if (userId == null) return;
-                        context.push(
+
+                        final updated = await context.push(
                           '/detail',
                           extra: {'courseId': course['id'], 'userId': userId},
                         );
+
+                        if (updated == true) {
+                          _loadLikedCourses();
+                        }
                       },
                     ),
                   );
