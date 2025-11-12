@@ -940,5 +940,3 @@ Widget _zoomButton(IconData icon, VoidCallback onPressed) {
     ),
   );
 }
-
-git status
