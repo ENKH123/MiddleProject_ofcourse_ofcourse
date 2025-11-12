@@ -40,15 +40,22 @@ class RegisterViewModel extends ChangeNotifier {
   XFile? get image => _image;
 
   // 회원가입(계정생성)
-  Future<void> registerSuccess(String filePath) async {
-    String userProfileImage = supabase.storage
-        .from('profile')
-        .getPublicUrl(filePath);
-    SupabaseManager.shared.createUserProfile(
-      _loginViewModel.googleUser?.email ?? "",
-      _controller.text,
-      userProfileImage,
-    );
+  Future<void> registerSuccess([String? filePath]) async {
+    if (filePath != null) {
+      String userProfileImage = supabase.storage
+          .from('profile')
+          .getPublicUrl(filePath);
+      SupabaseManager.shared.createUserProfile(
+        _loginViewModel.googleUser?.email ?? "",
+        _controller.text,
+        userProfileImage,
+      );
+    } else {
+      SupabaseManager.shared.createUserProfile(
+        _loginViewModel.googleUser?.email ?? "",
+        _controller.text,
+      );
+    }
   }
 
   // 프로필 이미지 선택
@@ -62,17 +69,23 @@ class RegisterViewModel extends ChangeNotifier {
 
   // 프로필 이미지 Bucket 업로드
   Future<void> uploadProfileImage() async {
-    final profileFile = File(_pickedImgPath);
-    final profileFullPath =
-        'public/${_loginViewModel.googleUser?.email}/${_image!.name}';
-    final String fullPath = await supabase.storage
-        .from('profile')
-        .upload(
-          profileFullPath,
-          profileFile,
-          fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
-        );
-    await registerSuccess(profileFullPath);
+    if (_pickedImgPath.isNotEmpty) {
+      final profileFile = File(_pickedImgPath);
+      final profileFullPath =
+          'public/${_loginViewModel.googleUser?.email}/${_image!.name}';
+      await supabase.storage
+          .from('profile')
+          .upload(
+            profileFullPath,
+            profileFile,
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+          );
+      await registerSuccess(profileFullPath);
+      notifyListeners();
+    } else {
+      await registerSuccess();
+      notifyListeners();
+    }
   }
 
   // 닉네임 2글자 이상 체크
@@ -82,8 +95,12 @@ class RegisterViewModel extends ChangeNotifier {
   }
 
   // 닉네임 중복 체크
-  Future<RegisterResult> isDuplicatedNickname() async {
-    if (await SupabaseManager.shared.isDuplicatedNickname(_controller.text)) {
+  Future<RegisterResult> isSucceed() async {
+    // 닉네임 중복 여부
+    bool nicknameSucceed = await SupabaseManager.shared.isDuplicatedNickname(
+      _controller.text,
+    );
+    if (nicknameSucceed) {
       await Future.delayed(const Duration(milliseconds: 1000));
       return RegisterResult.success;
     }
