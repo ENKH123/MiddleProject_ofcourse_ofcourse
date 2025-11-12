@@ -403,12 +403,103 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     }
   }
 
+  Future<void> _deleteCourseConfirmed() async {
+    try {
+      final supabase = SupabaseManager.shared.supabase;
+      final courseId = widget.courseId;
+
+      // 1️⃣ 코스 세트 ID 가져오기
+      final courseData = await supabase
+          .from('courses')
+          .select('set_01, set_02, set_03, set_04, set_05')
+          .eq('id', courseId)
+          .maybeSingle();
+
+      if (courseData == null) {
+        debugPrint('❌ 코스 데이터를 찾을 수 없음');
+        return;
+      }
+
+      final setIds = [
+        courseData['set_01'],
+        courseData['set_02'],
+        courseData['set_03'],
+        courseData['set_04'],
+        courseData['set_05'],
+      ].where((id) => id != null).toList();
+
+      debugPrint('📍 관련 세트 ID들: $setIds');
+
+      // 2️⃣ 관련 세트 이미지 URL들 가져오기
+      List<Map<String, dynamic>> setRows = [];
+      if (setIds.isNotEmpty) {
+        setRows = await supabase
+            .from('course_sets')
+            .select('img_01, img_02, img_03')
+            .inFilter('id', setIds);
+      }
+
+      // 3️⃣ 각 세트의 이미지 버킷에서 삭제
+      for (final set in setRows) {
+        final imageUrls = [set['img_01'], set['img_02'], set['img_03']]
+            .where(
+              (url) =>
+                  url != null && url != "null" && url.toString().isNotEmpty,
+            )
+            .toList();
+
+        for (final url in imageUrls) {
+          try {
+            final baseUrl =
+                'https://dbhecolzljfrmgtdjwie.supabase.co/storage/v1/object/public/course_set_image/course_set/';
+            final filePath = url.toString().substring(baseUrl.length);
+            await supabase.storage.from('course_set_image').remove([
+              'course_set/$filePath',
+            ]);
+          } catch (e) {
+            debugPrint("⚠️ 이미지 삭제 실패: $e");
+          }
+        }
+      }
+
+      await supabase.from('comments').delete().eq('course_id', courseId);
+
+      await supabase.from('liked_courses').delete().eq('course_id', courseId);
+
+      for (final setId in setIds) {
+        await supabase.from('course_sets').delete().eq('id', setId);
+      }
+
+      await supabase.from('courses').delete().eq('id', courseId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('코스 및 관련 세트, 이미지, 댓글, 좋아요가 모두 삭제되었습니다.'),
+          ),
+        );
+        Navigator.pop(context, true);
+      }
+    } catch (e, st) {
+      debugPrint('❌ 코스 삭제 오류: $e');
+      debugPrint('스택트레이스: $st');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('코스 삭제 중 오류가 발생했습니다: $e'),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
   void _deleteCourse() {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('게시글 삭제'),
-        content: const Text('게시글을 삭제하시겠습니까?'),
+        content: const Text('정말 이 코스를 삭제하시겠습니까?\n연관된 댓글과 좋아요도 함께 삭제됩니다.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -417,7 +508,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pop(context);
+              _deleteCourseConfirmed();
             },
             child: const Text('삭제', style: TextStyle(color: Colors.red)),
           ),
