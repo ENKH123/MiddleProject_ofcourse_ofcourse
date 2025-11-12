@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
@@ -12,10 +14,11 @@ class LoginViewModel extends ChangeNotifier {
   SupabaseUserModel? userAccount;
 
   Future<void> googleSignIn() async {
-    // 구글 프로바이더 작동
     final scopes = ['email', 'profile'];
+
+    // 구글 프로바이더 작동
     final googleSignIn = GoogleSignIn.instance;
-    await GoogleSignIn.instance.initialize(
+    await googleSignIn.initialize(
       serverClientId:
           '263065720661-k84n73rspv3unh1v4o9s7i38epccj93p.apps.googleusercontent.com',
       clientId:
@@ -24,7 +27,7 @@ class LoginViewModel extends ChangeNotifier {
     // 구글 프로바이더 작동
 
     // 구글에서 유저 정보 _googleUser로 전달
-    _googleUser = await googleSignIn.attemptLightweightAuthentication();
+    _googleUser = await googleSignIn.authenticate();
     // 구글에서 유저 정보 _googleUser로 전달
 
     print(_googleUser);
@@ -35,13 +38,17 @@ class LoginViewModel extends ChangeNotifier {
     // 구글 계정 없음
 
     // 무슨 코드??
+    // 토큰 발급 과정?
     final authorization =
         await _googleUser?.authorizationClient.authorizationForScopes(scopes) ??
         await _googleUser?.authorizationClient.authorizeScopes(scopes);
+
     final idToken = googleUser?.authentication.idToken;
+
     if (idToken == null) {
       throw AuthException('No ID Token found.');
     }
+
     await supabase.auth.signInWithIdToken(
       provider: OAuthProvider.google,
       idToken: idToken,
