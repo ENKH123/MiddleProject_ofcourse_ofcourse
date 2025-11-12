@@ -221,13 +221,13 @@ class _EditCoursePageState extends State<EditCoursePage> {
       debugPrint(
         "🧩 set index=$i, oldId=$oldId, existingSetIds=$_existingSetIds",
       );
-      // 새로 업로드된 이미지
+
+      // 새 이미지 업로드
       List<String?> uploaded = [];
       for (final f in set.images) {
         uploaded.add(await SupabaseManager.shared.uploadCourseSetImage(f));
       }
 
-      // 최종 남을 이미지
       String? img1 = uploaded.isNotEmpty
           ? uploaded[0]
           : (set.existingImages.isNotEmpty ? set.existingImages[0] : null);
@@ -238,19 +238,16 @@ class _EditCoursePageState extends State<EditCoursePage> {
           ? uploaded[2]
           : (set.existingImages.length > 2 ? set.existingImages[2] : null);
 
-      // ✅ 새 최종 이미지 목록
       final newImages = [
         img1,
         img2,
         img3,
       ].where((e) => e != null && e != "null").cast<String>().toList();
 
-      // ✅ 삭제 대상 찾기
       final deletedImages = set.existingImages
           .where((oldUrl) => !newImages.contains(oldUrl))
           .toList();
 
-      // ✅ 버킷에서 삭제
       for (final url in deletedImages) {
         if (url != "null" && url.isNotEmpty) {
           final baseUrl =
@@ -262,36 +259,24 @@ class _EditCoursePageState extends State<EditCoursePage> {
         }
       }
 
-      // DB 업데이트
       if (oldId != null) {
-        try {
-          debugPrint("🛠 UPDATE course_sets id=$oldId start");
-
-          final response = await SupabaseManager.shared.supabase
-              .from('course_sets')
-              .update({
-                'img_01': img1,
-                'img_02': img2,
-                'img_03': img3,
-                'tag': set.tagId, // 너 스키마가 tag면 그대로 유지
-                'address': set.query,
-                'lat': set.lat,
-                'lng': set.lng,
-                'gu': set.gu,
-                'description': set.description,
-              })
-              .eq('id', oldId)
-              .select();
-
-          debugPrint(
-            "✅ UPDATED id=$oldId rows=${response.length}, response=$response",
-          );
-
-          // 🔴 이 줄이 빠져서 setIds가 비어 있었음!
-          setIds.add(oldId); // ✅ 반드시 추가
-        } catch (e) {
-          debugPrint("❌ UPDATE course_sets id=$oldId failed: $e");
-        }
+        final response = await SupabaseManager.shared.supabase
+            .from('course_sets')
+            .update({
+              'img_01': img1,
+              'img_02': img2,
+              'img_03': img3,
+              'tag': set.tagId,
+              'address': set.query,
+              'lat': set.lat,
+              'lng': set.lng,
+              'gu': set.gu,
+              'description': set.description,
+            })
+            .eq('id', oldId)
+            .select();
+        debugPrint("✅ UPDATED id=$oldId rows=${response.length}");
+        setIds.add(oldId);
       } else {
         final newId = await SupabaseManager.shared.insertCourseSet(
           img1: img1,
@@ -308,7 +293,6 @@ class _EditCoursePageState extends State<EditCoursePage> {
       }
     }
 
-    // 코스 업데이트
     await SupabaseManager.shared.supabase
         .from('courses')
         .update({
@@ -321,7 +305,6 @@ class _EditCoursePageState extends State<EditCoursePage> {
         })
         .eq('id', widget.courseId);
 
-    // 삭제된 세트 삭제
     for (final deletedId in _deletedSetIds) {
       await SupabaseManager.shared.supabase
           .from('course_sets')
@@ -329,118 +312,215 @@ class _EditCoursePageState extends State<EditCoursePage> {
           .eq('id', deletedId);
     }
 
-    context.pop(true);
+    if (mounted) context.pop(true);
+  }
+
+  /// ✅ 뒤로가기/취소 팝업
+  Future<bool> _onWillPop() async {
+    final ok =
+        await showDialog<bool>(
+          context: context,
+          barrierDismissible: true,
+          builder: (ctx) {
+            return Center(
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  width: 290,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 22,
+                    horizontal: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        size: 42,
+                        color: Colors.orange,
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        "코스 수정을 취소하시겠습니까?",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        "수정 전 상태로 돌아갑니다.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 13, color: Colors.black54),
+                      ),
+                      const SizedBox(height: 20),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx, true),
+                        child: Container(
+                          height: 44,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            "확인",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx, false),
+                        child: Container(
+                          height: 40,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Color(0xFFF2F2F2),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Text("취소"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ) ??
+        false;
+
+    if (ok) context.pop(false);
+    return false; // 뒤로가기 막고 팝업에서 처리
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("코스 수정"),
-        actions: [TextButton(onPressed: _saveEdit, child: const Text("수정완료"))],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              TextField(
-                controller: _titleController,
-                decoration: const InputDecoration(hintText: '코스 제목'),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                key: _mapKey,
-                height: 300,
-                child: NaverMap(
-                  onMapReady: (c) async {
-                    _mapController = c;
-                    await _initMarkersForExistingSets();
-                  },
+    return WillPopScope(
+      onWillPop: _onWillPop, // ✅ 핸드폰 뒤로가기 제어
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("코스 수정"),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () async {
+              // ✅ AppBar 뒤로가기 버튼 눌러도 동일 팝업 표시
+              await _onWillPop();
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: _saveEdit,
+              child: const Text("수정완료", style: TextStyle(color: Colors.orange)),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _titleController,
+                  decoration: const InputDecoration(hintText: '코스 제목'),
                 ),
-              ),
-              const SizedBox(height: 16),
-              ..._courseSetDataList.asMap().entries.map((entry) {
-                final i = entry.key;
-                final set = entry.value;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: WriteCourseSet(
-                    key: ValueKey("edit_set_$i"),
-                    tagList: tagList,
-                    highlight: _highlightList[i],
-                    existingImageUrls: set.existingImages,
-                    initialQuery: set.query,
-                    initialDescription: set.description,
-                    initialTagId: set.tagId,
-                    onTagChanged: (tag) => set.tagId = tag.id,
-                    onSearchRequested: (query) =>
-                        _handleLocationSelected(i, query),
-                    onShowMapRequested: _scrollToMap,
-                    onLocationSaved: (lat, lng) {
-                      set.lat = lat;
-                      set.lng = lng;
+                const SizedBox(height: 16),
+                SizedBox(
+                  key: _mapKey,
+                  height: 300,
+                  child: NaverMap(
+                    onMapReady: (c) async {
+                      _mapController = c;
+                      await _initMarkersForExistingSets();
                     },
-                    onImagesChanged: (imgs) => set.images = imgs,
-                    onDescriptionChanged: (txt) => set.description = txt,
                   ),
-                );
-              }),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: _addNewSet,
-                    child: const Text("세트 추가"),
-                  ),
-                  const SizedBox(width: 12),
-                  if (_courseSetDataList.length >= 3)
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                      ),
-                      onPressed: () async {
-                        final lastIndex = _courseSetDataList.length - 1;
-                        final set = _courseSetDataList[lastIndex];
-
-                        // ✅ 1. 해당 세트의 기존 이미지 삭제
-                        for (final url in set.existingImages) {
-                          if (url != "null" && url.isNotEmpty) {
-                            final baseUrl =
-                                'https://dbhecolzljfrmgtdjwie.supabase.co/storage/v1/object/public/course_set_image/course_set/';
-                            final filePath = url.substring(baseUrl.length);
-                            debugPrint(
-                              "🧹 Deleting course_set image: course_set/$filePath",
-                            );
-                            await SupabaseManager.shared.supabase.storage
-                                .from('course_set_image')
-                                .remove(['course_set/$filePath']);
-                          }
-                        }
-
-                        // ✅ 2. 지도 마커 제거
-                        await _removeMarkerIfExists(lastIndex);
-
-                        // ✅ 3. 세트 정보/리스트 갱신
-                        setState(() {
-                          if (_existingSetIds.length > lastIndex) {
-                            final deletedId = _existingSetIds[lastIndex];
-                            _deletedSetIds.add(deletedId);
-                            _existingSetIds.removeAt(lastIndex);
-                          }
-                          _courseSetDataList.removeLast();
-                          _highlightList.removeLast();
-                        });
+                ),
+                const SizedBox(height: 16),
+                ..._courseSetDataList.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final set = entry.value;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: WriteCourseSet(
+                      key: ValueKey("edit_set_$i"),
+                      tagList: tagList,
+                      highlight: _highlightList[i],
+                      existingImageUrls: set.existingImages,
+                      initialQuery: set.query,
+                      initialDescription: set.description,
+                      initialTagId: set.tagId,
+                      onTagChanged: (tag) => set.tagId = tag.id,
+                      onSearchRequested: (query) =>
+                          _handleLocationSelected(i, query),
+                      onShowMapRequested: _scrollToMap,
+                      onLocationSaved: (lat, lng) {
+                        set.lat = lat;
+                        set.lng = lng;
                       },
-
-                      child: const Text("세트 삭제"),
+                      onImagesChanged: (imgs) => set.images = imgs,
+                      onDescriptionChanged: (txt) => set.description = txt,
                     ),
-                ],
-              ),
-              const SizedBox(height: 40),
-            ],
+                  );
+                }),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: _addNewSet,
+                      child: const Text("세트 추가"),
+                    ),
+                    const SizedBox(width: 12),
+                    if (_courseSetDataList.length >= 3)
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                        ),
+                        onPressed: () async {
+                          final lastIndex = _courseSetDataList.length - 1;
+                          final set = _courseSetDataList[lastIndex];
+
+                          for (final url in set.existingImages) {
+                            if (url != "null" && url.isNotEmpty) {
+                              final baseUrl =
+                                  'https://dbhecolzljfrmgtdjwie.supabase.co/storage/v1/object/public/course_set_image/course_set/';
+                              final filePath = url.substring(baseUrl.length);
+                              debugPrint("🧹 Deleting: $filePath");
+                              await SupabaseManager.shared.supabase.storage
+                                  .from('course_set_image')
+                                  .remove(['course_set/$filePath']);
+                            }
+                          }
+
+                          await _removeMarkerIfExists(lastIndex);
+
+                          setState(() {
+                            if (_existingSetIds.length > lastIndex) {
+                              final deletedId = _existingSetIds[lastIndex];
+                              _deletedSetIds.add(deletedId);
+                              _existingSetIds.removeAt(lastIndex);
+                            }
+                            _courseSetDataList.removeLast();
+                            _highlightList.removeLast();
+                          });
+                        },
+                        child: const Text("세트 삭제"),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 40),
+              ],
+            ),
           ),
         ),
       ),
