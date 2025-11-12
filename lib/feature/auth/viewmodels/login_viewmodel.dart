@@ -58,8 +58,8 @@ class LoginViewModel extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
-    await supabase.auth.signOut(scope: SignOutScope.global);
     await GoogleSignIn.instance.signOut();
+    await supabase.auth.signOut(scope: SignOutScope.global);
     notifyListeners();
   }
 
