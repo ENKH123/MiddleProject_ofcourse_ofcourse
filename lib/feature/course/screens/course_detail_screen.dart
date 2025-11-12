@@ -169,23 +169,85 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     });
   }
 
-  void _submitComment() {
+  Future<void> _submitComment() async {
     final commentText = _commentController.text.trim();
     if (commentText.isEmpty || commentText.length > _maxCommentLength) return;
 
-    final newComment = Comment(
-      commentId: DateTime.now().millisecondsSinceEpoch.toString(),
-      commentAuthor: '',
-      commentAvatar: '',
-      commentBody: commentText,
-      commentTime: DateTime.now(),
-      isCommentAuthor: true,
-    );
+    // 로그인 확인
+    final userRowId = await SupabaseManager.shared.getMyUserRowId();
+    if (userRowId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('로그인이 필요합니다.')));
+      }
+      return;
+    }
 
-    setState(() {
-      _comments.add(newComment);
-      _commentController.clear();
-    });
+    try {
+      // Supabase에 댓글 추가
+      final supabase = SupabaseManager.shared.supabase;
+
+      // 디버깅: 입력 데이터 확인
+      debugPrint(
+        '댓글 작성 시도 - courseId: ${widget.courseId}, userRowId: $userRowId, comment: $commentText',
+      );
+
+      final response = await supabase
+          .from('comments')
+          .insert({
+            'course_id': widget.courseId,
+            'user_id': userRowId,
+            'comment': commentText,
+          })
+          .select('''
+        *,
+        user:users!comments_user_id_fkey(nickname, profile_img)
+      ''')
+          .single();
+
+      // 디버깅: 응답 확인
+      debugPrint('댓글 작성 성공 - response: $response');
+
+      // 응답 데이터 파싱
+      final user = response['user'] ?? {};
+      final newComment = Comment(
+        commentId: response['id'].toString(),
+        commentAuthor: user['nickname'] ?? '',
+        commentAvatar: user['profile_img'] ?? '',
+        commentBody: response['comment'] ?? '',
+        commentTime: DateTime.parse(response['created_at']),
+        isCommentAuthor: true,
+      );
+
+      if (mounted) {
+        setState(() {
+          _comments.insert(0, newComment); // 최신 댓글을 맨 위에 추가
+          _commentController.clear();
+        });
+
+        // 키보드 닫기
+        FocusScope.of(context).unfocus();
+
+        // 성공 메시지
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('댓글이 작성되었습니다.')));
+      }
+    } catch (e, stackTrace) {
+      // 상세한 에러 로깅
+      debugPrint('댓글 작성 오류: $e');
+      debugPrint('스택 트레이스: $stackTrace');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('댓글 작성 중 오류가 발생했습니다: ${e.toString()}'),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
   }
 
   void _deleteComment(String commentId) {
@@ -200,17 +262,57 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             child: const Text('취소'),
           ),
           TextButton(
-            onPressed: () {
-              setState(() {
-                _comments.removeWhere((c) => c.commentId == commentId);
-              });
+            onPressed: () async {
               Navigator.pop(context);
+              await _performDeleteComment(commentId);
             },
             child: const Text('삭제', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _performDeleteComment(String commentId) async {
+    try {
+      final supabase = SupabaseManager.shared.supabase;
+
+      // 디버깅: 삭제 시도 확인
+      debugPrint('댓글 삭제 시도 - commentId: $commentId');
+
+      // Supabase에서 댓글 삭제 (soft delete: deleted_at 업데이트)
+      final response = await supabase
+          .from('comments')
+          .update({'deleted_at': DateTime.now().toIso8601String()})
+          .eq('id', int.parse(commentId))
+          .select();
+
+      // 디버깅: 삭제 응답 확인
+      debugPrint('댓글 삭제 응답: $response');
+
+      if (mounted) {
+        setState(() {
+          _comments.removeWhere((c) => c.commentId == commentId);
+        });
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('댓글이 삭제되었습니다.')));
+      }
+    } catch (e, stackTrace) {
+      // 상세한 에러 로깅
+      debugPrint('댓글 삭제 오류: $e');
+      debugPrint('스택 트레이스: $stackTrace');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('댓글 삭제 중 오류가 발생했습니다: ${e.toString()}'),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
   }
 
   void _deleteCourse() {
@@ -236,9 +338,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  void _editCourse() {
+  Future<void> _editCourse() async {
     if (_courseDetail == null) return;
-    context.push('/editcourse', extra: int.parse(_courseDetail!.courseId));
+    final updated = await context.push(
+      '/editcourse',
+      extra: int.parse(_courseDetail!.courseId),
+    );
+    if (updated == true) {
+      await _loadCourseDetail();
+    }
   }
 
   void _navigateToReport(
@@ -352,7 +460,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.pop(context),
+        onPressed: () => Navigator.pop(context, true),
       ),
       title: const Text(
         '코스 세부정보',
@@ -695,7 +803,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             ),
             const SizedBox(width: _spacingSmall),
             ElevatedButton(
-              onPressed: !_isCommentInputEmpty ? _submitComment : null,
+              onPressed: !_isCommentInputEmpty ? () => _submitComment() : null,
               child: const Text('댓글'),
             ),
           ],
