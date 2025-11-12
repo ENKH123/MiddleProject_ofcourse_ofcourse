@@ -5,7 +5,6 @@ import 'package:of_course/core/models/gu_model.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
 
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
-  // 상수 정의
   static const double _buttonHeight = 36.0;
   static const double _spacing = 8.0;
   static const Color _defaultBackgroundColor = Color(0xFFFAFAFA);
