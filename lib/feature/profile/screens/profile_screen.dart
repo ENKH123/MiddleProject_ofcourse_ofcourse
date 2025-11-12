@@ -171,8 +171,8 @@ class ProfileScreen extends StatelessWidget {
                 onPressed: () async {
                   // 회원탈퇴 후 로그아웃
                   showFullScreenLoading(context);
-                  await context.read<LoginViewModel>().signOut();
                   await context.read<LoginViewModel>().resign();
+                  await context.read<LoginViewModel>().signOut();
                   context.go('/login');
                   Navigator.of(context).pop();
                   // 회원탈퇴 팝업/라우팅 연결 예정
