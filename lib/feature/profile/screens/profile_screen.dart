@@ -7,6 +7,8 @@ import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/components/loading_dialog.dart';
+
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -140,6 +142,7 @@ class ProfileScreen extends StatelessWidget {
               height: 48,
               child: ElevatedButton(
                 onPressed: () async {
+                  showFullScreenLoading(context);
                   try {
                     await context.read<LoginViewModel>().signOut();
                     context.go('/login');
@@ -148,6 +151,7 @@ class ProfileScreen extends StatelessWidget {
                       context,
                     ).showSnackBar(SnackBar(content: Text('로그아웃 실패: $e')));
                   }
+                  Navigator.of(context).pop();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade100,
@@ -166,9 +170,11 @@ class ProfileScreen extends StatelessWidget {
               child: TextButton(
                 onPressed: () async {
                   // 회원탈퇴 후 로그아웃
+                  showFullScreenLoading(context);
                   await context.read<LoginViewModel>().resign();
                   await context.read<LoginViewModel>().signOut();
                   context.go('/login');
+                  Navigator.of(context).pop();
                   // 회원탈퇴 팝업/라우팅 연결 예정
                 },
                 child: const Text(

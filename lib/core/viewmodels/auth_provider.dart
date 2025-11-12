@@ -9,12 +9,23 @@ class AuthProvider extends ChangeNotifier {
   User? _currentUser;
   User? get currentUser => _currentUser;
 
-  SupabaseUserModel? _userEmail;
-  SupabaseUserModel? get userEmail => _userEmail;
+  SupabaseUserModel? _user;
+  SupabaseUserModel? get user => _user;
+
+  bool _isInitialized = false;
+  bool get isInitialized => _isInitialized;
 
   AuthProvider() {
-    _fetchCurrentUser();
-    _fetchUserEmail();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await _fetchCurrentUser();
+    if (_currentUser != null) {
+      await _fetchUser();
+    }
+    _isInitialized = true;
+    notifyListeners();
   }
 
   // 로그인 세션 가져오기
@@ -23,10 +34,8 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // 세션의 이메일이 실제 테이블에 있는지 추가 검증하여 예외 처리
-  Future<void> _fetchUserEmail() async {
-    _userEmail = await SupabaseManager.shared.getPublicUser(
-      _currentUser!.email!,
-    );
+  Future<void> _fetchUser() async {
+    _user = await SupabaseManager.shared.getPublicUser(_currentUser!.email!);
   }
 }
 

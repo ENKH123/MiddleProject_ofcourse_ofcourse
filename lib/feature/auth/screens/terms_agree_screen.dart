@@ -108,28 +108,36 @@ class TermBox extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            spacing: 12,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: onClick,
-                child: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Icon(
-                    term ? Icons.check_circle : Icons.circle_outlined,
-                    color: Color(0xff003366),
-                    size: 28,
-                  ),
+          Expanded(
+            child: GestureDetector(
+              onTap: onClick,
+              child: Container(
+                color: Colors.transparent,
+                child: Row(
+                  spacing: 12,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Icon(
+                        term ? Icons.check_circle : Icons.circle_outlined,
+                        color: Color(0xff003366),
+                        size: 28,
+                      ),
+                    ),
+
+                    Text(
+                      termsName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-
-              Text(
-                termsName,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-              ),
-            ],
+            ),
           ),
           GestureDetector(
             onTap: () async {
