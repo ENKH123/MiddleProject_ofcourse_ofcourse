@@ -165,7 +165,9 @@ class ProfileScreen extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () async {
+                  // 회원탈퇴 후 로그아웃
                   await context.read<LoginViewModel>().resign();
+                  await context.read<LoginViewModel>().signOut();
                   context.go('/login');
                   // 회원탈퇴 팝업/라우팅 연결 예정
                 },

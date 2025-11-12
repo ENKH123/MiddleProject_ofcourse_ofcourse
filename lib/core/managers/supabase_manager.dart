@@ -34,65 +34,33 @@ class SupabaseManager {
 
   // 회원탈퇴
   Future<void> resign() async {
-    // 지울 것: 유저, 좋아요, 댓글, 알림, 코스, 코스 세트
-    //
-    // // 현재 로그인 된 유저 이메일 가져옴
-    final String userEmail = supabase.auth.currentUser?.email ?? "";
-    //
-    // // 이메일로 아이디 가져옴
-    // final idResult = await supabase
-    //     .from("users")
-    //     .select('id')
-    //     .eq('email', userEmail)
-    //     .maybeSingle();
-    //
-    //
-    // // 아이디 값만 할당
-    // final String userId = idResult?['id'];
+    // 현재 로그인 정보
+    final currentUser = supabase.auth.currentUser;
 
-    await supabase.from("users").delete().eq('email', userEmail);
-    //
-    // // 유저 아이디랑 코스 작성자 아이디랑 일치하는 코스 아이디 리스트 아이디 가져옴
-    // final List<Map<String, dynamic>> courseResults = await supabase
-    //     .from("courses")
-    //     .select('id')
-    //     .eq('user_id', userId);
-    //
-    // final List<String> courseIds = courseResults.map((resultData) {
-    //   return resultData['id'].toString();
-    // }).toList();
-    //
-    // // 코스 리스트의 각 코스 세트 id들을 가져옴
-    // final List<Map<String, dynamic>?> courseSetResults = await supabase
-    //     .from("courses")
-    //     .select('set_01, set_02, set_03, set_04, set_05')
-    //     .inFilter('id', courseIds);
-    //
-    // print('courseSetResults: $courseSetResults');
-    //
-    // // final List<String> courseIds = courseResults.map((resultData) {
-    // //   return resultData['id'].toString();
-    // // }).toList();
-    //
-    // // 유저 아이디랑 댓글 작성자 아이디랑 일치하는 리스트 가져옴
-    // final List<Map<String, dynamic>> commentIds = await supabase
-    //     .from("comments")
-    //     .select('id')
-    //     .eq('user_id', userId);
-    //
-    // // 유저 아이디랑 좋아요 작성자 아이디랑 일치하는 리스트 가져옴
-    // final List<Map<String, dynamic>> likedIds = await supabase
-    //     .from("liked_courses")
-    //     .select('id')
-    //     .eq('user_id', userId);
-    //
-    // // 유저 아이디랑 알림 작성자 아이디랑 일치하는 리스트 가져옴
-    // final List<Map<String, dynamic>> alertIds = await supabase
-    //     .from("alert")
-    //     .select('id')
-    //     .eq('user_id', userId);
-    //
-    // // supabase.from('users').delete().eq('email', userEmail);
+    if (currentUser != null) {
+      // 프로필 사진 url 가져오기
+      final Map<String, dynamic>? urlResult = await supabase
+          .from('users')
+          .select('profile_img')
+          .eq('email', currentUser.email ?? "")
+          .maybeSingle();
+
+      // 프로필 사진 url 정보만 담기
+      final String? publicUrl = urlResult?['profile_img'].toString();
+
+      // bucket 파일 삭제
+      if (publicUrl != "null") {
+        final String baseUrl =
+            'https://dbhecolzljfrmgtdjwie.supabase.co/storage/v1/object/public/profile/';
+        final String filePath = publicUrl?.substring(baseUrl.length) ?? "";
+        await supabase.storage.from('profile').remove([filePath]);
+      }
+      // 계정 삭제
+      await supabase
+          .from("users")
+          .delete()
+          .eq('email', currentUser.email ?? "");
+    }
   }
 
   // 구 목록 가져오기
@@ -110,9 +78,9 @@ class SupabaseManager {
   // 회원가입 계정 생성
   Future<void> createUserProfile(
     String userEmail,
-    String userNickname,
-    String userProfileImage,
-  ) async {
+    String userNickname, [
+    String? userProfileImage,
+  ]) async {
     await supabase.from('users').insert({
       'email': userEmail,
       'nickname': userNickname,
