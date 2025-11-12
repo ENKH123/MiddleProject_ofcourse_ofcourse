@@ -44,10 +44,15 @@ class _ViewMyPostPageState extends State<ViewMyPostPage> {
               onTap: () async {
                 final userId = await SupabaseManager.shared.getMyUserRowId();
                 if (userId == null) return;
-                context.push(
+
+                final updated = await context.push(
                   '/detail',
                   extra: {'courseId': course['id'], 'userId': userId},
                 );
+
+                if (updated == true) {
+                  _loadMyPosts();
+                }
               },
             );
           },
