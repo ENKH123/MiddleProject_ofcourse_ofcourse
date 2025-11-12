@@ -66,13 +66,11 @@ class _EditCoursePageState extends State<EditCoursePage> {
       _highlightList.add(false);
     }
 
-    // 지도 생성 후 마커 초기화
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initMarkersForExistingSets();
     });
   }
 
-  /// ✅ 기존 세트 좌표 기반으로 마커 표시 및 줌 조정
   Future<void> _initMarkersForExistingSets() async {
     if (_mapController == null) return;
 
@@ -93,7 +91,6 @@ class _EditCoursePageState extends State<EditCoursePage> {
       validPositions.add(NLatLng(set.lat!, set.lng!));
     }
 
-    // 모든 마커가 보이도록 줌 조정
     if (validPositions.isNotEmpty) {
       double minLat = validPositions.first.latitude;
       double maxLat = validPositions.first.latitude;
@@ -118,7 +115,6 @@ class _EditCoursePageState extends State<EditCoursePage> {
     }
   }
 
-  /// ✅ 지도 스크롤 이동
   void _scrollToMap() {
     final ctx = _mapKey.currentContext;
     if (ctx != null) {
@@ -137,7 +133,6 @@ class _EditCoursePageState extends State<EditCoursePage> {
     }
   }
 
-  /// ✅ 주소 → 좌표 변환 (Naver, Kakao)
   Future<NLatLng?> _getLatLngFromAddress(String query) async {
     try {
       final url = Uri.parse(
@@ -179,28 +174,6 @@ class _EditCoursePageState extends State<EditCoursePage> {
     return null;
   }
 
-  /// ✅ 좌표 → 행정구 이름 변환
-  Future<String?> _getGuFromLatLng(double lat, double lng) async {
-    try {
-      final url = Uri.parse(
-        'https://maps.apigw.ntruss.com/map-reversegeocode/v2/gc?request=coordsToaddr&coords=$lng,$lat&sourcecrs=epsg:4326&orders=admcode,legalcode,addr,roadaddr&output=json',
-      );
-      final response = await http.get(
-        url,
-        headers: {
-          'Accept': 'application/json',
-          'x-ncp-apigw-api-key-id': 'sr1eyuomlk',
-          'x-ncp-apigw-api-key': 'XtMhndnqfc7MFpLU81jxfzvivP0LNJbSIu2wphec',
-        },
-      );
-      final data = jsonDecode(response.body);
-      final region = data['results'][0]['region'];
-      return "${region['area1']['name']} ${region['area2']['name']} ${region['area3']['name']}";
-    } catch (_) {}
-    return null;
-  }
-
-  /// ✅ 마커 삭제
   Future<void> _removeMarkerIfExists(int index) async {
     final oldId = _markerIdBySet[index];
     if (oldId == null || _mapController == null) return;
@@ -210,7 +183,6 @@ class _EditCoursePageState extends State<EditCoursePage> {
     _markerIdBySet.remove(index);
   }
 
-  /// ✅ 검색 결과 선택 시 마커 추가
   Future<void> _handleLocationSelected(int index, String query) async {
     _scrollToMap();
     NLatLng? loc = await _getLatLngFromAddress(query);
@@ -222,11 +194,6 @@ class _EditCoursePageState extends State<EditCoursePage> {
     set.lat = loc.latitude;
     set.lng = loc.longitude;
 
-    final guName = await _getGuFromLatLng(loc.latitude, loc.longitude);
-    if (guName != null) {
-      set.gu = await SupabaseManager.shared.getGuIdFromName(guName);
-    }
-
     await _removeMarkerIfExists(index);
     final id = "edit_marker_$index";
     await _mapController?.addOverlay(NMarker(id: id, position: loc));
@@ -237,7 +204,6 @@ class _EditCoursePageState extends State<EditCoursePage> {
     );
   }
 
-  /// ✅ 세트 추가
   void _addNewSet() {
     setState(() {
       _courseSetDataList.add(CourseSetData());
@@ -245,20 +211,23 @@ class _EditCoursePageState extends State<EditCoursePage> {
     });
   }
 
-  /// ✅ 세트 수정 저장
+  /// ✅ 세트 수정 저장 (이미지 삭제 로직 포함)
   Future<void> _saveEdit() async {
     List<int?> setIds = [];
 
-    // ✅ 1. 세트별 업데이트 or 새 세트 추가
     for (int i = 0; i < _courseSetDataList.length; i++) {
       final set = _courseSetDataList[i];
       final oldId = i < _existingSetIds.length ? _existingSetIds[i] : null;
-
+      debugPrint(
+        "🧩 set index=$i, oldId=$oldId, existingSetIds=$_existingSetIds",
+      );
+      // 새로 업로드된 이미지
       List<String?> uploaded = [];
       for (final f in set.images) {
         uploaded.add(await SupabaseManager.shared.uploadCourseSetImage(f));
       }
 
+      // 최종 남을 이미지
       String? img1 = uploaded.isNotEmpty
           ? uploaded[0]
           : (set.existingImages.isNotEmpty ? set.existingImages[0] : null);
@@ -269,22 +238,60 @@ class _EditCoursePageState extends State<EditCoursePage> {
           ? uploaded[2]
           : (set.existingImages.length > 2 ? set.existingImages[2] : null);
 
+      // ✅ 새 최종 이미지 목록
+      final newImages = [
+        img1,
+        img2,
+        img3,
+      ].where((e) => e != null && e != "null").cast<String>().toList();
+
+      // ✅ 삭제 대상 찾기
+      final deletedImages = set.existingImages
+          .where((oldUrl) => !newImages.contains(oldUrl))
+          .toList();
+
+      // ✅ 버킷에서 삭제
+      for (final url in deletedImages) {
+        if (url != "null" && url.isNotEmpty) {
+          final baseUrl =
+              'https://dbhecolzljfrmgtdjwie.supabase.co/storage/v1/object/public/course_set_image/course_set/';
+          final filePath = url.substring(baseUrl.length);
+          await SupabaseManager.shared.supabase.storage
+              .from('course_set_image')
+              .remove(['course_set/$filePath']);
+        }
+      }
+
+      // DB 업데이트
       if (oldId != null) {
-        await SupabaseManager.shared.supabase
-            .from('course_sets')
-            .update({
-              'img_01': img1,
-              'img_02': img2,
-              'img_03': img3,
-              'tag': set.tagId,
-              'address': set.query,
-              'lat': set.lat,
-              'lng': set.lng,
-              'gu': set.gu,
-              'description': set.description,
-            })
-            .eq('id', oldId);
-        setIds.add(oldId);
+        try {
+          debugPrint("🛠 UPDATE course_sets id=$oldId start");
+
+          final response = await SupabaseManager.shared.supabase
+              .from('course_sets')
+              .update({
+                'img_01': img1,
+                'img_02': img2,
+                'img_03': img3,
+                'tag': set.tagId, // 너 스키마가 tag면 그대로 유지
+                'address': set.query,
+                'lat': set.lat,
+                'lng': set.lng,
+                'gu': set.gu,
+                'description': set.description,
+              })
+              .eq('id', oldId)
+              .select();
+
+          debugPrint(
+            "✅ UPDATED id=$oldId rows=${response.length}, response=$response",
+          );
+
+          // 🔴 이 줄이 빠져서 setIds가 비어 있었음!
+          setIds.add(oldId); // ✅ 반드시 추가
+        } catch (e) {
+          debugPrint("❌ UPDATE course_sets id=$oldId failed: $e");
+        }
       } else {
         final newId = await SupabaseManager.shared.insertCourseSet(
           img1: img1,
@@ -301,7 +308,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
       }
     }
 
-    // ✅ 2. 코스 업데이트 먼저
+    // 코스 업데이트
     await SupabaseManager.shared.supabase
         .from('courses')
         .update({
@@ -314,7 +321,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
         })
         .eq('id', widget.courseId);
 
-    // ✅ 3. 코스 업데이트 후 삭제해야 참조 무결성 깨지지 않음
+    // 삭제된 세트 삭제
     for (final deletedId in _deletedSetIds) {
       await SupabaseManager.shared.supabase
           .from('course_sets')
@@ -333,7 +340,6 @@ class _EditCoursePageState extends State<EditCoursePage> {
         actions: [TextButton(onPressed: _saveEdit, child: const Text("수정완료"))],
       ),
       body: SafeArea(
-        // ✅ 시스템 하단바 피하기
         child: SingleChildScrollView(
           controller: _scrollController,
           padding: const EdgeInsets.all(16),
@@ -390,15 +396,34 @@ class _EditCoursePageState extends State<EditCoursePage> {
                     child: const Text("세트 추가"),
                   ),
                   const SizedBox(width: 12),
-                  if (_courseSetDataList.length >= 3) // ✅ 3개 초과일 때만 삭제 버튼 표시
+                  if (_courseSetDataList.length >= 3)
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.redAccent,
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         final lastIndex = _courseSetDataList.length - 1;
-                        _removeMarkerIfExists(lastIndex);
+                        final set = _courseSetDataList[lastIndex];
 
+                        // ✅ 1. 해당 세트의 기존 이미지 삭제
+                        for (final url in set.existingImages) {
+                          if (url != "null" && url.isNotEmpty) {
+                            final baseUrl =
+                                'https://dbhecolzljfrmgtdjwie.supabase.co/storage/v1/object/public/course_set_image/course_set/';
+                            final filePath = url.substring(baseUrl.length);
+                            debugPrint(
+                              "🧹 Deleting course_set image: course_set/$filePath",
+                            );
+                            await SupabaseManager.shared.supabase.storage
+                                .from('course_set_image')
+                                .remove(['course_set/$filePath']);
+                          }
+                        }
+
+                        // ✅ 2. 지도 마커 제거
+                        await _removeMarkerIfExists(lastIndex);
+
+                        // ✅ 3. 세트 정보/리스트 갱신
                         setState(() {
                           if (_existingSetIds.length > lastIndex) {
                             final deletedId = _existingSetIds[lastIndex];
@@ -409,6 +434,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
                           _highlightList.removeLast();
                         });
                       },
+
                       child: const Text("세트 삭제"),
                     ),
                 ],
