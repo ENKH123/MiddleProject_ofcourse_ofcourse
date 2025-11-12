@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
 
@@ -46,6 +48,8 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _textController = TextEditingController();
   TagModel? _selectedTag;
+  List<Map<String, dynamic>> _searchResults = [];
+  static const _kakaoRestKey = '05df8363e23a77cc74e7c20a667b6c7e';
 
   @override
   void initState() {
@@ -65,15 +69,77 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
       }
     }
 
-    // 이미지 초기값
     _existingImages = widget.existingImageUrls != null
         ? List<String>.from(widget.existingImageUrls!)
         : [];
 
-    // 설명 입력 변경 → 부모에게 전달
     _textController.addListener(() {
       widget.onDescriptionChanged?.call(_textController.text);
     });
+  }
+
+  // ✅ 카카오 API로 매장 검색
+  Future<void> _fetchKakaoSuggestions(String query) async {
+    try {
+      final url = Uri.parse(
+        'https://dapi.kakao.com/v2/local/search/keyword.json?query=${Uri.encodeQueryComponent(query)}',
+      );
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'KakaoAK $_kakaoRestKey'},
+      );
+
+      final data = jsonDecode(response.body);
+      final List docs = data['documents'];
+      setState(() {
+        _searchResults = docs.map((d) {
+          return {
+            'name': d['place_name'],
+            'address': d['road_address_name'] ?? d['address_name'],
+            'lat': double.parse(d['y']),
+            'lng': double.parse(d['x']),
+          };
+        }).toList();
+      });
+
+      if (_searchResults.isNotEmpty) {
+        _showSearchResults();
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('검색 결과가 없습니다.')));
+      }
+    } catch (e) {
+      debugPrint('❌ 카카오 검색 오류: $e');
+    }
+  }
+
+  void _showSearchResults() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return ListView.builder(
+          itemCount: _searchResults.length,
+          itemBuilder: (context, index) {
+            final item = _searchResults[index];
+            return ListTile(
+              title: Text(item['name']),
+              subtitle: Text(item['address'] ?? ''),
+              onTap: () {
+                Navigator.pop(context);
+                _searchController.text = item['name'];
+                widget.onSearchRequested?.call(item['name']);
+                widget.onLocationSaved?.call(item['lat'], item['lng']);
+                widget.onShowMapRequested?.call();
+              },
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _pickImage() async {
@@ -133,9 +199,8 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
     final query = _searchController.text.trim();
     if (query.isEmpty) return;
 
-    FocusScope.of(context).unfocus(); // ✅ 키보드 내림
-    widget.onSearchRequested?.call(query); // ✅ 위치 검색
-    widget.onShowMapRequested?.call(); // ✅ 지도 스크롤 요청
+    FocusScope.of(context).unfocus();
+    _fetchKakaoSuggestions(query);
   }
 
   @override
@@ -143,9 +208,6 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 450),
       curve: Curves.easeOutCubic,
-      transform: widget.highlight
-          ? Matrix4.translationValues(4, 0, 0)
-          : Matrix4.identity(),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         border: Border.all(
@@ -157,7 +219,7 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 검색
+          // 🔍 검색 필드
           Row(
             children: [
               Expanded(
@@ -178,86 +240,15 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
 
           const SizedBox(height: 12),
 
-          // 이미지
+          // 📷 이미지
           Row(
             children: [
-              // 기존 이미지 표시
               for (int i = 0; i < _existingImages.length; i++)
-                Stack(
-                  children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      margin: const EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        image: DecorationImage(
-                          image: NetworkImage(_existingImages[i]),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() => _existingImages.removeAt(i));
-                        },
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.black54,
-                          ),
-                          child: const Icon(
-                            Icons.close,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-              // 새로 추가한 이미지 표시
+                _buildImageBox(NetworkImage(_existingImages[i]), () {
+                  setState(() => _existingImages.removeAt(i));
+                }),
               for (int i = 0; i < _images.length; i++)
-                Stack(
-                  children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      margin: const EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        image: DecorationImage(
-                          image: FileImage(_images[i]),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: GestureDetector(
-                        onTap: () => _removeImage(i),
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.black54,
-                          ),
-                          child: const Icon(
-                            Icons.close,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-              // 추가 버튼
+                _buildImageBox(FileImage(_images[i]), () => _removeImage(i)),
               if (_existingImages.length + _images.length < 3)
                 GestureDetector(
                   onTap: _pickImage,
@@ -276,7 +267,7 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
 
           const SizedBox(height: 12),
 
-          // 설명
+          // ✍️ 설명
           TextField(
             controller: _textController,
             maxLength: 200,
@@ -291,7 +282,7 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
 
           const SizedBox(height: 12),
 
-          // 태그 선택
+          // 🏷️ 태그 선택
           DropdownButtonFormField<TagModel>(
             value: _selectedTag,
             isExpanded: true,
@@ -305,18 +296,48 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
                 vertical: 10,
               ),
             ),
-            items: widget.tagList.map((tag) {
-              return DropdownMenuItem(value: tag, child: Text(tag.name));
-            }).toList(),
+            items: widget.tagList
+                .map(
+                  (tag) => DropdownMenuItem(value: tag, child: Text(tag.name)),
+                )
+                .toList(),
             onChanged: (value) {
               setState(() => _selectedTag = value);
               if (value != null) widget.onTagChanged?.call(value);
             },
           ),
-
-          const SizedBox(height: 12),
         ],
       ),
+    );
+  }
+
+  Widget _buildImageBox(ImageProvider image, VoidCallback onRemove) {
+    return Stack(
+      children: [
+        Container(
+          width: 100,
+          height: 100,
+          margin: const EdgeInsets.only(right: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            image: DecorationImage(image: image, fit: BoxFit.cover),
+          ),
+        ),
+        Positioned(
+          right: 0,
+          top: 0,
+          child: GestureDetector(
+            onTap: onRemove,
+            child: Container(
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.black54,
+              ),
+              child: const Icon(Icons.close, color: Colors.white, size: 18),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
