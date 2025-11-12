@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class OfcourseBottomNavBarUI extends StatelessWidget {
-  const OfcourseBottomNavBarUI({super.key});
+  final Future<bool> Function(String route)? onNavigateAttempt;
+
+  const OfcourseBottomNavBarUI({super.key, this.onNavigateAttempt});
 
   int _getIndex(String location) {
     if (location.startsWith('/home')) return 0;
@@ -19,20 +21,31 @@ class OfcourseBottomNavBarUI extends StatelessWidget {
 
     return BottomNavigationBar(
       currentIndex: index,
-      onTap: (i) {
+      onTap: (i) async {
+        String? route;
         switch (i) {
           case 0:
-            context.go('/home');
+            route = '/home';
             break;
           case 1:
-            context.go('/write');
+            route = '/write';
             break;
           case 2:
-            context.go('/liked');
+            route = '/liked';
             break;
           case 3:
-            context.go('/profile');
+            route = '/profile';
             break;
+        }
+
+        if (route == null) return;
+
+        // 작성 중일 때는 콜백 통해 이동 제어
+        if (onNavigateAttempt != null) {
+          final ok = await onNavigateAttempt!(route);
+          if (ok && context.mounted) context.go(route);
+        } else {
+          context.go(route);
         }
       },
       type: BottomNavigationBarType.fixed,
