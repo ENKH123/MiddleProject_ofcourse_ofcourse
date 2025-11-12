@@ -177,9 +177,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     final userRowId = await SupabaseManager.shared.getMyUserRowId();
     if (userRowId == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('로그인이 필요합니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('로그인이 필요합니다.')));
       }
       return;
     }
@@ -189,16 +189,22 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       final supabase = SupabaseManager.shared.supabase;
 
       // 디버깅: 입력 데이터 확인
-      debugPrint('댓글 작성 시도 - courseId: ${widget.courseId}, userRowId: $userRowId, comment: $commentText');
+      debugPrint(
+        '댓글 작성 시도 - courseId: ${widget.courseId}, userRowId: $userRowId, comment: $commentText',
+      );
 
-      final response = await supabase.from('comments').insert({
-        'course_id': widget.courseId,
-        'user_id': userRowId,
-        'comment': commentText,
-      }).select('''
+      final response = await supabase
+          .from('comments')
+          .insert({
+            'course_id': widget.courseId,
+            'user_id': userRowId,
+            'comment': commentText,
+          })
+          .select('''
         *,
         user:users!comments_user_id_fkey(nickname, profile_img)
-      ''').single();
+      ''')
+          .single();
 
       // 디버깅: 응답 확인
       debugPrint('댓글 작성 성공 - response: $response');
@@ -224,9 +230,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         FocusScope.of(context).unfocus();
 
         // 성공 메시지
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('댓글이 작성되었습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('댓글이 작성되었습니다.')));
       }
     } catch (e, stackTrace) {
       // 상세한 에러 로깅
@@ -289,9 +295,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           _comments.removeWhere((c) => c.commentId == commentId);
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('댓글이 삭제되었습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('댓글이 삭제되었습니다.')));
       }
     } catch (e, stackTrace) {
       // 상세한 에러 로깅
@@ -332,16 +338,22 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  void _editCourse() {
+  Future<void> _editCourse() async {
     if (_courseDetail == null) return;
-    context.push('/editcourse', extra: int.parse(_courseDetail!.courseId));
+    final updated = await context.push(
+      '/editcourse',
+      extra: int.parse(_courseDetail!.courseId),
+    );
+    if (updated == true) {
+      await _loadCourseDetail();
+    }
   }
 
   void _navigateToReport(
-      String targetId,
-      ReportTargetType targetType, {
-        String? commentAuthor,
-      }) {
+    String targetId,
+    ReportTargetType targetType, {
+    String? commentAuthor,
+  }) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -448,7 +460,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.pop(context),
+        onPressed: () => Navigator.pop(context, true),
       ),
       title: const Text(
         '코스 세부정보',
@@ -506,9 +518,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 final hex = TagColorModel.getColorHex(tag);
                 final bg = hex != null
                     ? Color(
-                  int.parse(hex.replaceFirst('#', ''), radix: 16) +
-                      0xFF000000,
-                )
+                        int.parse(hex.replaceFirst('#', ''), radix: 16) +
+                            0xFF000000,
+                      )
                     : Colors.grey[200];
                 return Chip(label: Text(tag), backgroundColor: bg);
               }).toList(),
