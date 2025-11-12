@@ -134,7 +134,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Text(
-                            "OK",
+                            "확인",
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -154,7 +154,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                             color: Color(0xFFF2F2F2),
                             borderRadius: BorderRadius.circular(14),
                           ),
-                          child: const Text("Cancel"),
+                          child: const Text("취소"),
                         ),
                       ),
                     ],
@@ -419,117 +419,214 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      //backgroundColor: const Color(0xFFFAFAFA), 자체 배경 제거
-      body: SafeArea(
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton(
-                    onPressed: _onTempSavePressed,
-                    child: const Text("임시저장"),
-                  ),
-                  TextButton(
-                    onPressed: _onCancelPressed,
-                    child: const Text("취소"),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
+    return WillPopScope(
+      onWillPop: () async {
+        // ✅ 기존 ConfirmDialog 스타일로 뒤로가기 팝업 표시
+        final ok =
+            await showDialog<bool>(
+              context: context,
+              barrierDismissible: true,
+              useRootNavigator: false,
+              builder: (ctx) {
+                return Center(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      width: 290,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 22,
+                        horizontal: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.warning_amber_rounded,
+                            size: 42,
+                            color: Colors.orange,
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            "코스 작성을 취소하시겠습니까?",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            "저장되지 않은 내용이 사라집니다.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
 
-              TextField(
-                controller: _titleController,
-                decoration: InputDecoration(
-                  hintText: '코스 제목',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
+                          // 확인 버튼
+                          GestureDetector(
+                            onTap: () => Navigator.pop(ctx, true),
+                            child: Container(
+                              height: 44,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Colors.orange,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Text(
+                                "확인",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
 
-              const SizedBox(height: 16),
-
-              // 지도
-              SizedBox(
-                key: _mapKey,
-                height: 300,
-                child: NaverMap(
-                  onMapReady: (c) => _mapController = c,
-                  options: const NaverMapViewOptions(
-                    scrollGesturesEnable: true,
-                    zoomGesturesEnable: true,
-                    rotationGesturesEnable: true,
-                    tiltGesturesEnable: true,
-                    initialCameraPosition: NCameraPosition(
-                      target: NLatLng(37.5665, 126.9780),
-                      zoom: 12,
+                          // 취소 버튼
+                          GestureDetector(
+                            onTap: () => Navigator.pop(ctx, false),
+                            child: Container(
+                              height: 40,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Color(0xFFF2F2F2),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Text("취소"),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              ..._sets.asMap().entries.map((entry) {
-                final index = entry.key;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: WriteCourseSet(
-                    key: ValueKey("write_set_$index"),
-                    tagList: tagList,
-                    highlight: _highlightList[index],
-                    onTagChanged: (tag) =>
-                        _courseSetDataList[index].tagId = tag.id,
-                    onSearchRequested: (query) =>
-                        _handleLocationSelected(index, query),
-                    onLocationSaved: (lat, lng) {
-                      _courseSetDataList[index].lat = lat;
-                      _courseSetDataList[index].lng = lng;
-                    },
-                    onImagesChanged: (imgs) =>
-                        _courseSetDataList[index].images = imgs,
-                    onDescriptionChanged: (text) =>
-                        _courseSetDataList[index].description = text,
-                    onShowMapRequested: _scrollToMap,
                   ),
                 );
-              }),
+              },
+            ) ??
+            false;
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: _addNewSet,
-                    child: const Text("세트 추가"),
-                  ),
-                  const SizedBox(width: 12),
-                  if (_sets.length > 2)
-                    ElevatedButton(
-                      onPressed: () {
-                        final lastIndex = _courseSetDataList.length - 1;
-                        _removeMarkerIfExists(lastIndex);
-                        setState(() {
-                          _sets.removeLast();
-                          _courseSetDataList.removeLast();
-                          _highlightList.removeLast();
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                      ),
-                      child: const Text("세트 삭제"),
+        return ok; // true면 페이지 종료, false면 남아있기
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: _onTempSavePressed,
+                      child: const Text("임시저장"),
                     ),
-                ],
-              ),
+                    TextButton(
+                      onPressed: _onCancelPressed,
+                      child: const Text("취소"),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
 
-              const SizedBox(height: 24),
-              ElevatedButton(onPressed: _onUpload, child: const Text("코스 업로드")),
-            ],
+                TextField(
+                  controller: _titleController,
+                  decoration: InputDecoration(
+                    hintText: '코스 제목',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                SizedBox(
+                  key: _mapKey,
+                  height: 300,
+                  child: NaverMap(
+                    onMapReady: (c) => _mapController = c,
+                    options: const NaverMapViewOptions(
+                      scrollGesturesEnable: true,
+                      zoomGesturesEnable: true,
+                      rotationGesturesEnable: true,
+                      tiltGesturesEnable: true,
+                      initialCameraPosition: NCameraPosition(
+                        target: NLatLng(37.5665, 126.9780),
+                        zoom: 12,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                ..._sets.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: WriteCourseSet(
+                      key: ValueKey("write_set_$index"),
+                      tagList: tagList,
+                      highlight: _highlightList[index],
+                      onTagChanged: (tag) =>
+                          _courseSetDataList[index].tagId = tag.id,
+                      onSearchRequested: (query) =>
+                          _handleLocationSelected(index, query),
+                      onLocationSaved: (lat, lng) {
+                        _courseSetDataList[index].lat = lat;
+                        _courseSetDataList[index].lng = lng;
+                      },
+                      onImagesChanged: (imgs) =>
+                          _courseSetDataList[index].images = imgs,
+                      onDescriptionChanged: (text) =>
+                          _courseSetDataList[index].description = text,
+                      onShowMapRequested: _scrollToMap,
+                    ),
+                  );
+                }),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: _addNewSet,
+                      child: const Text("세트 추가"),
+                    ),
+                    const SizedBox(width: 12),
+                    if (_sets.length > 2)
+                      ElevatedButton(
+                        onPressed: () {
+                          final lastIndex = _courseSetDataList.length - 1;
+                          _removeMarkerIfExists(lastIndex);
+                          setState(() {
+                            _sets.removeLast();
+                            _courseSetDataList.removeLast();
+                            _highlightList.removeLast();
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                        ),
+                        child: const Text("세트 삭제"),
+                      ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: _onUpload,
+                  child: const Text("코스 업로드"),
+                ),
+              ],
+            ),
           ),
         ),
       ),
