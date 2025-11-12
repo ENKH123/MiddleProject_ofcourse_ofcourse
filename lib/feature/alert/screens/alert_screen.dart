@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:of_course/feature/alert/viewmodels/alert_viewmodel.dart';
+import 'package:provider/provider.dart';
 
 class AlertScreen extends StatelessWidget {
   const AlertScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => AlertViewModel(),
+      child: _AlertScreen(),
+    );
+  }
+}
+
+class _AlertScreen extends StatelessWidget {
+  const _AlertScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -12,36 +26,40 @@ class AlertScreen extends StatelessWidget {
         title: AppBar(title: const Text("알림"), centerTitle: true),
       ),
       body: SafeArea(
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(28.0),
-              child: Column(
-                spacing: 20,
-                children: [
-                  Expanded(
-                    child: ListView.separated(
-                      itemCount: 100,
-                      itemBuilder: (context, index) {
-                        return AlertBox(
-                          user: "수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈",
-                          type: "좋아요",
-                        );
-                      },
-                      separatorBuilder: (BuildContext context, int index) {
-                        return const SizedBox(height: 20.0);
-                      },
-                    ),
+        child: Consumer<AlertViewModel>(
+          builder: (context, viewmodel, child) {
+            return Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(28.0),
+                  child: Column(
+                    spacing: 20,
+                    children: [
+                      Expanded(
+                        child: ListView.separated(
+                          itemCount: viewmodel.alerts?.length ?? 0,
+                          itemBuilder: (context, index) {
+                            return AlertBox(
+                              user: viewmodel.alerts![index].from_user_id,
+                              type: viewmodel.alerts![index].type,
+                            );
+                          },
+                          separatorBuilder: (BuildContext context, int index) {
+                            return const SizedBox(height: 20.0);
+                          },
+                        ),
+                      ),
+                      // 예시 코드
+                      // AlertBox(user: "수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈", type: "좋아요"),
+                      // AlertBox(user: "재현", type: "댓글"),
+                      // AlertBox(user: "강현", type: "좋아요"),
+                    ],
                   ),
-                  // 예시 코드
-                  // AlertBox(user: "수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈", type: "좋아요"),
-                  // AlertBox(user: "재현", type: "댓글"),
-                  // AlertBox(user: "강현", type: "좋아요"),
-                ],
-              ),
-            ),
-            // AlertErrorPopup(),
-          ],
+                ),
+                // AlertErrorPopup(),
+              ],
+            );
+          },
         ),
       ),
     );
