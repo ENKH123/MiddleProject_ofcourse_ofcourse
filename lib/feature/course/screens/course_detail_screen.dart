@@ -220,6 +220,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           _commentController.clear();
         });
 
+        // 키보드 닫기
+        FocusScope.of(context).unfocus();
+
         // 성공 메시지
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('댓글이 작성되었습니다.')),
