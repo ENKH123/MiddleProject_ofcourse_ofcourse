@@ -310,7 +310,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
       if (mounted) {
         setState(() {
-          _comments.insert(0, newComment); // 최신 댓글을 맨 위에 추가
+          _comments.add(newComment); // 최신 댓글을 맨 아래에 추가
           _commentController.clear();
         });
 
