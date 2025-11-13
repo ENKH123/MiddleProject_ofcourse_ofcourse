@@ -153,34 +153,29 @@ class SupabaseManager {
     String? img1,
     String? img2,
     String? img3,
-    required String address,
-    required double lat,
-    required double lng,
-    int? tagId,
+    String? address,
+    double? lat,
+    double? lng,
     int? gu,
+    int? tagId,
     String? description,
   }) async {
-    try {
-      final inserted = await supabase
-          .from('course_sets')
-          .insert({
-            'img_01': img1,
-            'img_02': img2,
-            'img_03': img3,
-            'address': address,
-            'lat': lat,
-            'lng': lng,
-            'tag': tagId,
-            'gu': gu,
-            'description': description,
-          })
-          .select()
-          .single();
-      return inserted['id'] as int;
-    } catch (e) {
-      debugPrint('insertCourseSet error: $e');
-      return null;
+    final result = await supabase.from('course_sets').insert({
+      'img_01': img1,
+      'img_02': img2,
+      'img_03': img3,
+      'address': address,
+      'lat': lat,
+      'lng': lng,
+      'gu': gu,
+      'tag': tagId,
+      'description': description,
+    }).select();
+
+    if (result.isNotEmpty) {
+      return result[0]['id'] as int?;
     }
+    return null;
   }
 
   //주소 가져와서 지역비교 후 지역id부여
@@ -242,6 +237,18 @@ class SupabaseManager {
         .maybeSingle();
 
     return result != null;
+  }
+
+  //임시저장된 코스 확인
+  Future<List<Map<String, dynamic>>> getDraftCourses(String userId) async {
+    final result = await supabase
+        .from('courses')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_done', false)
+        .order('updated_at', ascending: false);
+
+    return result;
   }
 
   //기본 코스 가져오기
@@ -469,6 +476,51 @@ class SupabaseManager {
   }
 
   Future<Map<String, dynamic>?> getCourseForEdit(int courseId) async {
+    final supabase = Supabase.instance.client;
+
+    final course = await supabase
+        .from('courses')
+        .select('*')
+        .eq('id', courseId)
+        .maybeSingle();
+
+    if (course == null) return null;
+
+    final setKeys = ['set_01', 'set_02', 'set_03', 'set_04', 'set_05'];
+    List<Map<String, dynamic>> sets = [];
+
+    for (final key in setKeys) {
+      final setId = course[key];
+      if (setId == null) continue;
+
+      final cs = await supabase
+          .from('course_sets')
+          .select('*')
+          .eq('id', setId)
+          .maybeSingle();
+
+      if (cs == null) continue;
+
+      sets.add({
+        "id": cs['id'],
+        "query": cs['address'] ?? "",
+        "lat": cs['lat'],
+        "lng": cs['lng'],
+        "gu": cs['gu'],
+        "tag_id": cs['tag'],
+        "description": cs['description'] ?? "",
+        "images": [
+          cs['img_01'],
+          cs['img_02'],
+          cs['img_03'],
+        ].where((e) => e != null && e.toString().isNotEmpty).toList(),
+      });
+    }
+
+    return {"title": course['title'], "sets": sets};
+  }
+
+  Future<Map<String, dynamic>?> getCourseDetailForContinue(int courseId) async {
     final supabase = Supabase.instance.client;
 
     final course = await supabase
