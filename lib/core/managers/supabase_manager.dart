@@ -536,7 +536,7 @@ class SupabaseManager {
       ''')
         .eq('course_id', courseId)
         .isFilter('deleted_at', null)
-        .order('created_at', ascending: false)
+        .order('created_at', ascending: true)
         .limit(50);
 
     final processedComments = (rawComments as List).map((comment) {
