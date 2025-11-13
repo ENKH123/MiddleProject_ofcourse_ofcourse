@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/core/models/gu_model.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
+import 'package:of_course/feature/alert/viewmodels/alert_viewmodel.dart';
+import 'package:provider/provider.dart';
 
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   static const double _buttonHeight = 36.0;
@@ -16,7 +18,6 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Function(GuModel)? onGuChanged;
   final VoidCallback? onRandomPressed;
   final VoidCallback? onNotificationPressed;
-  final int? unreadAlertCount;
   final Color? backgroundColor;
   final Set<TagModel>? selectedCategories;
 
@@ -27,7 +28,6 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onGuChanged,
     this.onRandomPressed,
     this.onNotificationPressed,
-    this.unreadAlertCount,
     this.backgroundColor,
     this.selectedCategories,
   });
@@ -199,22 +199,26 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget _buildNotificationIcon() {
-    return Stack(
-      children: [
-        IconButton(
-          icon: Icon(Icons.notifications_outlined, color: Colors.grey[700]),
-          onPressed: onNotificationPressed,
-        ),
-        if (_hasUnreadNotifications)
-          _buildNotificationBadge(),
-      ],
+    return Consumer<AlertViewModel>(
+      builder: (context, alertViewModel, child) {
+        final alertCount = alertViewModel.alerts?.length ?? 0;
+        final hasUnreadNotifications = alertCount > 0;
+        
+        return Stack(
+          children: [
+            IconButton(
+              icon: Icon(Icons.notifications_outlined, color: Colors.grey[700]),
+              onPressed: onNotificationPressed,
+            ),
+            if (hasUnreadNotifications)
+              _buildNotificationBadge(alertCount),
+          ],
+        );
+      },
     );
   }
 
-  bool get _hasUnreadNotifications =>
-      unreadAlertCount != null && unreadAlertCount! > 0;
-
-  Widget _buildNotificationBadge() {
+  Widget _buildNotificationBadge(int alertCount) {
     return Positioned(
       right: 4,
       top: 4,
@@ -227,7 +231,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
         child: Center(
           child: Text(
-            _getNotificationCountText(),
+            _getNotificationCountText(alertCount),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 11,
@@ -239,11 +243,10 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  String _getNotificationCountText() {
-    if (unreadAlertCount == null) return '0';
-    return unreadAlertCount! > _maxNotificationCount
+  String _getNotificationCountText(int alertCount) {
+    return alertCount > _maxNotificationCount
         ? '$_maxNotificationCount+'
-        : unreadAlertCount.toString();
+        : alertCount.toString();
   }
 
   @override

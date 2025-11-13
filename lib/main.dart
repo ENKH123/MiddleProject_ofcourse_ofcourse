@@ -5,6 +5,7 @@ import 'package:of_course/core/app_theme.dart';
 import 'package:of_course/core/components/navigation_bar.dart';
 import 'package:of_course/core/viewmodels/auth_provider.dart';
 import 'package:of_course/feature/alert/screens/alert_screen.dart';
+import 'package:of_course/feature/alert/viewmodels/alert_viewmodel.dart';
 import 'package:of_course/feature/auth/screens/login_screen.dart';
 import 'package:of_course/feature/auth/screens/register_screen.dart';
 import 'package:of_course/feature/auth/screens/terms_agree_screen.dart';
@@ -52,6 +53,7 @@ Future<void> main() async {
         ChangeNotifierProvider(
           create: (context) => AuthProvider(),
         ), // 전역 프로바이더 // 로그인 상태 감지
+        ChangeNotifierProvider(create: (_) => AlertViewModel()), // 알림 ViewModel
       ],
       child: const MyApp(),
     ),

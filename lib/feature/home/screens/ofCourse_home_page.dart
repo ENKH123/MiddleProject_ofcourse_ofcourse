@@ -72,7 +72,6 @@ class _OfcourseHomePageState extends State<OfcourseHomePage> {
           _loadCourses();
         },
         onNotificationPressed: () => context.push('/alert'),
-        unreadAlertCount: 3,
         selectedCategories: selectedCategories,
       ),
 
