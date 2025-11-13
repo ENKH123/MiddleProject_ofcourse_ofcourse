@@ -76,7 +76,8 @@ class SupabaseManager {
         .from('alert')
         .select('*, users!from_user_id(nickname)')
         .eq('to_user_id', user?.id ?? "")
-        .neq('from_user_id', user?.id ?? "");
+        .neq('from_user_id', user?.id ?? "")
+        .order('created_at', ascending: false);
     return (data as List).map((e) => AlertModel.fromJson(e)).toList();
   }
 

@@ -37,6 +37,7 @@ class _RegisterScreen extends StatelessWidget {
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           SizedBox(height: 40), //상단 여백
                           Text(
@@ -169,25 +170,48 @@ class ProfileImage extends StatelessWidget {
     return GestureDetector(
       onTap: () async {
         print("프로필 클릭");
-        viewmodel.pickProfileImage(context);
+        viewmodel.pickImage(context);
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(60),
-        child: viewmodel.image != null
-            ? Container(
-                width: 120,
-                height: 120,
-                child: Image.file(
-                  File(viewmodel.image!.path),
-                  fit: BoxFit.cover,
-                ), //가져온 이미지
-              )
-            : Icon(
-                Icons.account_circle_sharp,
-                size: 120,
-                color: Color(0xff003366),
-                fill: 1.0,
-              ), // 이미지가 없으면 아이콘
+        child: SizedBox(
+          width: 120,
+          height: 120,
+          child: viewmodel.image != null
+              ? Image.file(File(viewmodel.image!.path), fit: BoxFit.cover)
+              : Stack(
+                  children: [
+                    Icon(
+                      Icons.account_circle_sharp,
+                      size: 120,
+                      color: Color(0xff003366),
+                      fill: 1.0,
+                    ), // 이미지가 없으면 아이콘
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Padding(
+                        padding: const EdgeInsets.all(14.0),
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Icon(
+                              Icons.camera_alt,
+                              size: 20,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ), //가져온 이미지,
+        ),
       ),
     );
   }
