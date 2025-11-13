@@ -594,11 +594,11 @@ class SupabaseManager {
           final filePath = '$userId/$fileName';
 
           // Supabase Storage에 이미지 업로드
-          await supabase.storage.from('reports').upload(filePath, imageFile);
+          await supabase.storage.from('report').upload(filePath, imageFile);
 
           // 공개 URL 가져오기
           final imageUrl = supabase.storage
-              .from('reports')
+              .from('report')
               .getPublicUrl(filePath);
 
           imageUrls.add(imageUrl);
@@ -611,8 +611,7 @@ class SupabaseManager {
           : 'comment';
 
       // 신고 데이터 삽입
-      await supabase.from('reports').insert({
-        'user_id': userId, // 신고를 제출한 사용자 ID
+      await supabase.from('report').insert({
         'target_id': targetId,
         'target_type': targetTypeString,
         'report_type': reportReason.label,
