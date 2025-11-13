@@ -53,7 +53,9 @@ Future<void> main() async {
         ChangeNotifierProvider(
           create: (context) => AuthProvider(),
         ), // 전역 프로바이더 // 로그인 상태 감지
-        ChangeNotifierProvider(create: (_) => AlertViewModel()), // 알림 ViewModel
+        ChangeNotifierProvider(
+          create: (_) => AlertViewModel(),
+        ), // 알림 ViewModel // 알림 감지
       ],
       child: const MyApp(),
     ),

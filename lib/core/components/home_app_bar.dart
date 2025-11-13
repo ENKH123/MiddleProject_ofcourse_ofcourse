@@ -68,10 +68,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         value: selectedGu,
         hint: const Text(
           '전체',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         underline: const SizedBox(),
         icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[700]),
@@ -87,10 +84,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         value: null,
         child: Text(
           '전체',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
       ),
     ];
@@ -101,10 +95,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           value: gu,
           child: Text(
             gu.name,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
         ),
       ),
@@ -133,10 +124,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         child: const Text(
           'random',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -182,11 +170,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     // 태그 기반 랜덤 시도
     if (_hasSelectedCategories) {
       final selectedTagNames = _getSelectedTagNames();
-      final tagBasedCourseId =
-      await SupabaseManager.shared.getRandomCourseByTags(
-        selectedTagNames,
-        likedCourseIds,
-      );
+      final tagBasedCourseId = await SupabaseManager.shared
+          .getRandomCourseByTags(selectedTagNames, likedCourseIds);
       if (tagBasedCourseId != null) return tagBasedCourseId;
     }
 
@@ -205,17 +190,14 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   /// 코스 상세 화면으로 이동
   void _navigateToDetail(BuildContext context, int courseId, String userId) {
-    context.push(
-      '/detail',
-      extra: {'courseId': courseId, 'userId': userId},
-    );
+    context.push('/detail', extra: {'courseId': courseId, 'userId': userId});
   }
 
   /// 에러 메시지 표시
   void _showErrorMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget _buildNotificationIcon() {
@@ -223,15 +205,14 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       builder: (context, alertViewModel, child) {
         final alertCount = alertViewModel.alerts?.length ?? 0;
         final hasUnreadNotifications = alertCount > 0;
-        
+
         return Stack(
           children: [
             IconButton(
               icon: Icon(Icons.notifications_outlined, color: Colors.grey[700]),
               onPressed: onNotificationPressed,
             ),
-            if (hasUnreadNotifications)
-              _buildNotificationBadge(alertCount),
+            if (hasUnreadNotifications) _buildNotificationBadge(alertCount),
           ],
         );
       },

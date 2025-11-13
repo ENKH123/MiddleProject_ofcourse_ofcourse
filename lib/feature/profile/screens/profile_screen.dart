@@ -84,10 +84,10 @@ class ProfileScreen extends StatelessWidget {
                           : null,
                       child: (imageUrl == null || imageUrl.isEmpty)
                           ? const Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 60,
-                      )
+                              Icons.person,
+                              color: Colors.white,
+                              size: 60,
+                            )
                           : null,
                     ),
                     const SizedBox(height: 12),
@@ -150,7 +150,7 @@ class ProfileScreen extends StatelessWidget {
                 onPressed: () async {
                   showFullScreenLoading(context);
                   try {
-                    await context.read<LoginViewModel>().signOut();
+                    await context.read<LoginViewModel>().signOut(context);
                     context.go('/login');
                   } catch (e) {
                     ScaffoldMessenger.of(
@@ -178,7 +178,7 @@ class ProfileScreen extends StatelessWidget {
                   // 회원탈퇴 후 로그아웃
                   showFullScreenLoading(context);
                   await context.read<LoginViewModel>().resign();
-                  await context.read<LoginViewModel>().signOut();
+                  await context.read<LoginViewModel>().signOut(context);
                   context.go('/login');
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(
@@ -203,10 +203,10 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _menuButton(
-      BuildContext context, {
-        required String label,
-        required VoidCallback onTap,
-      }) {
+    BuildContext context, {
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: SizedBox(
@@ -226,4 +226,3 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
-

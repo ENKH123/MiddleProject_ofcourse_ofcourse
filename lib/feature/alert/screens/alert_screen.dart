@@ -9,18 +9,6 @@ class AlertScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AlertViewModel(),
-      child: _AlertScreen(),
-    );
-  }
-}
-
-class _AlertScreen extends StatelessWidget {
-  const _AlertScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -29,11 +17,14 @@ class _AlertScreen extends StatelessWidget {
       body: SafeArea(
         child: Consumer<AlertViewModel>(
           builder: (context, viewmodel, child) {
-            if (viewmodel.alerts != null) {
+            if (viewmodel.alerts == null) {
+              return Container();
+            }
+            Widget buildRefreshableContent({required Widget scrollableChild}) {
               return Padding(
                 padding: const EdgeInsets.all(28.0),
                 child: Column(
-                  spacing: 20,
+                  // spacing: 20, // extension.dart의 Column.spacing을 사용한다고 가정
                   children: [
                     Expanded(
                       child: RefreshIndicator(
@@ -46,40 +37,55 @@ class _AlertScreen extends StatelessWidget {
                         edgeOffset: 20,
                         displacement: 20,
                         strokeWidth: 4,
-                        color: Color(0xFF003366),
-                        child: ListView.separated(
-                          itemCount: viewmodel.alerts?.length ?? 0,
-                          itemBuilder: (context, index) {
-                            return viewmodel.alerts!.isEmpty
-                                ? _emptyScreen(viewmodel)
-                                : AlertBox(
-                                    fromUser: viewmodel
-                                        .alerts![index]
-                                        .fromUserNickname,
-                                    type: viewmodel.alerts![index].type,
-                                    userId: viewmodel.alerts![index].to_user_id,
-                                    courseId: viewmodel.alerts![index].course_id
-                                        .toString(),
-                                    viewModel: viewmodel,
-                                    alertId: viewmodel.alerts![index].id,
-                                    relativeTime: viewmodel
-                                        .alerts![index]
-                                        .created_at
-                                        .getRelativeTime(),
-                                  );
-                          },
-                          separatorBuilder: (BuildContext context, int index) {
-                            return const SizedBox(height: 20.0);
-                          },
-                        ),
+                        color: const Color(0xFF003366),
+                        child: scrollableChild,
                       ),
                     ),
                   ],
                 ),
               );
-            } else {
-              return Container();
             }
+
+            // 💡 Case 2: 알림 리스트가 비어있을 때 (새로고침 가능)
+            if (viewmodel.alerts!.isEmpty) {
+              return buildRefreshableContent(
+                // ListView를 사용하여 스크롤 기능을 제공하고 RefreshIndicator가 작동하게 합니다.
+                scrollableChild: ListView(
+                  // physics: const AlwaysScrollableScrollPhysics(), // 항상 스크롤 가능하도록 설정
+                  children: [
+                    // SizedBox를 사용하여 화면의 대부분을 차지하도록 하고, Center로 메시지를 중앙에 배치합니다.
+                    SizedBox(
+                      // 현재 화면 높이를 기준으로 적절한 높이를 설정하여 당기는 영역을 확보합니다.
+                      height: MediaQuery.of(context).size.height * 0.7,
+                      child: _emptyScreen(viewmodel),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // ✅ Case 3: 알림 리스트에 내용이 있을 때 (새로고침 가능)
+            return buildRefreshableContent(
+              // AlertBox 목록을 보여주는 ListView.separated를 사용합니다.
+              scrollableChild: ListView.separated(
+                itemCount: viewmodel.alerts!.length,
+                itemBuilder: (context, index) {
+                  return AlertBox(
+                    fromUser: viewmodel.alerts![index].fromUserNickname,
+                    type: viewmodel.alerts![index].type,
+                    userId: viewmodel.alerts![index].to_user_id,
+                    courseId: viewmodel.alerts![index].course_id.toString(),
+                    viewModel: viewmodel,
+                    alertId: viewmodel.alerts![index].id,
+                    relativeTime: viewmodel.alerts![index].created_at
+                        .getRelativeTime(),
+                  );
+                },
+                separatorBuilder: (BuildContext context, int index) {
+                  return const SizedBox(height: 20.0);
+                },
+              ),
+            );
           },
         ),
       ),
@@ -87,8 +93,12 @@ class _AlertScreen extends StatelessWidget {
   }
 }
 
+Widget _loadingScreen(AlertViewModel viewModel) {
+  return Center(child: const Text("로딩중"));
+}
+
 Widget _emptyScreen(AlertViewModel viewModel) {
-  return Center(child: const Text("새로운 알림이 없습니다."));
+  return const Center(child: Text("새로운 알림이 없습니다."));
 }
 
 void _showAlertErrorPopup(BuildContext context) {
@@ -192,12 +202,12 @@ class AlertBox extends StatelessWidget {
     // 알림창 전체 영역이 버튼
     return GestureDetector(
       onTap: () async {
-        // print('AlertBox가 클릭되었습니다!');
-        // _showAlertErrorPopup(context);
+        // 디테일 화면 갔다가
         await context.push(
           '/detail',
           extra: {'courseId': courseId, 'userId': userId},
         );
+        // 돌아오면 삭제
         await viewModel.deleteAlert(alertId);
       },
       child: ClipRRect(
