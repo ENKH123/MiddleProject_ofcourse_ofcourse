@@ -15,7 +15,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   final GuModel? selectedGu;
   final List<GuModel> guList;
-  final Function(GuModel)? onGuChanged;
+  final Function(GuModel?)? onGuChanged;
   final VoidCallback? onRandomPressed;
   final VoidCallback? onNotificationPressed;
   final Color? backgroundColor;
@@ -66,6 +66,13 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       child: DropdownButton<GuModel>(
         value: selectedGu,
+        hint: const Text(
+          '전체',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         underline: const SizedBox(),
         icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[700]),
         items: _buildDropdownItems(),
@@ -75,26 +82,39 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   List<DropdownMenuItem<GuModel>> _buildDropdownItems() {
-    return guList
-        .map(
-          (gu) => DropdownMenuItem(
-        value: gu,
+    final items = <DropdownMenuItem<GuModel>>[
+      const DropdownMenuItem<GuModel>(
+        value: null,
         child: Text(
-          gu.name,
-          style: const TextStyle(
+          '전체',
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
         ),
       ),
-    )
-        .toList();
+    ];
+
+    items.addAll(
+      guList.map(
+        (gu) => DropdownMenuItem<GuModel>(
+          value: gu,
+          child: Text(
+            gu.name,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    return items;
   }
 
   void _handleGuChanged(GuModel? value) {
-    if (value != null) {
-      onGuChanged?.call(value);
-    }
+    onGuChanged?.call(value);
   }
 
   Widget _buildRandomButton(BuildContext context) {
