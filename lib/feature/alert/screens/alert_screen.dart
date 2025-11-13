@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:of_course/core/extensions/extension.dart';
 import 'package:of_course/feature/alert/viewmodels/alert_viewmodel.dart';
 import 'package:provider/provider.dart';
 
@@ -28,43 +29,62 @@ class _AlertScreen extends StatelessWidget {
       body: SafeArea(
         child: Consumer<AlertViewModel>(
           builder: (context, viewmodel, child) {
-            return Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(28.0),
-                  child: Column(
-                    spacing: 20,
-                    children: [
-                      Expanded(
-                        child: ListView.separated(
-                          itemCount: viewmodel.alerts?.length ?? 0,
-                          itemBuilder: (context, index) {
-                            return AlertBox(
-                              fromUser:
-                                  viewmodel.alerts![index].fromUserNickname,
-                              type: viewmodel.alerts![index].type,
-                              userId: viewmodel.alerts![index].to_user_id,
-                              courseId: viewmodel.alerts![index].course_id
-                                  .toString(),
-                              viewModel: viewmodel,
-                              alertId: viewmodel.alerts![index].id,
-                            );
-                          },
-                          separatorBuilder: (BuildContext context, int index) {
-                            return const SizedBox(height: 20.0);
-                          },
+            if (viewmodel.alerts != null) {
+              return viewmodel.alerts!.isEmpty
+                  ? _emptyScreen()
+                  : Stack(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(28.0),
+                          child: Column(
+                            spacing: 20,
+                            children: [
+                              Expanded(
+                                child: ListView.separated(
+                                  itemCount: viewmodel.alerts?.length ?? 0,
+                                  itemBuilder: (context, index) {
+                                    return AlertBox(
+                                      fromUser: viewmodel
+                                          .alerts![index]
+                                          .fromUserNickname,
+                                      type: viewmodel.alerts![index].type,
+                                      userId:
+                                          viewmodel.alerts![index].to_user_id,
+                                      courseId: viewmodel
+                                          .alerts![index]
+                                          .course_id
+                                          .toString(),
+                                      viewModel: viewmodel,
+                                      alertId: viewmodel.alerts![index].id,
+                                      relativeTime: viewmodel
+                                          .alerts![index]
+                                          .created_at
+                                          .getRelativeTime(),
+                                    );
+                                  },
+                                  separatorBuilder:
+                                      (BuildContext context, int index) {
+                                        return const SizedBox(height: 20.0);
+                                      },
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
+                      ],
+                    );
+            } else {
+              return Container();
+            }
           },
         ),
       ),
     );
   }
+}
+
+Widget _emptyScreen() {
+  return Center(child: const Text("새로운 알림이 없습니다."));
 }
 
 void _showAlertErrorPopup(BuildContext context) {
@@ -148,6 +168,7 @@ class AlertBox extends StatelessWidget {
   final String type;
   final String courseId;
   final String userId;
+  final String relativeTime;
   final int alertId;
   final AlertViewModel viewModel;
   const AlertBox({
@@ -156,8 +177,9 @@ class AlertBox extends StatelessWidget {
     required this.type,
     required this.courseId,
     required this.userId,
-    required this.viewModel,
+    required this.relativeTime,
     required this.alertId,
+    required this.viewModel,
   });
 
   @override
@@ -178,20 +200,29 @@ class AlertBox extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         child: Container(
           width: double.maxFinite,
-          height: 100,
+          // height: 100,
           decoration: BoxDecoration(
             color: Colors.white,
             border: Border.all(),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               // spacing: 8,
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 알림 메세지
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      relativeTime,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    ),
+                  ],
+                ),
                 Text.rich(
                   TextSpan(
                     children: <TextSpan>[
