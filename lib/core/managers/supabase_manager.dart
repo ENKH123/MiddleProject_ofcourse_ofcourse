@@ -67,7 +67,16 @@ class SupabaseManager {
 
   // 알림 목록 조회
   Future<List<AlertModel>?> fetchAlerts() async {
-    final data = await supabase.from('alert').select();
+    final currentUser = supabase.auth.currentUser;
+    final user = await SupabaseManager.shared.getPublicUser(
+      currentUser?.email ?? "",
+    );
+
+    final data = await supabase
+        .from('alert')
+        .select('*, users!from_user_id(nickname)')
+        .eq('to_user_id', user?.id ?? "")
+        .neq('from_user_id', user?.id ?? "");
     return (data as List).map((e) => AlertModel.fromJson(e)).toList();
   }
 

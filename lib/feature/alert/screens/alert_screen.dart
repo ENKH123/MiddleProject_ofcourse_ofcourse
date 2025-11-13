@@ -40,7 +40,7 @@ class _AlertScreen extends StatelessWidget {
                           itemCount: viewmodel.alerts?.length ?? 0,
                           itemBuilder: (context, index) {
                             return AlertBox(
-                              user: viewmodel.alerts![index].from_user_id,
+                              user: viewmodel.alerts![index].fromUserNickname,
                               type: viewmodel.alerts![index].type,
                             );
                           },
@@ -52,7 +52,6 @@ class _AlertScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                // AlertErrorPopup(),
               ],
             );
           },
