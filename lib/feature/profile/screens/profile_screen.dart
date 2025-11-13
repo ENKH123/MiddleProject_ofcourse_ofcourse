@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/components/loading_dialog.dart';
+import 'terms_mypage_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -83,10 +84,10 @@ class ProfileScreen extends StatelessWidget {
                           : null,
                       child: (imageUrl == null || imageUrl.isEmpty)
                           ? const Icon(
-                              Icons.person,
-                              color: Colors.white,
-                              size: 60,
-                            )
+                        Icons.person,
+                        color: Colors.white,
+                        size: 60,
+                      )
                           : null,
                     ),
                     const SizedBox(height: 12),
@@ -134,7 +135,12 @@ class ProfileScreen extends StatelessWidget {
             _menuButton(
               context,
               label: '약관 확인',
-              onTap: () => context.push('/check_thrms'),
+              onTap: () => showDialog(
+                context: context,
+                barrierColor: Colors.black54,
+                barrierDismissible: true,
+                builder: (context) => const TermsOfUseScreen(),
+              ),
             ),
 
             const SizedBox(height: 4),
@@ -197,10 +203,10 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _menuButton(
-    BuildContext context, {
-    required String label,
-    required VoidCallback onTap,
-  }) {
+      BuildContext context, {
+        required String label,
+        required VoidCallback onTap,
+      }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: SizedBox(
@@ -220,3 +226,4 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
+
