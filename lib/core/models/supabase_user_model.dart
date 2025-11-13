@@ -3,23 +3,12 @@ class SupabaseUserModel {
   final String? profile_img;
   final String nickname;
 
-  // bool get isMine {
-  //   final String? currentUserId =
-  //       SupabaseManager.shared.supabase.auth.currentUser?.id;
-  //
-  //   if (currentUserId == null) {
-  //     return false;
-  //   }
-  //   return currentUserId == sender_id;
-  // }
-
   SupabaseUserModel({
     required this.email,
     required this.profile_img,
     required this.nickname,
   });
 
-  // json -> ChatMessage
   factory SupabaseUserModel.fromJson(Map<String, dynamic> json) {
     return SupabaseUserModel(
       email: json["email"] as String,
@@ -28,5 +17,3 @@ class SupabaseUserModel {
     );
   }
 }
-
-// Map<String, dynamic> = json

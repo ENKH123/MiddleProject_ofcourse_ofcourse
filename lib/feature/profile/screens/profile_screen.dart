@@ -175,6 +175,9 @@ class ProfileScreen extends StatelessWidget {
                   await context.read<LoginViewModel>().signOut();
                   context.go('/login');
                   Navigator.of(context).pop();
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('회원탈퇴가 완료되었습니다.')));
                   // 회원탈퇴 팝업/라우팅 연결 예정
                 },
                 child: const Text(

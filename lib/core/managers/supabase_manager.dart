@@ -7,6 +7,8 @@ import 'package:of_course/core/models/tags_moedl.dart';
 import 'package:of_course/feature/report/models/report_models.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/alert_model.dart';
+
 class SupabaseManager {
   static final SupabaseManager _shared = SupabaseManager();
 
@@ -61,6 +63,12 @@ class SupabaseManager {
           .delete()
           .eq('email', currentUser.email ?? "");
     }
+  }
+
+  // 알림 목록 조회
+  Future<List<AlertModel>?> fetchAlerts() async {
+    final data = await supabase.from('alert').select();
+    return (data as List).map((e) => AlertModel.fromJson(e)).toList();
   }
 
   // 구 목록 가져오기
