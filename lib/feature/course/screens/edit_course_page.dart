@@ -28,6 +28,9 @@ class _EditCoursePageState extends State<EditCoursePage> {
   final List<int> _existingSetIds = [];
   final List<int> _deletedSetIds = []; // ✅ 삭제된 세트 추적 리스트
 
+  /// ✅ 각 세트별 "원래 DB에서 가져온 이미지 URL 리스트"
+  final List<List<String>> _originalImageUrls = [];
+
   List<TagModel> tagList = [];
   final TextEditingController _titleController = TextEditingController();
 
@@ -52,6 +55,8 @@ class _EditCoursePageState extends State<EditCoursePage> {
     _titleController.text = data['title'];
 
     for (var s in data['sets']) {
+      final images = List<String>.from(s['images'] ?? []);
+
       final model = CourseSetData()
         ..query = s['query']
         ..lat = s['lat']
@@ -59,11 +64,16 @@ class _EditCoursePageState extends State<EditCoursePage> {
         ..gu = s['gu']
         ..tagId = s['tag_id']
         ..description = s['description']
-        ..existingImages = List<String>.from(s['images']);
+        ..existingImages = List<String>.from(
+          images,
+        ); // ✅ 현재 유지 중인 URL 리스트(= for_update_url 역할)
 
       _existingSetIds.add(s['id']);
       _courseSetDataList.add(model);
       _highlightList.add(false);
+
+      // ✅ "원래 DB 기준 이미지 리스트" 별도 보관
+      _originalImageUrls.add(List<String>.from(images));
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -208,57 +218,102 @@ class _EditCoursePageState extends State<EditCoursePage> {
     setState(() {
       _courseSetDataList.add(CourseSetData());
       _highlightList.add(false);
+      _originalImageUrls.add([]); // ✅ 새 세트는 원본 이미지 없음
     });
   }
 
-  /// ✅ 세트 수정 저장 (이미지 삭제 로직 포함)
+  /// ✅ Supabase Storage에서 public URL 기준으로 삭제
+  Future<void> _deleteImageFromStorage(String publicUrl) async {
+    if (publicUrl == "null" || publicUrl.isEmpty) return;
+
+    // ✅ 버킷 루트까지만 포함한 baseUrl
+    const String baseUrl =
+        'https://dbhecolzljfrmgtdjwie.supabase.co/storage/v1/object/public/course_set_image/';
+
+    if (!publicUrl.startsWith(baseUrl)) {
+      debugPrint('❌ 예상치 못한 URL 형식: $publicUrl');
+      return;
+    }
+
+    // 예: publicUrl = .../course_set_image/course_set/12345.jpg
+    // filePath = course_set/12345.jpg
+    final String filePath = publicUrl.substring(baseUrl.length);
+
+    debugPrint('🧹 Storage 삭제 시도: bucket=course_set_image, path=$filePath');
+
+    try {
+      final res = await SupabaseManager.shared.supabase.storage
+          .from('course_set_image')
+          .remove([filePath]);
+      debugPrint('🧹 Storage 삭제 결과: $res');
+    } catch (e, st) {
+      debugPrint('❌ Storage 삭제 중 오류: $e\n$st');
+    }
+  }
+
+  /// ✅ 세트 수정 저장 (이미지 삭제 + 업데이트 모두 처리)
   Future<void> _saveEdit() async {
     List<int?> setIds = [];
 
     for (int i = 0; i < _courseSetDataList.length; i++) {
       final set = _courseSetDataList[i];
       final oldId = i < _existingSetIds.length ? _existingSetIds[i] : null;
+
       debugPrint(
         "🧩 set index=$i, oldId=$oldId, existingSetIds=$_existingSetIds",
       );
 
-      // 새 이미지 업로드
-      List<String?> uploaded = [];
-      for (final f in set.images) {
-        uploaded.add(await SupabaseManager.shared.uploadCourseSetImage(f));
-      }
+      // -------------------------------
+      // 0) 원래 DB 이미지 vs 현재 유지 중 이미지 비교
+      //    → 삭제해야 할 URL 찾기 (for_update_url 개념)
+      // -------------------------------
+      final List<String> original = i < _originalImageUrls.length
+          ? _originalImageUrls[i]
+          : <String>[];
+      final List<String> currentExisting = List<String>.from(
+        set.existingImages,
+      );
 
-      String? img1 = uploaded.isNotEmpty
-          ? uploaded[0]
-          : (set.existingImages.isNotEmpty ? set.existingImages[0] : null);
-      String? img2 = uploaded.length > 1
-          ? uploaded[1]
-          : (set.existingImages.length > 1 ? set.existingImages[1] : null);
-      String? img3 = uploaded.length > 2
-          ? uploaded[2]
-          : (set.existingImages.length > 2 ? set.existingImages[2] : null);
-
-      final newImages = [
-        img1,
-        img2,
-        img3,
-      ].where((e) => e != null && e != "null").cast<String>().toList();
-
-      final deletedImages = set.existingImages
-          .where((oldUrl) => !newImages.contains(oldUrl))
+      final deletedUrls = original
+          .where((url) => !currentExisting.contains(url))
           .toList();
 
-      for (final url in deletedImages) {
-        if (url != "null" && url.isNotEmpty) {
-          final baseUrl =
-              'https://dbhecolzljfrmgtdjwie.supabase.co/storage/v1/object/public/course_set_image/course_set/';
-          final filePath = url.substring(baseUrl.length);
-          await SupabaseManager.shared.supabase.storage
-              .from('course_set_image')
-              .remove(['course_set/$filePath']);
+      debugPrint("🧹 삭제 대상 URL(original - current) = $deletedUrls");
+
+      // Storage에서 삭제 대상만 제거
+      for (final url in deletedUrls) {
+        await _deleteImageFromStorage(url);
+      }
+
+      // -------------------------------
+      // 1) 새 이미지 업로드
+      // -------------------------------
+      List<String> uploaded = [];
+      for (final f in set.images) {
+        final uploadedUrl = await SupabaseManager.shared.uploadCourseSetImage(
+          f,
+        );
+        if (uploadedUrl != null) {
+          uploaded.add(uploadedUrl);
         }
       }
 
+      // -------------------------------
+      // 2) 최종 이미지 리스트 구성
+      //    - 남겨둔 기존 이미지 + 새로 업로드한 이미지
+      // -------------------------------
+      final List<String> finalImages = [
+        ...currentExisting, // 사용자가 안 지운 기존 URL들
+        ...uploaded, // 새로 추가한 이미지 URL들
+      ];
+
+      String? img1 = finalImages.isNotEmpty ? finalImages[0] : null;
+      String? img2 = finalImages.length > 1 ? finalImages[1] : null;
+      String? img3 = finalImages.length > 2 ? finalImages[2] : null;
+
+      // -------------------------------
+      // 3) 기존 세트 업데이트 또는 새 세트 생성
+      // -------------------------------
       if (oldId != null) {
         final response = await SupabaseManager.shared.supabase
             .from('course_sets')
@@ -275,6 +330,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
             })
             .eq('id', oldId)
             .select();
+
         debugPrint("✅ UPDATED id=$oldId rows=${response.length}");
         setIds.add(oldId);
       } else {
@@ -293,6 +349,9 @@ class _EditCoursePageState extends State<EditCoursePage> {
       }
     }
 
+    // -------------------------------
+    // 4) 코스 메인 테이블 업데이트
+    // -------------------------------
     await SupabaseManager.shared.supabase
         .from('courses')
         .update({
@@ -305,6 +364,9 @@ class _EditCoursePageState extends State<EditCoursePage> {
         })
         .eq('id', widget.courseId);
 
+    // -------------------------------
+    // 5) 삭제된 세트 DB 삭제 (해당 세트 전체 제거)
+    // -------------------------------
     for (final deletedId in _deletedSetIds) {
       await SupabaseManager.shared.supabase
           .from('course_sets')
@@ -467,7 +529,15 @@ class _EditCoursePageState extends State<EditCoursePage> {
                         set.lat = lat;
                         set.lng = lng;
                       },
-                      onImagesChanged: (imgs) => set.images = imgs,
+                      // ✅ 새로 추가된 로컬 이미지 파일 리스트
+                      onImagesChanged: (imgs) {
+                        set.images = imgs;
+                      },
+                      // ✅ 기존 URL 리스트가 바뀔 때마다 현재 상태를 세트에 반영
+                      //    (네가 말한 for_update_url 역할)
+                      onExistingImagesChanged: (list) {
+                        set.existingImages = list;
+                      },
                       onDescriptionChanged: (txt) => set.description = txt,
                     ),
                   );
@@ -490,16 +560,9 @@ class _EditCoursePageState extends State<EditCoursePage> {
                           final lastIndex = _courseSetDataList.length - 1;
                           final set = _courseSetDataList[lastIndex];
 
-                          for (final url in set.existingImages) {
-                            if (url != "null" && url.isNotEmpty) {
-                              final baseUrl =
-                                  'https://dbhecolzljfrmgtdjwie.supabase.co/storage/v1/object/public/course_set_image/course_set/';
-                              final filePath = url.substring(baseUrl.length);
-                              debugPrint("🧹 Deleting: $filePath");
-                              await SupabaseManager.shared.supabase.storage
-                                  .from('course_set_image')
-                                  .remove(['course_set/$filePath']);
-                            }
+                          // 🔥 세트 통째로 삭제할 때: 그 세트가 들고 있던 이미지 모두 Storage 제거
+                          for (final url in _originalImageUrls[lastIndex]) {
+                            await _deleteImageFromStorage(url);
                           }
 
                           await _removeMarkerIfExists(lastIndex);
@@ -512,6 +575,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
                             }
                             _courseSetDataList.removeLast();
                             _highlightList.removeLast();
+                            _originalImageUrls.removeLast();
                           });
                         },
                         child: const Text("세트 삭제"),

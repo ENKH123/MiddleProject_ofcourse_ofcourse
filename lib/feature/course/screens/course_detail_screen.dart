@@ -124,16 +124,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         isLiked = userLike != null;
       }
 
-      return {
-        'likeCount': likeCount,
-        'isLiked': isLiked,
-      };
+      return {'likeCount': likeCount, 'isLiked': isLiked};
     } catch (e) {
       debugPrint('좋아요 정보 가져오기 오류: $e');
-      return {
-        'likeCount': 0,
-        'isLiked': false,
-      };
+      return {'likeCount': 0, 'isLiked': false};
     }
   }
 
@@ -156,10 +150,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         NMarker(
           id: set.setId,
           position: pos,
-          caption: NOverlayCaption(
-            text: setNumber.toString(),
-            textSize: 14,
-          ),
+          caption: NOverlayCaption(text: setNumber.toString(), textSize: 14),
         ),
       );
       setNumber++;
@@ -168,7 +159,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     if (_mapController != null && points.isNotEmpty) {
       _mapController!.addOverlayAll(_markers.toSet());
 
-      // ✅ polyline path 생성 (메인 컬러로 변경)
       if (points.length >= 2) {
         final polylineOverlay = NPolylineOverlay(
           id: "course_polyline_path",
@@ -180,7 +170,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         _mapController!.addOverlay(polylineOverlay);
       }
 
-      // ✅ 카메라 bounds fit
       double minLat = points.first.latitude;
       double maxLat = points.first.latitude;
       double minLng = points.first.longitude;
@@ -222,9 +211,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     final userRowId = await SupabaseManager.shared.getMyUserRowId();
     if (userRowId == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('로그인이 필요합니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('로그인이 필요합니다.')));
       }
       return;
     }
@@ -241,9 +230,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             .eq('user_id', userRowId);
       } else {
         // 좋아요 추가
-        await supabase
-            .from('liked_courses')
-            .insert({
+        await supabase.from('liked_courses').insert({
           'course_id': widget.courseId,
           'user_id': userRowId,
         });
@@ -260,9 +247,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('좋아요 처리 중 오류가 발생했습니다: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('좋아요 처리 중 오류가 발생했습니다: $e')));
       }
     }
   }
@@ -275,9 +262,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     final userRowId = await SupabaseManager.shared.getMyUserRowId();
     if (userRowId == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('로그인이 필요합니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('로그인이 필요합니다.')));
       }
       return;
     }
@@ -287,16 +274,22 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       final supabase = SupabaseManager.shared.supabase;
 
       // 디버깅: 입력 데이터 확인
-      debugPrint('댓글 작성 시도 - courseId: ${widget.courseId}, userRowId: $userRowId, comment: $commentText');
+      debugPrint(
+        '댓글 작성 시도 - courseId: ${widget.courseId}, userRowId: $userRowId, comment: $commentText',
+      );
 
-      final response = await supabase.from('comments').insert({
-        'course_id': widget.courseId,
-        'user_id': userRowId,
-        'comment': commentText,
-      }).select('''
+      final response = await supabase
+          .from('comments')
+          .insert({
+            'course_id': widget.courseId,
+            'user_id': userRowId,
+            'comment': commentText,
+          })
+          .select('''
         *,
         user:users!comments_user_id_fkey(nickname, profile_img)
-      ''').single();
+      ''')
+          .single();
 
       // 디버깅: 응답 확인
       debugPrint('댓글 작성 성공 - response: $response');
@@ -322,9 +315,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         FocusScope.of(context).unfocus();
 
         // 성공 메시지
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('댓글이 작성되었습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('댓글이 작성되었습니다.')));
       }
     } catch (e, stackTrace) {
       // 상세한 에러 로깅
@@ -387,9 +380,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           _comments.removeWhere((c) => c.commentId == commentId);
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('댓글이 삭제되었습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('댓글이 삭제되었습니다.')));
       }
     } catch (e, stackTrace) {
       // 상세한 에러 로깅
@@ -448,8 +441,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         final imageUrls = [set['img_01'], set['img_02'], set['img_03']]
             .where(
               (url) =>
-          url != null && url != "null" && url.toString().isNotEmpty,
-        )
+                  url != null && url != "null" && url.toString().isNotEmpty,
+            )
             .toList();
 
         for (final url in imageUrls) {
@@ -527,10 +520,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   void _navigateToReport(
-      String targetId,
-      ReportTargetType targetType, {
-        String? commentAuthor,
-      }) {
+    String targetId,
+    ReportTargetType targetType, {
+    String? commentAuthor,
+  }) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -703,9 +696,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 final hex = TagColorModel.getColorHex(tag);
                 final bg = hex != null
                     ? Color(
-                  int.parse(hex.replaceFirst('#', ''), radix: 16) +
-                      0xFF000000,
-                )
+                        int.parse(hex.replaceFirst('#', ''), radix: 16) +
+                            0xFF000000,
+                      )
                     : Colors.grey.shade200;
                 return Container(
                   padding: const EdgeInsets.symmetric(
@@ -716,10 +709,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     color: bg,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(
-                    '#$tag',
-                    style: const TextStyle(fontSize: 12),
-                  ),
+                  child: Text('#$tag', style: const TextStyle(fontSize: 12)),
                 );
               }).toList(),
             ),
@@ -1075,16 +1065,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             SizedBox(
               height: 40,
               child: ElevatedButton(
-                onPressed: !_isCommentInputEmpty ? () => _submitComment() : null,
+                onPressed: !_isCommentInputEmpty
+                    ? () => _submitComment()
+                    : null,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   minimumSize: const Size(0, 40),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: const Text(
-                  '댓글',
-                  style: TextStyle(fontSize: 12),
-                ),
+                child: const Text('댓글', style: TextStyle(fontSize: 12)),
               ),
             ),
           ],
@@ -1113,4 +1102,3 @@ Widget _zoomButton(IconData icon, VoidCallback onPressed) {
     ),
   );
 }
-
