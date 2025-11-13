@@ -7,7 +7,8 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
-import 'package:of_course/feature/course/components/course_set.dart';
+
+import '../components/course_set.dart';
 
 class CourseSetData {
   String? query;
@@ -17,12 +18,14 @@ class CourseSetData {
   int? gu;
   List<File> images = [];
   String? description;
+  List<String> existingImages = []; // ✅ 현재 세트에 남아 있는 이미지 URL들
 
   CourseSetData();
 }
 
 class WriteCoursePage extends StatefulWidget {
-  const WriteCoursePage({super.key});
+  final int? continueCourseId;
+  const WriteCoursePage({super.key, this.continueCourseId});
 
   @override
   State<WriteCoursePage> createState() => _WriteCoursePageState();
@@ -32,11 +35,16 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _mapKey = GlobalKey(debugLabel: "write_map_key");
 
-  final List<WriteCourseSet> _sets = [];
   final List<CourseSetData> _courseSetDataList = [];
   final List<bool> _highlightList = [];
 
   final Map<int, String> _markerIdBySet = {};
+
+  final List<int> _existingSetIds = [];
+  final List<int> _deletedSetIds = [];
+
+  /// ✅ continue 모드에서 각 세트별 "처음 DB에서 가져온 이미지 URL 리스트" 저장용
+  final List<List<String>> _originalImageUrls = [];
 
   List<TagModel> tagList = [];
   final TextEditingController _titleController = TextEditingController();
@@ -54,39 +62,116 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
 
   Future<void> _loadInitial() async {
     await _loadTags();
-    setState(() {
-      for (int i = 0; i < 2; i++) _addNewSet();
-    });
+
+    // continue 모드
+    if (widget.continueCourseId != null) {
+      await _loadContinueCourse(widget.continueCourseId!);
+    }
+    // 새 코스 작성 모드
+    else {
+      setState(() {
+        for (int i = 0; i < 2; i++) {
+          _courseSetDataList.add(CourseSetData());
+          _highlightList.add(false);
+          _originalImageUrls.add([]); // ✅ 새 세트는 원본 이미지 없음
+        }
+      });
+    }
   }
 
   Future<void> _loadTags() async {
     tagList = await SupabaseManager.shared.getTags();
   }
 
-  void _addNewSet() {
-    final index = _courseSetDataList.length;
+  Future<void> _loadContinueCourse(int courseId) async {
+    final data = await SupabaseManager.shared.getCourseDetailForContinue(
+      courseId,
+    );
+    if (data == null) return;
 
-    setState(() {
-      _courseSetDataList.add(CourseSetData());
+    _titleController.text = data['title'];
+
+    // 기존 세트 불러오기
+    for (var s in data['sets']) {
+      final images = List<String>.from(s['images'] ?? []);
+
+      final model = CourseSetData()
+        ..query = s['query']
+        ..lat = s['lat']
+        ..lng = s['lng']
+        ..gu = s['gu']
+        ..tagId = s['tag_id']
+        ..description = s['description']
+        ..existingImages = List<String>.from(images); // ✅ 현재 유지중인 URL 리스트
+
+      _existingSetIds.add(s['id']);
+      _courseSetDataList.add(model);
       _highlightList.add(false);
 
-      _sets.add(
-        WriteCourseSet(
-          tagList: tagList,
-          highlight: _highlightList[index],
-          onTagChanged: (tag) => _courseSetDataList[index].tagId = tag.id,
-          onSearchRequested: (query) => _handleLocationSelected(index, query),
-          onLocationSaved: (lat, lng) {
-            _courseSetDataList[index].lat = lat;
-            _courseSetDataList[index].lng = lng;
-          },
-          onImagesChanged: (imgs) => _courseSetDataList[index].images = imgs,
-          onDescriptionChanged: (text) =>
-              _courseSetDataList[index].description = text,
-          onShowMapRequested: _scrollToMap,
+      // ✅ "처음 DB에서 가져온 원본 이미지 리스트" 저장
+      _originalImageUrls.add(List<String>.from(images));
+    }
+
+    // 최소 2개 세트 보장
+    while (_courseSetDataList.length < 2) {
+      _courseSetDataList.add(CourseSetData());
+      _highlightList.add(false);
+      _originalImageUrls.add([]); // 원본 없음
+    }
+
+    // 지도 마커 생성
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initMarkersForExistingSets();
+    });
+
+    setState(() {});
+  }
+
+  Future<void> _initMarkersForExistingSets() async {
+    if (_mapController == null) return;
+
+    List<NLatLng> positions = [];
+
+    for (int i = 0; i < _courseSetDataList.length; i++) {
+      final set = _courseSetDataList[i];
+      if (set.lat == null || set.lng == null) continue;
+
+      final markerId = "existing_marker_$i";
+
+      final marker = NMarker(
+        id: markerId,
+        position: NLatLng(set.lat!, set.lng!),
+      );
+
+      await _mapController!.addOverlay(marker);
+      _markerIdBySet[i] = markerId;
+
+      positions.add(NLatLng(set.lat!, set.lng!));
+    }
+
+    if (positions.isNotEmpty) {
+      double minLat = positions.first.latitude;
+      double maxLat = positions.first.latitude;
+      double minLng = positions.first.longitude;
+      double maxLng = positions.first.longitude;
+
+      for (var p in positions) {
+        minLat = p.latitude < minLat ? p.latitude : minLat;
+        maxLat = p.latitude > maxLat ? p.latitude : maxLat;
+        minLng = p.longitude < minLng ? p.longitude : minLng;
+        maxLng = p.longitude > maxLng ? p.longitude : maxLng;
+      }
+
+      await _mapController!.updateCamera(
+        NCameraUpdate.fitBounds(
+          NLatLngBounds(
+            southWest: NLatLng(minLat, minLng),
+            northEast: NLatLng(maxLat, maxLng),
+          ),
+          padding: const EdgeInsets.all(80),
         ),
       );
-    });
+    }
   }
 
   Future<bool> _showConfirmDialog(String title) async {
@@ -122,10 +207,8 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                         ),
                       ),
                       const SizedBox(height: 20),
-
-                      //  OK 버튼
                       GestureDetector(
-                        onTap: () => Navigator.pop(ctx, true), //  다이얼로그만 닫힘
+                        onTap: () => Navigator.pop(ctx, true),
                         child: Container(
                           height: 44,
                           alignment: Alignment.center,
@@ -143,10 +226,8 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                         ),
                       ),
                       const SizedBox(height: 10),
-
-                      //  Cancel 버튼
                       GestureDetector(
-                        onTap: () => Navigator.pop(ctx, false), //  다이얼로그만 닫힘
+                        onTap: () => Navigator.pop(ctx, false),
                         child: Container(
                           height: 40,
                           alignment: Alignment.center,
@@ -167,18 +248,6 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
         false;
   }
 
-  // 임시저장 → 확인 팝업 후 실행
-  void _onTempSavePressed() async {
-    final ok = await _showConfirmDialog("임시저장하시겠습니까?");
-    if (ok && _validateBeforeUpload()) _saveCourse(false);
-  }
-
-  // 취소 → 확인 팝업 후 홈 이동
-  void _onCancelPressed() async {
-    final ok = await _showConfirmDialog("작성 중인 내용을 취소하시겠습니까?");
-    if (ok) context.push('/home');
-  }
-
   void _highlightSet(int index) {
     setState(() => _highlightList[index] = true);
     Future.delayed(const Duration(milliseconds: 600), () {
@@ -189,7 +258,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
 
   void _scrollToSet(int index) {
     _scrollController.animateTo(
-      index * 450.0,
+      index * 450,
       duration: const Duration(milliseconds: 450),
       curve: Curves.easeOutCubic,
     );
@@ -227,30 +296,6 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
     return true;
   }
 
-  Future<String?> _getGuFromLatLng(double lat, double lng) async {
-    try {
-      final url = Uri.parse(
-        'https://maps.apigw.ntruss.com/map-reversegeocode/v2/gc?request=coordsToaddr&coords=$lng,$lat&sourcecrs=epsg:4326&orders=admcode,legalcode,addr,roadaddr&output=json',
-      );
-
-      final response = await http.get(
-        url,
-        headers: {
-          'Accept': 'application/json',
-          'x-ncp-apigw-api-key-id': _naverClientId,
-          'x-ncp-apigw-api-key': _naverClientSecret,
-        },
-      );
-
-      final data = jsonDecode(response.body);
-      if (data['results'] == null || data['results'].isEmpty) return null;
-
-      final region = data['results'][0]['region'];
-      return "${region['area1']['name']} ${region['area2']['name']} ${region['area3']['name']}";
-    } catch (_) {}
-    return null;
-  }
-
   Future<void> _removeMarkerIfExists(int setIndex) async {
     final oldId = _markerIdBySet[setIndex];
     if (oldId == null || _mapController == null) return;
@@ -260,42 +305,58 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
     _markerIdBySet.remove(setIndex);
   }
 
-  Future<void> _handleLocationSelected(int index, String query) async {
-    NLatLng? location = await _getLatLngFromAddress(query);
-    location ??= await _getLatLngFromKakao(query);
-    if (location == null) {
-      _showMessage("위치를 찾을 수 없어요.");
-      return;
+  /// ✅ Storage에서 public URL 기준으로 삭제 (URL 파싱 방식)
+  Future<void> _deleteImageFromStorage(String publicUrl) async {
+    if (publicUrl == "null" || publicUrl.isEmpty) return;
+
+    try {
+      final uri = Uri.parse(publicUrl);
+      final segments = uri.pathSegments;
+
+      // .../public/<bucket>/<objectPath>
+      final publicIndex = segments.indexOf('public');
+      if (publicIndex == -1 || publicIndex + 2 >= segments.length) {
+        debugPrint('❌ URL 파싱 실패: $publicUrl');
+        return;
+      }
+
+      final bucket = segments[publicIndex + 1]; // course_set_image
+      final objectPath = segments
+          .sublist(publicIndex + 2)
+          .join('/'); // course_set/xxx.jpg
+
+      debugPrint('🧹 Storage 삭제 시도: bucket=$bucket, path=$objectPath');
+
+      final res = await SupabaseManager.shared.supabase.storage
+          .from(bucket)
+          .remove([objectPath]);
+
+      debugPrint('🧹 Storage 삭제 결과: $res'); // [] 나오면 정상 삭제
+    } catch (e, st) {
+      debugPrint('❌ Storage 삭제 오류: $e\n$st');
     }
+  }
 
-    _courseSetDataList[index].query = query;
-    _courseSetDataList[index].lat = location.latitude;
-    _courseSetDataList[index].lng = location.longitude;
-
-    final guName = await _getGuFromLatLng(
-      location.latitude,
-      location.longitude,
-    );
-    if (guName != null) {
-      _courseSetDataList[index].gu = await SupabaseManager.shared
-          .getGuIdFromName(guName);
-    }
-
+  Future<void> _deleteSet(int index) async {
     await _removeMarkerIfExists(index);
 
-    final markerId = 'set_marker_$index';
-    final marker = NMarker(
-      id: markerId,
-      position: location,
-      caption: NOverlayCaption(text: query),
-    );
+    // ✅ 이 세트가 가진 원본 이미지도 모두 스토리지에서 삭제
+    if (index < _originalImageUrls.length) {
+      for (final url in _originalImageUrls[index]) {
+        await _deleteImageFromStorage(url);
+      }
+      _originalImageUrls.removeAt(index);
+    }
 
-    await _mapController?.addOverlay(marker);
-    _markerIdBySet[index] = markerId;
+    if (index < _existingSetIds.length) {
+      _deletedSetIds.add(_existingSetIds[index]);
+      _existingSetIds.removeAt(index);
+    }
 
-    await _mapController?.updateCamera(
-      NCameraUpdate.scrollAndZoomTo(target: location, zoom: 15),
-    );
+    setState(() {
+      _courseSetDataList.removeAt(index);
+      _highlightList.removeAt(index);
+    });
   }
 
   Future<NLatLng?> _getLatLngFromAddress(String query) async {
@@ -327,6 +388,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
       final url = Uri.parse(
         'https://dapi.kakao.com/v2/local/search/keyword.json?query=${Uri.encodeQueryComponent(query)}',
       );
+
       final response = await http.get(
         url,
         headers: {'Authorization': 'KakaoAK $_kakaoRestKey'},
@@ -341,19 +403,68 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
     return null;
   }
 
-  void _onUpload() {
-    if (_validateBeforeUpload()) _saveCourse(true);
+  Future<void> _handleLocationSelected(int index, String query) async {
+    NLatLng? location = await _getLatLngFromAddress(query);
+    location ??= await _getLatLngFromKakao(query);
+
+    if (location == null) {
+      _showMessage("위치를 찾을 수 없어요.");
+      return;
+    }
+
+    final set = _courseSetDataList[index];
+
+    set.query = query;
+    set.lat = location.latitude;
+    set.lng = location.longitude;
+
+    await _removeMarkerIfExists(index);
+
+    final markerId = 'set_marker_$index';
+
+    final marker = NMarker(
+      id: markerId,
+      position: location,
+      caption: NOverlayCaption(text: query),
+    );
+
+    await _mapController?.addOverlay(marker);
+    _markerIdBySet[index] = markerId;
+
+    await _mapController?.updateCamera(
+      NCameraUpdate.scrollAndZoomTo(target: location, zoom: 15),
+    );
   }
 
-  Future<void> _saveCourse(bool isDone) async {
+  Future<void> _onTempSave() async {
+    final ok = await _showConfirmDialog("임시저장하시겠습니까?");
+    if (!ok) return;
+
+    if (widget.continueCourseId != null) {
+      await _continuesaveEdit(false);
+    } else {
+      await _saveNew(false);
+    }
+  }
+
+  Future<void> _onUpload() async {
+    if (!_validateBeforeUpload()) return;
+
+    if (widget.continueCourseId != null) {
+      await _continuesaveEdit(true);
+    } else {
+      await _saveNew(true);
+    }
+  }
+
+  Future<void> _saveNew(bool isDone) async {
     final userID = await SupabaseManager.shared.getMyUserRowId();
 
     List<int?> setIds = [];
 
-    for (var set in _courseSetDataList) {
-      if (set.lat == null || set.lng == null) continue;
-
+    for (final set in _courseSetDataList) {
       String? img1, img2, img3;
+
       if (set.images.isNotEmpty) {
         img1 = await SupabaseManager.shared.uploadCourseSetImage(set.images[0]);
       }
@@ -368,15 +479,15 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
         img1: img1,
         img2: img2,
         img3: img3,
-        address: set.query ?? '',
-        lat: set.lat!,
-        lng: set.lng!,
+        address: set.query ?? "",
+        lat: set.lat,
+        lng: set.lng,
         gu: set.gu,
         tagId: set.tagId,
         description: set.description,
       );
 
-      if (id != null) setIds.add(id);
+      setIds.add(id);
     }
 
     await SupabaseManager.shared.supabase.from('courses').insert({
@@ -391,9 +502,131 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
     });
 
     if (!mounted) return;
+
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(isDone ? "코스 저장 완료" : "임시 저장 완료")));
+    ).showSnackBar(SnackBar(content: Text(isDone ? "코스 업로드 완료" : "임시 저장 완료")));
+
+    context.push('/home');
+  }
+
+  /// ✅ continue 모드: 원본 vs 현재(existingImages) 비교 후 삭제 + 최종 이미지 구성
+  Future<void> _continuesaveEdit(bool isDone) async {
+    if (widget.continueCourseId == null) return;
+
+    List<int?> setIds = [];
+
+    for (int i = 0; i < _courseSetDataList.length; i++) {
+      final set = _courseSetDataList[i];
+      final oldId = i < _existingSetIds.length ? _existingSetIds[i] : null;
+
+      // ---------------------------------------------------------
+      // 0) 원본 vs 현재 existing 비교 → 삭제할 이미지 찾기
+      // ---------------------------------------------------------
+      final List<String> original = i < _originalImageUrls.length
+          ? _originalImageUrls[i]
+          : <String>[];
+
+      final List<String> currentExisting = List<String>.from(
+        set.existingImages,
+      );
+
+      final deletedUrls = original
+          .where((url) => !currentExisting.contains(url))
+          .toList();
+
+      debugPrint("🧹 [continue] 세트 $i 삭제할 이미지 = $deletedUrls");
+
+      for (final url in deletedUrls) {
+        await _deleteImageFromStorage(url);
+      }
+
+      // ---------------------------------------------------------
+      // 1) 새 이미지 업로드
+      // ---------------------------------------------------------
+      List<String> uploaded = [];
+      for (final f in set.images) {
+        final u = await SupabaseManager.shared.uploadCourseSetImage(f);
+        if (u != null) uploaded.add(u);
+      }
+
+      // ---------------------------------------------------------
+      // 2) 최종 이미지 리스트 구성
+      // ---------------------------------------------------------
+      final List<String> finalImages = [...currentExisting, ...uploaded];
+
+      String? img1 = finalImages.isNotEmpty ? finalImages[0] : null;
+      String? img2 = finalImages.length > 1 ? finalImages[1] : null;
+      String? img3 = finalImages.length > 2 ? finalImages[2] : null;
+
+      // ---------------------------------------------------------
+      // 3) 기존 세트면 update, 신규면 insert
+      // ---------------------------------------------------------
+      if (oldId != null) {
+        await SupabaseManager.shared.supabase
+            .from('course_sets')
+            .update({
+              'img_01': img1,
+              'img_02': img2,
+              'img_03': img3,
+              'tag': set.tagId,
+              'address': set.query,
+              'lat': set.lat,
+              'lng': set.lng,
+              'gu': set.gu,
+              'description': set.description,
+            })
+            .eq('id', oldId);
+
+        setIds.add(oldId);
+      } else {
+        final newId = await SupabaseManager.shared.insertCourseSet(
+          img1: img1,
+          img2: img2,
+          img3: img3,
+          address: set.query ?? "",
+          lat: set.lat,
+          lng: set.lng,
+          gu: set.gu,
+          tagId: set.tagId,
+          description: set.description,
+        );
+
+        setIds.add(newId);
+      }
+    }
+
+    // ---------------------------------------------------------
+    // 4) 완전히 삭제된 세트 DB삭제
+    // ---------------------------------------------------------
+    for (final del in _deletedSetIds) {
+      await SupabaseManager.shared.supabase
+          .from('course_sets')
+          .delete()
+          .eq('id', del);
+    }
+
+    // ---------------------------------------------------------
+    // 5) courses 테이블 업데이트
+    // ---------------------------------------------------------
+    await SupabaseManager.shared.supabase
+        .from('courses')
+        .update({
+          'title': _titleController.text,
+          'set_01': setIds.length > 0 ? setIds[0] : null,
+          'set_02': setIds.length > 1 ? setIds[1] : null,
+          'set_03': setIds.length > 2 ? setIds[2] : null,
+          'set_04': setIds.length > 3 ? setIds[3] : null,
+          'set_05': setIds.length > 4 ? setIds[4] : null,
+          'is_done': isDone,
+        })
+        .eq('id', widget.continueCourseId!);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(isDone ? "코스 업로드 완료" : "임시 저장 완료")));
 
     context.push('/home');
   }
@@ -405,14 +638,6 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
         ctx,
         duration: const Duration(milliseconds: 450),
         curve: Curves.easeOutCubic,
-        alignment: 0.0, // 맵이 화면 상단에 오도록
-      );
-    } else {
-      // fallback: 대략적인 오프셋
-      _scrollController.animateTo(
-        300,
-        duration: const Duration(milliseconds: 450),
-        curve: Curves.easeOutCubic,
       );
     }
   }
@@ -421,7 +646,6 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        // ✅ 기존 ConfirmDialog 스타일로 뒤로가기 팝업 표시
         final ok =
             await showDialog<bool>(
               context: context,
@@ -468,8 +692,6 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                             ),
                           ),
                           const SizedBox(height: 20),
-
-                          // 확인 버튼
                           GestureDetector(
                             onTap: () => Navigator.pop(ctx, true),
                             child: Container(
@@ -489,8 +711,6 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                             ),
                           ),
                           const SizedBox(height: 10),
-
-                          // 취소 버튼
                           GestureDetector(
                             onTap: () => Navigator.pop(ctx, false),
                             child: Container(
@@ -512,7 +732,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
             ) ??
             false;
 
-        return ok; // true면 페이지 종료, false면 남아있기
+        return ok;
       },
       child: Scaffold(
         body: SafeArea(
@@ -525,15 +745,21 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     TextButton(
-                      onPressed: _onTempSavePressed,
+                      onPressed: _onTempSave,
                       child: const Text("임시저장"),
                     ),
                     TextButton(
-                      onPressed: _onCancelPressed,
+                      onPressed: () async {
+                        final ok = await _showConfirmDialog(
+                          "작성 중인 내용을 취소하시겠습니까?",
+                        );
+                        if (ok) context.push('/home');
+                      },
                       child: const Text("취소"),
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 16),
 
                 TextField(
@@ -554,10 +780,6 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                   child: NaverMap(
                     onMapReady: (c) => _mapController = c,
                     options: const NaverMapViewOptions(
-                      scrollGesturesEnable: true,
-                      zoomGesturesEnable: true,
-                      rotationGesturesEnable: true,
-                      tiltGesturesEnable: true,
                       initialCameraPosition: NCameraPosition(
                         target: NLatLng(37.5665, 126.9780),
                         zoom: 12,
@@ -568,26 +790,34 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
 
                 const SizedBox(height: 16),
 
-                ..._sets.asMap().entries.map((entry) {
+                ..._courseSetDataList.asMap().entries.map((entry) {
                   final index = entry.key;
+                  final set = entry.value;
+
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 20),
                     child: WriteCourseSet(
                       key: ValueKey("write_set_$index"),
                       tagList: tagList,
                       highlight: _highlightList[index],
-                      onTagChanged: (tag) =>
-                          _courseSetDataList[index].tagId = tag.id,
-                      onSearchRequested: (query) =>
-                          _handleLocationSelected(index, query),
+
+                      initialQuery: set.query,
+                      initialDescription: set.description,
+                      initialTagId: set.tagId,
+                      existingImageUrls: set.existingImages,
+
+                      onTagChanged: (tag) => set.tagId = tag.id,
+                      onDescriptionChanged: (txt) => set.description = txt,
+                      onImagesChanged: (imgs) => set.images = imgs,
+                      onExistingImagesChanged: (list) =>
+                          set.existingImages = list,
+
+                      onSearchRequested: (q) =>
+                          _handleLocationSelected(index, q),
                       onLocationSaved: (lat, lng) {
-                        _courseSetDataList[index].lat = lat;
-                        _courseSetDataList[index].lng = lng;
+                        set.lat = lat;
+                        set.lng = lng;
                       },
-                      onImagesChanged: (imgs) =>
-                          _courseSetDataList[index].images = imgs,
-                      onDescriptionChanged: (text) =>
-                          _courseSetDataList[index].description = text,
                       onShowMapRequested: _scrollToMap,
                     ),
                   );
@@ -597,20 +827,22 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
-                      onPressed: _addNewSet,
+                      onPressed: () {
+                        setState(() {
+                          _courseSetDataList.add(CourseSetData());
+                          _highlightList.add(false);
+                          _originalImageUrls.add([]); // ✅ 새 세트는 원본 이미지 없음
+                        });
+                      },
                       child: const Text("세트 추가"),
                     ),
+
                     const SizedBox(width: 12),
-                    if (_sets.length > 2)
+
+                    if (_courseSetDataList.length > 2)
                       ElevatedButton(
                         onPressed: () {
-                          final lastIndex = _courseSetDataList.length - 1;
-                          _removeMarkerIfExists(lastIndex);
-                          setState(() {
-                            _sets.removeLast();
-                            _courseSetDataList.removeLast();
-                            _highlightList.removeLast();
-                          });
+                          _deleteSet(_courseSetDataList.length - 1);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.redAccent,
@@ -621,6 +853,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                 ),
 
                 const SizedBox(height: 24),
+
                 ElevatedButton(
                   onPressed: _onUpload,
                   child: const Text("코스 업로드"),
