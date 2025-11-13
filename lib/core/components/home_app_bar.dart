@@ -54,7 +54,6 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  /// 지역 선택 드롭다운
   Widget _buildRegionSelector() {
     return Container(
       height: _buttonHeight,
@@ -97,7 +96,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     items.addAll(
       guList.map(
-        (gu) => DropdownMenuItem<GuModel>(
+            (gu) => DropdownMenuItem<GuModel>(
           value: gu,
           child: Text(
             gu.name,
@@ -132,7 +131,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           elevation: 0,
         ),
         child: const Text(
-          'random',
+          '코스 추천',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -142,80 +141,111 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  void _onRandomButtonPressed(BuildContext context) {
+  void _onRandomButtonPressed(BuildContext context) async {
     if (onRandomPressed != null) {
       onRandomPressed!();
-    } else {
-      _handleRandomPressed(context);
+      return;
     }
-  }
-
-  /// 랜덤 코스 가져오기 및 상세 화면으로 이동
-  Future<void> _handleRandomPressed(BuildContext context) async {
-    if (!context.mounted) return;
 
     try {
       final userRowId = await SupabaseManager.shared.getMyUserRowId();
-      final likedCourseIds = await _getLikedCourseIds(userRowId);
-      final randomCourseId = await _getRandomCourseId(likedCourseIds);
 
-      if (randomCourseId != null && context.mounted) {
-        _navigateToDetail(context, randomCourseId, userRowId ?? '');
-      } else if (context.mounted) {
-        _showErrorMessage(context, '랜덤 코스를 찾을 수 없습니다.');
+      if (userRowId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('로그인이 필요합니다.')),
+        );
+        return;
       }
-    } catch (e) {
-      if (context.mounted) {
-        _showErrorMessage(context, '랜덤 코스를 가져오는 중 오류가 발생했습니다.');
-      }
-    }
-  }
 
-  /// 좋아요한 코스 ID 목록 가져오기
-  Future<List<int>> _getLikedCourseIds(String? userRowId) async {
-    if (userRowId == null) return [];
-    return await SupabaseManager.shared.getLikedCourseIds(userRowId);
-  }
+      final supabase = SupabaseManager.shared.supabase;
 
-  /// 랜덤 코스 ID 가져오기 (태그 기반 또는 완전 랜덤)
-  Future<int?> _getRandomCourseId(List<int> likedCourseIds) async {
-    // 태그 기반 랜덤 시도
-    if (_hasSelectedCategories) {
-      final selectedTagNames = _getSelectedTagNames();
-      final tagBasedCourseId =
-      await SupabaseManager.shared.getRandomCourseByTags(
-        selectedTagNames,
-        likedCourseIds,
+      final response = await supabase.functions.invoke(
+        'smart-task',
+        body: {'user_id': userRowId},
       );
-      if (tagBasedCourseId != null) return tagBasedCourseId;
+
+      final data = response.data as Map<String, dynamic>;
+      final recs = (data['recommendations'] ?? []) as List<dynamic>;
+
+      if (recs.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('추천할 코스를 찾지 못했습니다.')),
+        );
+        return;
+      }
+
+      final first = recs.first as Map<String, dynamic>;
+      final course = first['course'] as Map<String, dynamic>;
+      final courseId = course['id'] as int;
+
+      final summary = (data['summary'] ?? {}) as Map<String, dynamic>;
+      final reason = _buildRecommendationReason(summary, first);
+
+      context.push(
+        '/detail',
+        extra: {
+          'courseId': courseId,
+          'userId': userRowId,
+          'recommendationReason': reason,
+        },
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('추천 중 오류가 발생했습니다: $e')),
+      );
+    }
+  }
+
+  String _buildRecommendationReason(
+      Map<String, dynamic> summary,
+      Map<String, dynamic> rec,
+      ) {
+    final percent = rec['similarity_percent'] ?? 0;
+
+    final matchedTags = rec['matched_tags'] as List<dynamic>? ?? [];
+    final matchedGus = rec['matched_gus'] as List<dynamic>? ?? [];
+
+    String? tagPart;
+    if (matchedTags.isNotEmpty) {
+      final names = matchedTags
+          .map((t) => t['name'])
+          .whereType<String>()
+          .where((s) => s.isNotEmpty)
+          .toList();
+      if (names.isNotEmpty) {
+        tagPart = names.join(', ');
+      }
     }
 
-    // 완전 랜덤
-    return await SupabaseManager.shared.getRandomCourse(
-      excludeCourseIds: likedCourseIds,
-    );
-  }
+    String? guPart;
+    if (matchedGus.isNotEmpty) {
+      final names = matchedGus
+          .map((g) => g['name'])
+          .whereType<String>()
+          .where((s) => s.isNotEmpty)
+          .toList();
+      if (names.isNotEmpty) {
+        guPart = names.join(', ');
+      }
+    }
 
-  bool get _hasSelectedCategories =>
-      selectedCategories != null && selectedCategories!.isNotEmpty;
+    String sentence = '이 코스는 내 취향과 유사도 $percent%입니다.\n';
 
-  List<String> _getSelectedTagNames() {
-    return selectedCategories!.map((tag) => tag.name).toList();
-  }
+    if (tagPart != null) {
+      sentence += '최근에 $tagPart 태그 코스를 좋아했고,\n';
+    }
 
-  /// 코스 상세 화면으로 이동
-  void _navigateToDetail(BuildContext context, int courseId, String userId) {
-    context.push(
-      '/detail',
-      extra: {'courseId': courseId, 'userId': userId},
-    );
-  }
+    if (guPart != null) {
+      sentence += '$guPart관련 코스를 자주 선택해 추천했어요.';
+    } else {
+      if (sentence.endsWith(',\n')) {
+        sentence = sentence.substring(0, sentence.length - 2);
+        sentence += '\n';
+      }
+      sentence += '추천했어요.';
+    }
 
-  /// 에러 메시지 표시
-  void _showErrorMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    return sentence;
   }
 
   Widget _buildNotificationIcon() {
@@ -223,7 +253,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       builder: (context, alertViewModel, child) {
         final alertCount = alertViewModel.alerts?.length ?? 0;
         final hasUnreadNotifications = alertCount > 0;
-        
+
         return Stack(
           children: [
             IconButton(

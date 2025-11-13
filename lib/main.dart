@@ -11,6 +11,7 @@ import 'package:of_course/feature/auth/screens/register_screen.dart';
 import 'package:of_course/feature/auth/screens/terms_agree_screen.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
 import 'package:of_course/feature/course/screens/course_detail_screen.dart';
+import 'package:of_course/feature/course/screens/course_recommend_screen.dart';
 import 'package:of_course/feature/course/screens/edit_course_page.dart';
 import 'package:of_course/feature/course/screens/liked_course_page.dart';
 import 'package:of_course/feature/course/screens/write_course_page.dart';
@@ -97,8 +98,17 @@ class MyApp extends StatelessWidget {
             final extra = state.extra as Map<String, dynamic>;
             final courseId = int.parse(extra['courseId'].toString());
             final userId = extra['userId'].toString();
-            return CourseDetailScreen(courseId: courseId, userId: userId);
+            final recommendationReason = extra['recommendationReason'] as String?;
+            return CourseDetailScreen(
+              courseId: courseId,
+              userId: userId,
+              recommendationReason: recommendationReason,
+            );
           },
+        ),
+        GoRoute(
+          path: '/recommend',
+          builder: (context, state) => const CourseRecommendScreen(),
         ),
         GoRoute(
           path: '/change_profile',

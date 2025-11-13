@@ -11,11 +11,13 @@ import '../models/course_detail_models.dart';
 class CourseDetailScreen extends StatefulWidget {
   final int courseId;
   final String userId;
+  final String? recommendationReason; // 추천 페이지에서 전달받은 추천 사유
 
   const CourseDetailScreen({
     super.key,
     required this.courseId,
     required this.userId,
+    this.recommendationReason,
   });
 
   @override
@@ -31,6 +33,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   late int _likeCount;
 
   late List<Comment> _comments;
+  String? _recommendationReason; // 코스 추천 사유
   final TextEditingController _commentController = TextEditingController();
   bool _isCommentInputEmpty = true;
 
@@ -49,6 +52,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _recommendationReason = widget.recommendationReason;
     _loadCourseDetail();
     _commentController.addListener(_onCommentChanged);
   }
@@ -609,7 +613,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               child: Column(
                 children: [
                   _buildHeader(),
+
+                  if (_recommendationReason != null) ...[
+                    _buildRecommendationReason(),
+                    const SizedBox(height: 24), // 사유 카드 아래 여백 추가
+                  ],
+
                   _buildMapSection(),
+
                   const SizedBox(height: _spacingLarge),
                   _buildSetsSection(),
                   const SizedBox(height: _spacingLarge),
@@ -621,6 +632,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
             ),
           ),
+
           _buildCommentInputSection(),
         ],
       ),
@@ -713,6 +725,54 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildRecommendationReason() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: _spacingMedium),
+      child: Container(
+        padding: const EdgeInsets.all(_spacingMedium),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(_borderRadius),
+          border: Border.all(color: Colors.grey[300]!),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.lightbulb_outline,
+              color: _mainColor,
+              size: 20,
+            ),
+            const SizedBox(width: _spacingSmall),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '코스 추천 사유',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: _spacingSmall),
+                  Text(
+                    _recommendationReason!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[700],
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
