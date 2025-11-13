@@ -43,9 +43,11 @@ class _AlertScreen extends StatelessWidget {
                               fromUser:
                                   viewmodel.alerts![index].fromUserNickname,
                               type: viewmodel.alerts![index].type,
-                              user_id: viewmodel.alerts![index].to_user_id,
-                              course_id: viewmodel.alerts![index].course_id
+                              userId: viewmodel.alerts![index].to_user_id,
+                              courseId: viewmodel.alerts![index].course_id
                                   .toString(),
+                              viewModel: viewmodel,
+                              alertId: viewmodel.alerts![index].id,
                             );
                           },
                           separatorBuilder: (BuildContext context, int index) {
@@ -144,14 +146,18 @@ class AlertAppBar extends StatelessWidget {
 class AlertBox extends StatelessWidget {
   final String fromUser;
   final String type;
-  final String course_id;
-  final String user_id;
+  final String courseId;
+  final String userId;
+  final int alertId;
+  final AlertViewModel viewModel;
   const AlertBox({
     super.key,
     required this.fromUser,
     required this.type,
-    required this.course_id,
-    required this.user_id,
+    required this.courseId,
+    required this.userId,
+    required this.viewModel,
+    required this.alertId,
   });
 
   @override
@@ -164,8 +170,9 @@ class AlertBox extends StatelessWidget {
         // _showAlertErrorPopup(context);
         await context.push(
           '/detail',
-          extra: {'courseId': course_id, 'userId': user_id},
+          extra: {'courseId': courseId, 'userId': userId},
         );
+        await viewModel.deleteAlert(alertId);
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),

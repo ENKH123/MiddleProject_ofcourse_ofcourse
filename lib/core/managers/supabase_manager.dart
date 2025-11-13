@@ -80,6 +80,11 @@ class SupabaseManager {
     return (data as List).map((e) => AlertModel.fromJson(e)).toList();
   }
 
+  // 알림 삭제
+  Future<void> deleteAlert(int alertId) async {
+    await supabase.from('alert').delete().eq('id', alertId);
+  }
+
   // 구 목록 가져오기
   Future<List<GuModel>> getGuList() async {
     final data = await supabase.from("gu").select();
