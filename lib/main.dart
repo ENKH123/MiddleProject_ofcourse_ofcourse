@@ -73,7 +73,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final GoRouter router = GoRouter(
-      // initialLocation: '/home',
+      // initialLocation: '/register',
       initialLocation:
           authProvider.currentUser != null && authProvider.user != null
           ? '/home'

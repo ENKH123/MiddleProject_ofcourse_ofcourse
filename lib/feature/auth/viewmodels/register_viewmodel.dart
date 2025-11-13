@@ -11,6 +11,8 @@ import '../../../main.dart';
 
 enum RegisterResult { success, duplicate }
 
+enum ProfilePickResult { camera, album }
+
 class RegisterViewModel extends ChangeNotifier {
   // 로그인 뷰모델 주입
   LoginViewModel _loginViewModel;
@@ -59,8 +61,16 @@ class RegisterViewModel extends ChangeNotifier {
   }
 
   // 프로필 이미지 선택
-  Future<void> pickProfileImage(BuildContext context) async {
+  Future<void> _pickProfileImageAlbum(BuildContext context) async {
     _image = await _picker.pickImage(source: ImageSource.gallery);
+    if (_image != null) {
+      _pickedImgPath = _image!.path;
+    }
+    notifyListeners();
+  }
+
+  Future<void> _pickProfileImageCamera(BuildContext context) async {
+    _image = await _picker.pickImage(source: ImageSource.camera);
     if (_image != null) {
       _pickedImgPath = _image!.path;
     }
@@ -104,5 +114,39 @@ class RegisterViewModel extends ChangeNotifier {
       return RegisterResult.success;
     }
     return RegisterResult.duplicate;
+  }
+
+  Future<void> pickImage(BuildContext context) async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text("앨범에서 선택"),
+                onTap: () async {
+                  Navigator.pop(context);
+                  _pickProfileImageAlbum(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text("사진 촬영"),
+                onTap: () async {
+                  Navigator.pop(context);
+                  _pickProfileImageCamera(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
