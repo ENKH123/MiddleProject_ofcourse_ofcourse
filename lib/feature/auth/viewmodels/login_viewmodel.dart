@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/core/models/supabase_user_model.dart';
+import 'package:of_course/feature/alert/viewmodels/alert_viewmodel.dart';
 import 'package:of_course/main.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginViewModel extends ChangeNotifier {
@@ -13,7 +15,7 @@ class LoginViewModel extends ChangeNotifier {
 
   SupabaseUserModel? userAccount;
 
-  Future<void> googleSignIn() async {
+  Future<void> googleSignIn(BuildContext context) async {
     final scopes = ['email', 'profile'];
 
     // 구글 프로바이더 작동
@@ -60,11 +62,15 @@ class LoginViewModel extends ChangeNotifier {
     userAccount = await SupabaseManager.shared.getPublicUser(
       _googleUser!.email,
     );
+    final alertViewModel = context.read<AlertViewModel>();
+    alertViewModel.resubscribeRealtime();
     // supabase public 테이블에 _googleUser로 받은 이메일이 있는지 확인
     notifyListeners();
   }
 
-  Future<void> signOut() async {
+  Future<void> signOut(BuildContext context) async {
+    final alertViewModel = context.read<AlertViewModel>();
+    alertViewModel.unsubscribeRealtime();
     await GoogleSignIn.instance.signOut();
     await supabase.auth.signOut(scope: SignOutScope.global);
     notifyListeners();
