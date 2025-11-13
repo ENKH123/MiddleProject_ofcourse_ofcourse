@@ -444,8 +444,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         final imageUrls = [set['img_01'], set['img_02'], set['img_03']]
             .where(
               (url) =>
-                  url != null && url != "null" && url.toString().isNotEmpty,
-            )
+          url != null && url != "null" && url.toString().isNotEmpty,
+        )
             .toList();
 
         for (final url in imageUrls) {
@@ -972,7 +972,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   Widget _buildCommentInputSection() {
     return Container(
-      padding: const EdgeInsets.all(_spacingMedium),
+      padding: const EdgeInsets.symmetric(
+        horizontal: _spacingMedium,
+        vertical: _spacingSmall,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -987,23 +990,42 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         child: Row(
           children: [
             Expanded(
-              child: TextField(
-                controller: _commentController,
-                maxLength: _maxCommentLength,
-                maxLines: null,
-                decoration: InputDecoration(
-                  hintText: '댓글 작성',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(_borderRadius),
+              child: SizedBox(
+                height: 40,
+                child: TextField(
+                  controller: _commentController,
+                  maxLength: _maxCommentLength,
+                  maxLines: 1,
+                  decoration: InputDecoration(
+                    hintText: '댓글 작성',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(_borderRadius),
+                    ),
+                    counterText: '',
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    isDense: true,
                   ),
-                  counterText: '',
                 ),
               ),
             ),
             const SizedBox(width: _spacingSmall),
-            ElevatedButton(
-              onPressed: !_isCommentInputEmpty ? () => _submitComment() : null,
-              child: const Text('댓글'),
+            SizedBox(
+              height: 40,
+              child: ElevatedButton(
+                onPressed: !_isCommentInputEmpty ? () => _submitComment() : null,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  minimumSize: const Size(0, 40),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text(
+                  '댓글',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
             ),
           ],
         ),
@@ -1031,3 +1053,4 @@ Widget _zoomButton(IconData icon, VoidCallback onPressed) {
     ),
   );
 }
+
