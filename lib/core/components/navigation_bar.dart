@@ -28,8 +28,9 @@ class OfcourseBottomNavBarUI extends StatelessWidget {
             route = '/home';
             break;
           case 1:
-            route = '/write';
-            break;
+            final now = GoRouterState.of(context).uri.toString();
+            context.push('/write', extra: {'from': now});
+            return; // 아래 go() 실행 방지
           case 2:
             route = '/liked';
             break;
