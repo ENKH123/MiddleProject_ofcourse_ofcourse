@@ -199,6 +199,45 @@ class SupabaseManager {
     return null;
   }
 
+  // 특정 코스의 좋아요 개수 + 댓글 개수 가져오기
+  Future<Map<String, int>> getCourseCount(int courseId) async {
+    try {
+      // 좋아요 개수
+      final likeRows = await supabase
+          .from('liked_courses')
+          .select('user_id')
+          .eq('course_id', courseId);
+
+      final likeCount = (likeRows as List).length;
+
+      // 댓글 개수 (deleted_at 제외)
+      final commentRows = await supabase
+          .from('comments')
+          .select('id')
+          .eq('course_id', courseId)
+          .isFilter('deleted_at', null);
+
+      final commentCount = (commentRows as List).length;
+
+      return {'like_count': likeCount, 'comment_count': commentCount};
+    } catch (e) {
+      debugPrint("getCourseStats error: $e");
+      return {'like_count': 0, 'comment_count': 0};
+    }
+  }
+
+  //코스 좋아요 여부 가져오기
+  Future<bool> isCourseLikedByUser(int courseId, String userId) async {
+    final result = await supabase
+        .from('liked_courses')
+        .select()
+        .eq('course_id', courseId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+    return result != null;
+  }
+
   //기본 코스 가져오기
   Future<List<Map<String, dynamic>>> getCourseList({
     int? guId,
@@ -270,14 +309,22 @@ class SupabaseManager {
         final intersects = tags.intersection(selectedTagNames.toSet());
         if (intersects.isEmpty) continue;
       }
+      final count = await getCourseCount(courseId);
+      final userId = await getMyUserRowId();
+      bool isLiked = false;
+
+      if (userId != null) {
+        isLiked = await isCourseLikedByUser(courseId, userId);
+      }
 
       result.add({
         'id': courseId,
         'title': course['title'],
         'images': images,
         'tags': tags.toList(),
-        'like_count': 0,
-        'comment_count': 0,
+        'like_count': count['like_count'],
+        'comment_count': count['comment_count'],
+        'is_liked': isLiked,
       });
     }
 
@@ -344,13 +391,21 @@ class SupabaseManager {
         if (tags.intersection(selectedTagNames.toSet()).isEmpty) continue;
       }
 
+      final count = await getCourseCount(course['id']);
+      final userId = await getMyUserRowId();
+      bool isLiked = false;
+
+      if (userId != null) {
+        isLiked = await isCourseLikedByUser(course['id'], userId);
+      }
       result.add({
         'id': course['id'],
         'title': course['title'],
         'images': images.take(3).toList(),
         'tags': tags.toList(),
-        'like_count': 0,
-        'comment_count': 0,
+        'like_count': count['like_count'],
+        'comment_count': count['comment_count'],
+        'is_liked': isLiked,
       });
     }
 

@@ -7,7 +7,8 @@ class PostCard extends StatelessWidget {
   final List<String>? imageUrls;
   final int? likeCount;
   final int? commentCount;
-  final VoidCallback? onTap; // ✅ 상세 페이지 이동 등 클릭 이벤트
+  final bool? isLiked; // ⭐ 좋아요 여부 추가
+  final VoidCallback? onTap;
 
   const PostCard({
     Key? key,
@@ -16,12 +17,12 @@ class PostCard extends StatelessWidget {
     this.imageUrls,
     this.likeCount,
     this.commentCount,
-    this.onTap, // ✅ 추가
+    this.isLiked, // ⭐ 추가
+    this.onTap,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // 최대 3장까지 이미지 슬롯
     final List<String?> displayImages = List.generate(3, (i) {
       if (imageUrls != null &&
           i < imageUrls!.length &&
@@ -33,7 +34,7 @@ class PostCard extends StatelessWidget {
     });
 
     return GestureDetector(
-      onTap: onTap, // ✅ 카드 눌렀을 때 이벤트 실행
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -57,7 +58,7 @@ class PostCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // 이미지 3개 슬라이드 느낌
+            // 이미지
             SizedBox(
               height: 100,
               child: Row(
@@ -112,23 +113,30 @@ class PostCard extends StatelessWidget {
 
             const SizedBox(height: 6),
 
-            // 좋아요 & 댓글 개수 (옵션)
-            if (likeCount != null || commentCount != null)
-              Row(
-                children: [
-                  if (likeCount != null) ...[
-                    const Icon(Icons.favorite_border, size: 14),
-                    const SizedBox(width: 4),
-                    Text('$likeCount'),
-                  ],
-                  const SizedBox(width: 12),
-                  if (commentCount != null) ...[
-                    const Icon(Icons.chat_bubble_outline, size: 14),
-                    const SizedBox(width: 4),
-                    Text('$commentCount'),
-                  ],
+            // 좋아요 & 댓글 개수 표시
+            Row(
+              children: [
+                if (likeCount != null) ...[
+                  Icon(
+                    isLiked == true
+                        ? Icons
+                              .favorite // 빨간 하트
+                        : Icons.favorite_border, // 빈 하트
+                    size: 14,
+                    color: isLiked == true ? Colors.red : Colors.black,
+                  ),
+                  const SizedBox(width: 4),
+                  Text('$likeCount'),
                 ],
-              ),
+                const SizedBox(width: 12),
+
+                if (commentCount != null) ...[
+                  const Icon(Icons.chat_bubble_outline, size: 14),
+                  const SizedBox(width: 4),
+                  Text('$commentCount'),
+                ],
+              ],
+            ),
           ],
         ),
       ),
