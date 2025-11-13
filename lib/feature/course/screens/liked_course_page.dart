@@ -136,6 +136,7 @@ class _LikedCoursePageState extends State<LikedCoursePage> {
                       imageUrls: List<String>.from(course['images']),
                       likeCount: course['like_count'],
                       commentCount: course['comment_count'],
+                      isLiked: course['is_liked'],
                       onTap: () async {
                         final userId = await SupabaseManager.shared
                             .getMyUserRowId();
