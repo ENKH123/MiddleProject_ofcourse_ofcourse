@@ -14,4 +14,8 @@ class AlertViewModel extends ChangeNotifier {
     _alerts = await SupabaseManager.shared.fetchAlerts();
     notifyListeners();
   }
+
+  Future<void> deleteAlert(int alertId) async {
+    await SupabaseManager.shared.deleteAlert(alertId);
+  }
 }
