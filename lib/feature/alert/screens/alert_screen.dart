@@ -49,10 +49,6 @@ class _AlertScreen extends StatelessWidget {
                           },
                         ),
                       ),
-                      // 예시 코드
-                      // AlertBox(user: "수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈수빈", type: "좋아요"),
-                      // AlertBox(user: "재현", type: "댓글"),
-                      // AlertBox(user: "강현", type: "좋아요"),
                     ],
                   ),
                 ),
