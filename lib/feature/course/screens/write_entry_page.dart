@@ -57,30 +57,137 @@ class _WriteEntryPageState extends State<WriteEntryPage> {
     final selected = await showDialog<int>(
       context: context,
       barrierDismissible: true,
-      builder: (ctx) => AlertDialog(
-        title: const Text("임시 저장된 코스가 있어요"),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text("이어 작성할 코스를 선택하세요.\n"),
-              ...drafts.map((d) {
-                return ListTile(
-                  title: Text(d['title'] ?? '제목 없음'),
-                  subtitle: Text("ID: ${d['id']}"),
-                  onTap: () => Navigator.pop(ctx, d['id']),
-                );
-              }),
-              const Divider(),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, -1),
-                child: const Text("새 코스 만들기"),
+      useRootNavigator: false,
+      builder: (ctx) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: 300,
+              padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
               ),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.edit_note, size: 42, color: Colors.orange),
+                  const SizedBox(height: 12),
+
+                  const Text(
+                    "임시 저장된 코스가 있어요",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // 📌 리스트 섹션
+                  SizedBox(
+                    height: 180,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: drafts.map((d) {
+                          return GestureDetector(
+                            onTap: () => Navigator.pop(ctx, d['id']),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 10,
+                              ),
+                              margin: const EdgeInsets.only(bottom: 8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8F8F8),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.description_outlined,
+                                    color: Colors.orange,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          d['title'] ?? '제목 없음',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          "ID: ${d['id']}",
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // 📌 하단 버튼 구역 (같은 영역)
+                  Column(
+                    children: [
+                      // 새 코스 만들기
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx, -1),
+                        child: Container(
+                          height: 44,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: const Text(
+                            "새 코스 만들기",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // 취소
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx, null),
+                        child: Container(
+                          height: 40,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF2F2F2),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Text("취소"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
 
     if (!mounted) return;
