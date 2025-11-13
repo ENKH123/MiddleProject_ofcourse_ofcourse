@@ -40,8 +40,14 @@ class _AlertScreen extends StatelessWidget {
                           itemCount: viewmodel.alerts?.length ?? 0,
                           itemBuilder: (context, index) {
                             return AlertBox(
-                              user: viewmodel.alerts![index].fromUserNickname,
+                              fromUser:
+                                  viewmodel.alerts![index].fromUserNickname,
                               type: viewmodel.alerts![index].type,
+                              userId: viewmodel.alerts![index].to_user_id,
+                              courseId: viewmodel.alerts![index].course_id
+                                  .toString(),
+                              viewModel: viewmodel,
+                              alertId: viewmodel.alerts![index].id,
                             );
                           },
                           separatorBuilder: (BuildContext context, int index) {
@@ -138,18 +144,35 @@ class AlertAppBar extends StatelessWidget {
 }
 
 class AlertBox extends StatelessWidget {
-  final String user;
+  final String fromUser;
   final String type;
-  const AlertBox({super.key, required this.user, required this.type});
+  final String courseId;
+  final String userId;
+  final int alertId;
+  final AlertViewModel viewModel;
+  const AlertBox({
+    super.key,
+    required this.fromUser,
+    required this.type,
+    required this.courseId,
+    required this.userId,
+    required this.viewModel,
+    required this.alertId,
+  });
 
   @override
   Widget build(BuildContext context) {
     // 리플 효과 없는 버튼
     // 알림창 전체 영역이 버튼
     return GestureDetector(
-      onTap: () {
-        print('AlertBox가 클릭되었습니다!');
-        _showAlertErrorPopup(context);
+      onTap: () async {
+        // print('AlertBox가 클릭되었습니다!');
+        // _showAlertErrorPopup(context);
+        await context.push(
+          '/detail',
+          extra: {'courseId': courseId, 'userId': userId},
+        );
+        await viewModel.deleteAlert(alertId);
       },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
@@ -173,7 +196,7 @@ class AlertBox extends StatelessWidget {
                   TextSpan(
                     children: <TextSpan>[
                       TextSpan(
-                        text: user,
+                        text: fromUser,
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       TextSpan(text: " 님이 내 코스에 "),
