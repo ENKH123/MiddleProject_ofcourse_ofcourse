@@ -10,10 +10,7 @@ class AlertScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: AppBar(title: const Text("알림"), centerTitle: true),
-      ),
+      appBar: AppBar(title: const Text("알림"), centerTitle: true),
       body: SafeArea(
         child: Consumer<AlertViewModel>(
           builder: (context, viewmodel, child) {
