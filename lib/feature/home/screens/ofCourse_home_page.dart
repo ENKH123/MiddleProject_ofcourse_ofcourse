@@ -126,43 +126,51 @@ class _OfcourseHomePageState extends State<OfcourseHomePage> {
         child: Row(
           children: tagList.map((tag) {
             final bool isSelected = selectedCategories.contains(tag);
-            return Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    isSelected
-                        ? selectedCategories.remove(tag)
-                        : selectedCategories.add(tag);
-                  });
-                  _loadCourses();
-                },
-                child: AnimatedContainer(
-                  height: 35,
-                  alignment: Alignment.center,
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
-                  decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xff003366) : Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 5,
-                        offset: const Offset(0, 2),
+            return Builder(
+              builder: (context) {
+                final cs = Theme.of(context).bottomNavigationBarTheme;
+                final sc = Theme.of(context).colorScheme;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isSelected
+                            ? selectedCategories.remove(tag)
+                            : selectedCategories.add(tag);
+                      });
+                      _loadCourses();
+                    },
+                    child: AnimatedContainer(
+                      height: 35,
+                      alignment: Alignment.center,
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? cs.selectedItemColor
+                            : cs.unselectedItemColor,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 5,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Text(
-                    tag.name,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                      child: Text(
+                        tag.name,
+                        style: TextStyle(
+                          color: isSelected ? sc.onPrimary : Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             );
           }).toList(),
         ),
