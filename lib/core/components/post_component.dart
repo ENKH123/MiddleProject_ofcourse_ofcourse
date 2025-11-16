@@ -135,7 +135,7 @@ class PostCard extends StatelessWidget {
                               .favorite // 빨간 하트
                         : Icons.favorite_border, // 빈 하트
                     size: 14,
-                    color: isLiked == true ? Colors.red : Colors.black,
+                    color: isLiked == true ? Colors.red : cs.onBackground,
                   ),
                   const SizedBox(width: 4),
                   Text('$likeCount'),

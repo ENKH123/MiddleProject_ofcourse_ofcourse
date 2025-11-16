@@ -35,7 +35,6 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: backgroundColor ?? _defaultBackgroundColor,
       elevation: 0,
       automaticallyImplyLeading: false,
       title: Row(
@@ -55,28 +54,30 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget _buildRegionSelector() {
-    return Container(
-      height: _buttonHeight,
-      padding: const EdgeInsets.symmetric(horizontal: _spacing),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(_spacing),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: DropdownButton<GuModel>(
-        value: selectedGu,
-        hint: const Text(
-          '전체',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+    return Builder(
+      builder: (context) {
+        final cs = Theme.of(context).colorScheme;
+        return Container(
+          height: _buttonHeight,
+          padding: const EdgeInsets.symmetric(horizontal: _spacing),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainer,
+            borderRadius: BorderRadius.circular(_spacing),
+            border: Border.all(color: Colors.grey[300]!),
           ),
-        ),
-        underline: const SizedBox(),
-        icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[700]),
-        items: _buildDropdownItems(),
-        onChanged: _handleGuChanged,
-      ),
+          child: DropdownButton<GuModel>(
+            value: selectedGu,
+            hint: const Text(
+              '전체',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+            underline: const SizedBox(),
+            icon: Icon(Icons.keyboard_arrow_down, color: cs.onBackground),
+            items: _buildDropdownItems(),
+            onChanged: _handleGuChanged,
+          ),
+        );
+      },
     );
   }
 
@@ -86,24 +87,18 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         value: null,
         child: Text(
           '전체',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
       ),
     ];
 
     items.addAll(
       guList.map(
-            (gu) => DropdownMenuItem<GuModel>(
+        (gu) => DropdownMenuItem<GuModel>(
           value: gu,
           child: Text(
             gu.name,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
         ),
       ),
@@ -122,8 +117,6 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       child: ElevatedButton(
         onPressed: () => _onRandomButtonPressed(context),
         style: ElevatedButton.styleFrom(
-          backgroundColor: _randomButtonColor,
-          foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(_spacing),
@@ -132,10 +125,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         child: const Text(
           '코스 추천',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -151,9 +141,9 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       final userRowId = await SupabaseManager.shared.getMyUserRowId();
 
       if (userRowId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('로그인이 필요합니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('로그인이 필요합니다.')));
         return;
       }
 
@@ -168,9 +158,9 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       final recs = (data['recommendations'] ?? []) as List<dynamic>;
 
       if (recs.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('추천할 코스를 찾지 못했습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('추천할 코스를 찾지 못했습니다.')));
         return;
       }
 
@@ -190,16 +180,16 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         },
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('추천 중 오류가 발생했습니다: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('추천 중 오류가 발생했습니다: $e')));
     }
   }
 
   String _buildRecommendationReason(
-      Map<String, dynamic> summary,
-      Map<String, dynamic> rec,
-      ) {
+    Map<String, dynamic> summary,
+    Map<String, dynamic> rec,
+  ) {
     final percent = rec['similarity_percent'] ?? 0;
 
     final matchedTags = rec['matched_tags'] as List<dynamic>? ?? [];
@@ -260,8 +250,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               icon: Icon(Icons.notifications_outlined, color: Colors.grey[700]),
               onPressed: onNotificationPressed,
             ),
-            if (hasUnreadNotifications)
-              _buildNotificationBadge(alertCount),
+            if (hasUnreadNotifications) _buildNotificationBadge(alertCount),
           ],
         );
       },
