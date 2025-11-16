@@ -85,10 +85,12 @@ final ThemeData lightTheme = ThemeData(
         primary: const Color(0xFF003366),
         onPrimary: const Color(0xFFFAFAFA), // 버튼 텍스트 색
         onSurface: const Color(0xFF030303), // 기본 텍스트 색
+        surfaceContainer: const Color(0xFFFAFAFA),
       ),
 
   scaffoldBackgroundColor: const Color(0xFFFAFAFA),
   canvasColor: const Color(0xFFFAFAFA),
+  cardColor: const Color(0xFF003366),
 
   // surfaceTintColor: Colors.transparent,
   textTheme: const TextTheme(
@@ -121,6 +123,13 @@ final ThemeData lightTheme = ThemeData(
     foregroundColor: Color(0xFF030303),
     elevation: 0,
   ),
+
+  bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+    backgroundColor: Color(0xfffafafa),
+    selectedItemColor: Color(0xff003366),
+    unselectedItemColor: Color(0xffD9D9D9),
+  ),
+
   filledButtonTheme: FilledButtonThemeData(
     style: FilledButton.styleFrom(
       backgroundColor: const Color(0xFF003366),
@@ -161,10 +170,12 @@ final ThemeData darkTheme = ThemeData(
     //onBackground: const Color(0xFFFAFAFA), // 기본 글자색
     surface: const Color(0xFF002245),
     onSurface: const Color(0xFFFAFAFA),
+    surfaceContainer: const Color(0xFF516C87), //흰 vs 회색 버튼 색상
   ),
 
   scaffoldBackgroundColor: const Color(0xFF002245),
   canvasColor: const Color(0xFF002245),
+  cardColor: const Color(0xFFC5D5E4),
 
   //surfaceTintColor: Colors.transparent,
   textTheme: const TextTheme(
@@ -198,6 +209,12 @@ final ThemeData darkTheme = ThemeData(
     elevation: 0,
   ),
 
+  bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+    backgroundColor: Color(0xff002245),
+    selectedItemColor: Color(0xfffafafa),
+    unselectedItemColor: Color(0xffA5A5A5),
+  ),
+
   filledButtonTheme: FilledButtonThemeData(
     style: FilledButton.styleFrom(
       backgroundColor: const Color(0xFFC5D5E4),
@@ -214,7 +231,7 @@ final ThemeData darkTheme = ThemeData(
   ),
   iconButtonTheme: const IconButtonThemeData(
     style: ButtonStyle(
-      foregroundColor: WidgetStatePropertyAll(Color(0xFFC5D5E4)),
+      foregroundColor: WidgetStatePropertyAll(Color(0xFFfafafa)),
     ),
   ),
   floatingActionButtonTheme: const FloatingActionButtonThemeData(

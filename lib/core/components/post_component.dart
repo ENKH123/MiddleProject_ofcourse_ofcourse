@@ -23,6 +23,8 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    // 최대 3장까지 이미지 슬롯
     final List<String?> displayImages = List.generate(3, (i) {
       if (imageUrls != null &&
           i < imageUrls!.length &&
@@ -38,7 +40,7 @@ class PostCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cs.surfaceContainer,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -54,7 +56,11 @@ class PostCard extends StatelessWidget {
             // 제목
             Text(
               title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: cs.onBackground,
+              ),
             ),
             const SizedBox(height: 8),
 
@@ -106,7 +112,13 @@ class PostCard extends StatelessWidget {
                     color: bgColor,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text('#$tag', style: const TextStyle(fontSize: 12)),
+                  child: Text(
+                    '#$tag',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xff030303),
+                    ),
+                  ),
                 );
               }).toList(),
             ),
