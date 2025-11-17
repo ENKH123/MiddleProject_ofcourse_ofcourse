@@ -732,7 +732,13 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
             ) ??
             false;
 
-        return ok;
+        if (ok) {
+          // 🔥 뒤로가기 팝 대신 home으로 이동
+          context.pushReplacement('/home');
+          return false; // 앱이 종료되지 않도록 pop 막기
+        }
+
+        return false; // 취소 눌러도 pop 하지 않음
       },
       child: Scaffold(
         body: SafeArea(
@@ -819,6 +825,13 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                         set.lng = lng;
                       },
                       onShowMapRequested: _scrollToMap,
+                      onScrollToTop: (offsetY) {
+                        _scrollController.animateTo(
+                          offsetY - 20, // 약간 여유 공간
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOutCubic,
+                        );
+                      },
                     ),
                   );
                 }),
