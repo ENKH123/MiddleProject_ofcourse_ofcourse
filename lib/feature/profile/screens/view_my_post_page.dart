@@ -28,8 +28,7 @@ class _ViewMyPostPageState extends State<ViewMyPostPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
-      appBar: AppBar(title: const Text("내가 작성한 코스")),
+      appBar: AppBar(scrolledUnderElevation: 0, title: const Text("내가 작성한 코스")),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: ListView.separated(

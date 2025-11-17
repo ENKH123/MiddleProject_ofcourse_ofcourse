@@ -7,6 +7,7 @@ import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/components/custom_app_bar.dart';
 import '../../../core/components/loading_dialog.dart';
 import 'terms_mypage_screen.dart';
 
@@ -16,24 +17,14 @@ class ProfileScreen extends StatelessWidget {
   Future<SupabaseUserModel?> _loadUser() async {
     final email = Supabase.instance.client.auth.currentUser?.email;
     if (email == null) return null;
-    return await SupabaseManager.shared.getPublicUser(email);
+    return await SupabaseManager.shared.fetchPublicUser(email);
   }
 
   @override
   Widget build(BuildContext context) {
+    LoginViewModel viewModelL = context.read<LoginViewModel>();
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('마이페이지'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_rounded),
-            onPressed: () {
-              context.push('/alert');
-            },
-          ),
-        ],
-      ),
+      appBar: CustomAppBar(title: '마이페이지', showBackButton: false),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
@@ -148,16 +139,8 @@ class ProfileScreen extends StatelessWidget {
               height: 48,
               child: ElevatedButton(
                 onPressed: () async {
-                  showFullScreenLoading(context);
-                  try {
-                    await context.read<LoginViewModel>().signOut(context);
-                    context.go('/login');
-                  } catch (e) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('로그아웃 실패: $e')));
-                  }
-                  Navigator.of(context).pop();
+                  viewModelL.isDialogType(DialogType.logOut);
+                  _showSignOutPopup(context, viewModelL);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade100,
@@ -175,16 +158,8 @@ class ProfileScreen extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () async {
-                  // 회원탈퇴 후 로그아웃
-                  showFullScreenLoading(context);
-                  await context.read<LoginViewModel>().resign();
-                  await context.read<LoginViewModel>().signOut(context);
-                  context.go('/login');
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('회원탈퇴가 완료되었습니다.')));
-                  // 회원탈퇴 팝업/라우팅 연결 예정
+                  viewModelL.isDialogType(DialogType.reSign);
+                  _showSignOutPopup(context, viewModelL);
                 },
                 child: const Text(
                   '회원탈퇴',
@@ -225,4 +200,94 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+void _showSignOutPopup(BuildContext context, LoginViewModel viewModel) {
+  showDialog(
+    context: context,
+
+    // 다이얼로그 외부를 탭해도 닫히지 않게 설정 (배경 클릭 방지)
+    // barrierDismissible: false,
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.transparent, // Dialog 배경 투명하게
+        child: Center(
+          child: Container(
+            width: 240,
+            height: 200,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 20,
+                children: [
+                  viewModel.dialogType == DialogType.logOut
+                      ? Text("로그아웃 하시겠습니까?", style: TextStyle(fontSize: 20))
+                      : Text("정말 탈퇴하시겠습니까?", style: TextStyle(fontSize: 20)),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            if (viewModel.dialogType == DialogType.logOut) {
+                              try {
+                                showFullScreenLoading(context);
+                                await context.read<LoginViewModel>().signOut(
+                                  context,
+                                );
+                                Navigator.of(context).pop();
+                                Navigator.of(context).pop();
+                                context.go('/login');
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('로그아웃 실패: $e')),
+                                );
+                              }
+                            } else {
+                              // 회원탈퇴 후 로그아웃
+                              showFullScreenLoading(context);
+                              await context.read<LoginViewModel>().resign();
+                              await context.read<LoginViewModel>().signOut(
+                                context,
+                              );
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              context.go('/login');
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('회원탈퇴가 완료되었습니다.')),
+                              );
+                            }
+                          },
+                          child: const Text("확인"),
+                        ),
+                      ),
+                      SizedBox.fromSize(size: Size(8, 0)),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                          ),
+                          child: const Text(
+                            "취소",
+                            style: TextStyle(color: Colors.black),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }

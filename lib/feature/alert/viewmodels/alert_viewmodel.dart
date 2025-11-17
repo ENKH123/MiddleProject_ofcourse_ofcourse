@@ -10,15 +10,31 @@ class AlertViewModel extends ChangeNotifier {
   List<AlertModel>? _alerts;
   List<AlertModel>? get alerts => _alerts;
 
-  late RealtimeChannel channel;
+  final currentUser = SupabaseManager.shared.supabase.auth.currentUser;
+
+  String? _publicUserId;
+  String? get publicUserId => _publicUserId;
+
+  late RealtimeChannel? channel;
 
   AlertViewModel() {
+    _init();
+  }
+
+  Future<void> _init() async {
+    _publicUserId = await SupabaseManager.shared.fetchPublicUserId(
+      currentUser?.email ?? "",
+    );
+    // 처음 뷰모델 생성시 알림 불러오기
+    fetchAlerts();
     channel = _subscribeAlertEvent();
   }
 
   @override
   void dispose() {
-    channel.unsubscribe();
+    if (channel != null) {
+      channel?.unsubscribe();
+    }
     super.dispose();
   }
 
@@ -35,30 +51,40 @@ class AlertViewModel extends ChangeNotifier {
   }
 
   void unsubscribeRealtime() {
-    channel.unsubscribe();
+    channel?.unsubscribe();
   }
 
   void resubscribeRealtime() {
-    channel.unsubscribe();
+    channel?.unsubscribe();
     channel = _subscribeAlertEvent();
   }
 
   // 실시간 감지
-  RealtimeChannel _subscribeAlertEvent() {
-    // 처음 뷰모델 생성시 알림 불러오기
-    fetchAlerts();
-    // 데이터 변경(추가, 삭제) 될 때마다 알림 불러오기
-    return SupabaseManager.shared.supabase
-        .channel('listen_alert')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'alert',
-          callback: (payload) {
-            print("payload : $payload");
-            fetchAlerts();
-          },
-        )
-        .subscribe();
+  RealtimeChannel? _subscribeAlertEvent() {
+    if (publicUserId != null) {
+      // 데이터 변경(추가, 삭제) 될 때마다 알림 불러오기
+      return SupabaseManager.shared.supabase
+          .channel('listen_alert')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'alert',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'to_user_id',
+              value: publicUserId,
+            ),
+            callback: (payload) {
+              print("payload : $payload");
+              print("_alerts : ${_alerts}");
+              fetchAlerts();
+              // _alerts?.add(payload.newRecord as AlertModel);
+              notifyListeners();
+            },
+          )
+          .subscribe();
+    } else {
+      return null;
+    }
   }
 }
