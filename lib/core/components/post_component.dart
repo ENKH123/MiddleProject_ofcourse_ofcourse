@@ -4,10 +4,10 @@ import 'package:of_course/core/models/tag_color_model.dart';
 class PostCard extends StatelessWidget {
   final String title;
   final List<String> tags;
-  final List<String>? imageUrls;
+  final List<String>? imageUrls; // 최대 3장
   final int? likeCount;
   final int? commentCount;
-  final bool? isLiked; // ⭐ 좋아요 여부 추가
+  final bool? isLiked;
   final VoidCallback? onTap;
 
   const PostCard({
@@ -17,23 +17,18 @@ class PostCard extends StatelessWidget {
     this.imageUrls,
     this.likeCount,
     this.commentCount,
-    this.isLiked, // ⭐ 추가
+    this.isLiked,
     this.onTap,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    // 최대 3장까지 이미지 슬롯
-    final List<String?> displayImages = List.generate(3, (i) {
-      if (imageUrls != null &&
-          i < imageUrls!.length &&
-          imageUrls![i] != null &&
-          imageUrls![i]!.isNotEmpty) {
-        return imageUrls![i];
-      }
-      return null;
-    });
+
+    // 유효 이미지만 필터링 (null, 빈 문자열 제외)
+    final List<String> validImages = (imageUrls ?? [])
+        .where((e) => e != null && e.toString().trim().isNotEmpty)
+        .toList();
 
     return GestureDetector(
       onTap: onTap,
@@ -62,34 +57,38 @@ class PostCard extends StatelessWidget {
                 color: cs.onBackground,
               ),
             ),
+
             const SizedBox(height: 8),
 
-            // 이미지
-            SizedBox(
-              height: 100,
-              child: Row(
-                children: displayImages.map((url) {
-                  return Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 6),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: url == null
-                            ? const SizedBox.shrink() // 완전 투명
-                            : Image.network(
-                                url,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
-                                    const SizedBox.shrink(),
-                              ),
+            // ⭐ 이미지가 있을 때만 보여줌
+            if (validImages.isNotEmpty)
+              SizedBox(
+                height: 100,
+                child: Row(
+                  children: List.generate(3, (i) {
+                    final url = i < validImages.length ? validImages[i] : null;
+
+                    return Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 6),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: url == null
+                              ? const SizedBox.shrink()
+                              : Image.network(
+                                  url,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) =>
+                                      Container(color: Colors.grey[300]),
+                                ),
+                        ),
                       ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }),
+                ),
               ),
-            ),
 
-            const SizedBox(height: 8),
+            if (validImages.isNotEmpty) const SizedBox(height: 8),
 
             // 태그 목록
             Wrap(
@@ -130,10 +129,7 @@ class PostCard extends StatelessWidget {
               children: [
                 if (likeCount != null) ...[
                   Icon(
-                    isLiked == true
-                        ? Icons
-                              .favorite // 빨간 하트
-                        : Icons.favorite_border, // 빈 하트
+                    isLiked == true ? Icons.favorite : Icons.favorite_border,
                     size: 14,
                     color: isLiked == true ? Colors.red : cs.onBackground,
                   ),

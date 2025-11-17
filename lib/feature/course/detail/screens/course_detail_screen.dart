@@ -395,6 +395,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     return AppBar(
       backgroundColor: _backgroundColor,
       elevation: 0,
+      scrolledUnderElevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: _handleBackNavigation,
