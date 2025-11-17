@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:of_course/feature/home/screens/ofCourse_home_page.dart';
 
 class OfcourseBottomNavBarUI extends StatelessWidget {
   final Future<bool> Function(String route)? onNavigateAttempt;
@@ -23,17 +24,29 @@ class OfcourseBottomNavBarUI extends StatelessWidget {
       currentIndex: index,
       onTap: (i) async {
         String? route;
+
         switch (i) {
           case 0:
+            if (currentLocation.startsWith('/home')) {
+              OfcourseHomePage.scrollController.animateTo(
+                0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+              return;
+            }
             route = '/home';
             break;
+
           case 1:
-            final now = GoRouterState.of(context).uri.toString();
+            final now = currentLocation;
             context.push('/write', extra: {'from': now});
-            return; // 아래 go() 실행 방지
+            return;
+
           case 2:
             route = '/liked';
             break;
+
           case 3:
             route = '/profile';
             break;
@@ -41,7 +54,6 @@ class OfcourseBottomNavBarUI extends StatelessWidget {
 
         if (route == null) return;
 
-        // 작성 중일 때는 콜백 통해 이동 제어
         if (onNavigateAttempt != null) {
           final ok = await onNavigateAttempt!(route);
           if (ok && context.mounted) context.go(route);

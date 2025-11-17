@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
 
 class WriteEntryPage extends StatefulWidget {
-  final String? from; // 🔥 이전 화면 저장
+  final String? from;
 
   const WriteEntryPage({super.key, this.from});
 
@@ -12,49 +12,61 @@ class WriteEntryPage extends StatefulWidget {
 }
 
 class _WriteEntryPageState extends State<WriteEntryPage> {
+  late final String _prevRoute;
   bool _checked = false;
-  bool _isChecking = false;
-
-  late String _prevRoute;
 
   @override
   void initState() {
     super.initState();
-    // 🔥 이전 화면 경로 저장 → 없으면 홈
     _prevRoute = widget.from ?? '/home';
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
     if (!_checked) {
       _checked = true;
       _checkDraft();
     }
   }
 
+  void _navigateTo(String route, {Object? extra}) {
+    if (!mounted) return;
+    context.go(route, extra: extra);
+  }
+
+  void _navigateBack() => _navigateTo(_prevRoute);
+
+  void _navigateToNew() => _navigateTo('/write/new');
+
+  void _navigateToContinue(int id) => _navigateTo('/write/continue', extra: id);
+
   Future<void> _checkDraft() async {
-    if (_isChecking) return;
-    _isChecking = true;
+    try {
+      final userId = await SupabaseManager.shared.getMyUserRowId();
+      if (!mounted) return;
 
-    final userId = await SupabaseManager.shared.getMyUserRowId();
-    if (!mounted) return;
+      if (userId == null) return _navigateBack();
 
-    if (userId == null) {
-      context.go(_prevRoute);
-      return;
+      final drafts = await SupabaseManager.shared.getDraftCourses(userId);
+      if (!mounted) return;
+
+      if (drafts.isEmpty) return _navigateToNew();
+
+      final selected = await _showDraftDialog(drafts);
+
+      if (selected == null) return _navigateBack();
+      if (selected == -1) return _navigateToNew();
+
+      return _navigateToContinue(selected);
+    } catch (e) {
+      debugPrint("❌ Draft check error: $e");
+      if (mounted) _navigateBack();
     }
+  }
 
-    final drafts = await SupabaseManager.shared.getDraftCourses(userId);
-    if (!mounted) return;
-
-    if (drafts.isEmpty) {
-      context.go('/write/new');
-      return;
-    }
-
-    final selected = await showDialog<int>(
+  Future<int?> _showDraftDialog(List<dynamic> drafts) {
+    return showDialog<int>(
       context: context,
       barrierDismissible: true,
       useRootNavigator: false,
@@ -74,16 +86,13 @@ class _WriteEntryPageState extends State<WriteEntryPage> {
                 children: [
                   const Icon(Icons.edit_note, size: 42, color: Colors.orange),
                   const SizedBox(height: 12),
-
                   const Text(
                     "임시 저장된 코스가 있어요",
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                   ),
-
                   const SizedBox(height: 16),
 
-                  // 📌 리스트 섹션
                   SizedBox(
                     height: 180,
                     child: SingleChildScrollView(
@@ -142,10 +151,8 @@ class _WriteEntryPageState extends State<WriteEntryPage> {
 
                   const SizedBox(height: 20),
 
-                  // 📌 하단 버튼 구역 (같은 영역)
                   Column(
                     children: [
-                      // 새 코스 만들기
                       GestureDetector(
                         onTap: () => Navigator.pop(ctx, -1),
                         child: Container(
@@ -164,10 +171,7 @@ class _WriteEntryPageState extends State<WriteEntryPage> {
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 10),
-
-                      // 취소
                       GestureDetector(
                         onTap: () => Navigator.pop(ctx, null),
                         child: Container(
@@ -189,27 +193,13 @@ class _WriteEntryPageState extends State<WriteEntryPage> {
         );
       },
     );
-
-    if (!mounted) return;
-
-    if (selected == null) {
-      context.go(_prevRoute);
-      return;
-    }
-
-    if (selected == -1) {
-      context.go('/write/new');
-      return;
-    }
-
-    context.go('/write/continue', extra: selected);
   }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        context.go(_prevRoute); // 🔥 뒤로가기 → 이전 경로로 복귀
+        _navigateBack();
         return false;
       },
       child: const Scaffold(body: Center(child: CircularProgressIndicator())),
