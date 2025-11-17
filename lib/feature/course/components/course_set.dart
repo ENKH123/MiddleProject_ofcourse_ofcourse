@@ -15,8 +15,7 @@ class WriteCourseSet extends StatefulWidget {
   final Function(TagModel)? onTagChanged;
 
   final VoidCallback? onShowMapRequested;
-  final ValueSetter<double>? onScrollToTop; // ⭐ 검색창 눌렀을 때 부모 스크롤 제어
-
+  final ValueSetter<double>? onScrollToTop;
   final List<TagModel> tagList;
   final bool highlight;
 
