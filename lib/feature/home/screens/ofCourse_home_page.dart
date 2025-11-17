@@ -9,6 +9,8 @@ import 'package:of_course/core/models/tags_moedl.dart';
 class OfcourseHomePage extends StatefulWidget {
   const OfcourseHomePage({super.key});
 
+  static final ScrollController scrollController = ScrollController();
+
   @override
   State<OfcourseHomePage> createState() => _OfcourseHomePageState();
 }
@@ -63,7 +65,6 @@ class _OfcourseHomePageState extends State<OfcourseHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //backgroundColor: const Color(0xFFFAFAFA), 자체 배경 제거
       appBar: HomeAppBar(
         selectedGu: selectedGu,
         guList: guList,
@@ -82,6 +83,7 @@ class _OfcourseHomePageState extends State<OfcourseHomePage> {
 
           Expanded(
             child: ListView.separated(
+              controller: OfcourseHomePage.scrollController, // ⭐ 적용
               padding: const EdgeInsets.symmetric(horizontal: 16),
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemCount: courseList.length,
