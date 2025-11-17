@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:go_router/go_router.dart';
@@ -40,7 +42,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   NaverMapController? _mapController;
   final List<NMarker> _markers = [];
+  final Map<String, NLatLng> _markerPositions = {}; // 마커 ID와 위치 매핑
   NPolylineOverlay? _polyline;
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _setCardKeys = {};
+  final GlobalKey _mapSectionKey = GlobalKey();
 
   static const Color _backgroundColor = Color(0xFFFAFAFA);
   static const Color _mainColor = Color(0xFF003366);
@@ -90,6 +96,12 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         _comments = List.from(courseDetail.comments);
         _isLoading = false;
       });
+
+      // 세트 카드 키 초기화
+      _setCardKeys.clear();
+      for (final set in courseDetail.sets) {
+        _setCardKeys[set.setId] = GlobalKey();
+      }
     } catch (e, st) {
       print(st);
 
@@ -136,6 +148,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     if (_courseDetail == null) return;
 
     _markers.clear();
+    _markerPositions.clear();
     final List<NLatLng> points = [];
 
     // 세트 순서에 맞춰서 마커 생성 (숫자 표기)
@@ -154,6 +167,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           caption: NOverlayCaption(text: setNumber.toString(), textSize: 14),
         ),
       );
+      // 마커 위치 저장
+      _markerPositions[set.setId] = pos;
       setNumber++;
     }
 
@@ -198,6 +213,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   void dispose() {
     _commentController.removeListener(_onCommentChanged);
     _commentController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -613,6 +629,103 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   String _formatDate(DateTime date) =>
       '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
 
+  /// 지도 탭 이벤트 처리 - 가장 가까운 마커 찾기
+  void _handleMapTap(NLatLng tappedLocation) {
+    if (_courseDetail == null || _markerPositions.isEmpty) return;
+
+    String? closestMarkerId;
+    double minDistance = double.infinity;
+    const double maxTapDistanceMeters = 100.0; // 약 100m 이내
+
+    // 탭된 위치에서 가장 가까운 마커 찾기
+    for (final entry in _markerPositions.entries) {
+      final markerId = entry.key;
+      final markerPos = entry.value;
+      final distance = _calculateDistance(
+        tappedLocation.latitude,
+        tappedLocation.longitude,
+        markerPos.latitude,
+        markerPos.longitude,
+      );
+
+      if (distance < minDistance && distance < maxTapDistanceMeters) {
+        minDistance = distance;
+        closestMarkerId = markerId;
+      }
+    }
+
+    // 가장 가까운 마커가 있으면 해당 세트로 스크롤
+    if (closestMarkerId != null) {
+      _scrollToSetCard(closestMarkerId);
+    }
+  }
+
+  /// 두 좌표 간 거리 계산 (하버사인 공식, 미터 단위)
+  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    const double earthRadius = 6371000; // 지구 반지름 (미터)
+    final double dLat = _toRadians(lat2 - lat1);
+    final double dLon = _toRadians(lon2 - lon1);
+
+    final double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(_toRadians(lat1)) *
+            math.cos(_toRadians(lat2)) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
+    final double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+
+    return earthRadius * c;
+  }
+
+  double _toRadians(double degrees) => degrees * (math.pi / 180.0);
+
+  /// 마커 클릭 시 해당 세트 카드로 스크롤
+  void _scrollToSetCard(String setId) {
+    final key = _setCardKeys[setId];
+    if (key?.currentContext != null) {
+      Scrollable.ensureVisible(
+        key!.currentContext!,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+        alignment: 0.1, // 화면 상단에서 약간 아래 위치
+      );
+    }
+  }
+
+  /// 세트 주소 클릭 시 지도 섹션으로 스크롤하고 해당 마커로 이동
+  void _moveToMarker(String setId) {
+    // 먼저 지도 섹션으로 스크롤
+    if (_mapSectionKey.currentContext != null) {
+      Scrollable.ensureVisible(
+        _mapSectionKey.currentContext!,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+        alignment: 0.0,
+      );
+    }
+
+    // 지도가 준비되면 해당 마커로 이동
+    if (_courseDetail == null) return;
+
+    final set = _courseDetail!.sets.firstWhere(
+          (s) => s.setId == setId,
+      orElse: () => _courseDetail!.sets.first,
+    );
+
+    if (set.lat == 0.0 || set.lng == 0.0) return;
+
+    // 지도 컨트롤러가 준비될 때까지 약간의 지연 후 이동
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (_mapController != null) {
+        _mapController!.updateCamera(
+          NCameraUpdate.withParams(
+            target: NLatLng(set.lat, set.lng),
+            zoom: 15.0,
+          ),
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -658,6 +771,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         children: [
           Expanded(
             child: SingleChildScrollView(
+              controller: _scrollController,
               child: Column(
                 children: [
                   _buildHeader(),
@@ -824,6 +938,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   Widget _buildMapSection() {
     return Padding(
+      key: _mapSectionKey,
       padding: const EdgeInsets.symmetric(horizontal: _spacingMedium),
       child: Container(
         height: 200,
@@ -839,6 +954,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 onMapReady: (controller) {
                   _mapController = controller;
                   _initMarkers();
+                },
+                onMapTapped: (point, latLng) {
+                  _handleMapTap(latLng);
                 },
                 options: const NaverMapViewOptions(
                   zoomGesturesEnable: true,
@@ -882,6 +1000,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         final i = entry.key;
         final set = entry.value;
         return Padding(
+          key: _setCardKeys[set.setId],
           padding: EdgeInsets.only(
             left: _spacingMedium,
             right: _spacingMedium,
@@ -936,12 +1055,22 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
             const SizedBox(height: _spacingMedium),
             if (set.setAddress.isNotEmpty)
-              Row(
-                children: [
-                  Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
-                  Expanded(child: Text(set.setAddress)),
-                ],
+              GestureDetector(
+                onTap: () => _moveToMarker(set.setId),
+                child: Row(
+                  children: [
+                    Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        set.setAddress,
+                        style: TextStyle(
+                          color: _mainColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             if (set.setAddress.isNotEmpty)
               const SizedBox(height: _spacingSmall),
