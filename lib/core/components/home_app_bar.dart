@@ -35,8 +35,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      backgroundColor: backgroundColor ?? _defaultBackgroundColor,
       elevation: 0,
-      scrolledUnderElevation: 0,
       automaticallyImplyLeading: false,
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -54,31 +54,27 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
+  /// 지역 선택 드롭다운
   Widget _buildRegionSelector() {
-    return Builder(
-      builder: (context) {
-        final cs = Theme.of(context).colorScheme;
-        return Container(
-          height: _buttonHeight,
-          padding: const EdgeInsets.symmetric(horizontal: _spacing),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainer,
-            borderRadius: BorderRadius.circular(_spacing),
-            border: Border.all(color: Colors.grey[300]!),
-          ),
-          child: DropdownButton<GuModel>(
-            value: selectedGu,
-            hint: const Text(
-              '전체',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
-            underline: const SizedBox(),
-            icon: Icon(Icons.keyboard_arrow_down, color: cs.onBackground),
-            items: _buildDropdownItems(),
-            onChanged: _handleGuChanged,
-          ),
-        );
-      },
+    return Container(
+      height: _buttonHeight,
+      padding: const EdgeInsets.symmetric(horizontal: _spacing),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(_spacing),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: DropdownButton<GuModel>(
+        value: selectedGu,
+        hint: const Text(
+          '전체',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        underline: const SizedBox(),
+        icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[700]),
+        items: _buildDropdownItems(),
+        onChanged: _handleGuChanged,
+      ),
     );
   }
 
@@ -118,6 +114,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       child: ElevatedButton(
         onPressed: () => _onRandomButtonPressed(context),
         style: ElevatedButton.styleFrom(
+          backgroundColor: _randomButtonColor,
+          foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(_spacing),
@@ -125,88 +123,81 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           elevation: 0,
         ),
         child: const Text(
-          '코스 추천',
+          'random',
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
     );
   }
 
-  void _onRandomButtonPressed(BuildContext context) async {
+  void _onRandomButtonPressed(BuildContext context) {
     if (onRandomPressed != null) {
       onRandomPressed!();
-      return;
-    }
-
-    try {
-      final userRowId = await SupabaseManager.shared.getMyUserRowId();
-
-      if (userRowId == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('로그인이 필요합니다.')));
-        return;
-      }
-
-      // 온보딩 화면으로 이동
-      context.push('/onboarding');
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('추천 중 오류가 발생했습니다: $e')));
+    } else {
+      _handleRandomPressed(context);
     }
   }
 
-  String _buildRecommendationReason(
-    Map<String, dynamic> summary,
-    Map<String, dynamic> rec,
-  ) {
-    final percent = rec['similarity_percent'] ?? 0;
+  /// 랜덤 코스 가져오기 및 상세 화면으로 이동
+  Future<void> _handleRandomPressed(BuildContext context) async {
+    if (!context.mounted) return;
 
-    final matchedTags = rec['matched_tags'] as List<dynamic>? ?? [];
-    final matchedGus = rec['matched_gus'] as List<dynamic>? ?? [];
+    try {
+      final userRowId = await SupabaseManager.shared.getMyUserRowId();
+      final likedCourseIds = await _getLikedCourseIds(userRowId);
+      final randomCourseId = await _getRandomCourseId(likedCourseIds);
 
-    String? tagPart;
-    if (matchedTags.isNotEmpty) {
-      final names = matchedTags
-          .map((t) => t['name'])
-          .whereType<String>()
-          .where((s) => s.isNotEmpty)
-          .toList();
-      if (names.isNotEmpty) {
-        tagPart = names.join(', ');
+      if (randomCourseId != null && context.mounted) {
+        _navigateToDetail(context, randomCourseId, userRowId ?? '');
+      } else if (context.mounted) {
+        _showErrorMessage(context, '랜덤 코스를 찾을 수 없습니다.');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        _showErrorMessage(context, '랜덤 코스를 가져오는 중 오류가 발생했습니다.');
       }
     }
+  }
 
-    String? guPart;
-    if (matchedGus.isNotEmpty) {
-      final names = matchedGus
-          .map((g) => g['name'])
-          .whereType<String>()
-          .where((s) => s.isNotEmpty)
-          .toList();
-      if (names.isNotEmpty) {
-        guPart = names.join(', ');
-      }
+  /// 좋아요한 코스 ID 목록 가져오기
+  Future<List<int>> _getLikedCourseIds(String? userRowId) async {
+    if (userRowId == null) return [];
+    return await SupabaseManager.shared.getLikedCourseIds(userRowId);
+  }
+
+  /// 랜덤 코스 ID 가져오기 (태그 기반 또는 완전 랜덤)
+  Future<int?> _getRandomCourseId(List<int> likedCourseIds) async {
+    // 태그 기반 랜덤 시도
+    if (_hasSelectedCategories) {
+      final selectedTagNames = _getSelectedTagNames();
+      final tagBasedCourseId = await SupabaseManager.shared
+          .getRandomCourseByTags(selectedTagNames, likedCourseIds);
+      if (tagBasedCourseId != null) return tagBasedCourseId;
     }
 
-    String sentence = '이 코스는 내 취향과 유사도 $percent%입니다.\n';
+    // 완전 랜덤
+    return await SupabaseManager.shared.getRandomCourse(
+      excludeCourseIds: likedCourseIds,
+    );
+  }
 
-    if (tagPart != null) {
-      sentence += '최근에 $tagPart 태그 코스를 좋아했고,\n';
-    }
+  bool get _hasSelectedCategories =>
+      selectedCategories != null && selectedCategories!.isNotEmpty;
 
-    if (guPart != null) {
-      sentence += '$guPart관련 코스를 자주 선택해 추천했어요.';
-    } else {
-      if (sentence.endsWith(',\n')) {
-        sentence = sentence.substring(0, sentence.length - 2);
-        sentence += '\n';
-      }
-      sentence += '추천했어요.';
-    }
+  List<String> _getSelectedTagNames() {
+    return selectedCategories!.map((tag) => tag.name).toList();
+  }
 
-    return sentence;
+  /// 코스 상세 화면으로 이동
+  void _navigateToDetail(BuildContext context, int courseId, String userId) {
+    context.push('/detail', extra: {'courseId': courseId, 'userId': userId});
+  }
+
+  /// 에러 메시지 표시
+  void _showErrorMessage(BuildContext context, String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget _buildNotificationIcon() {

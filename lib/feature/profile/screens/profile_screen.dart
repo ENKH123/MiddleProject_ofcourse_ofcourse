@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/core/app_theme.dart';
-import 'package:of_course/core/components/custom_app_bar.dart';
-import 'package:of_course/core/components/loading_dialog.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
 import 'package:of_course/feature/profile/screens/terms_mypage_screen.dart';
 import 'package:of_course/feature/profile/viewmodels/profile_viewmodel.dart';
 import 'package:provider/provider.dart';
+
+import '../../../core/components/custom_app_bar.dart';
+import '../../../core/components/loading_dialog.dart';
+import 'terms_mypage_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -201,4 +203,94 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+void _showSignOutPopup(BuildContext context, LoginViewModel viewModel) {
+  showDialog(
+    context: context,
+
+    // 다이얼로그 외부를 탭해도 닫히지 않게 설정 (배경 클릭 방지)
+    // barrierDismissible: false,
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.transparent, // Dialog 배경 투명하게
+        child: Center(
+          child: Container(
+            width: 240,
+            height: 200,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 20,
+                children: [
+                  viewModel.dialogType == DialogType.logOut
+                      ? Text("로그아웃 하시겠습니까?", style: TextStyle(fontSize: 20))
+                      : Text("정말 탈퇴하시겠습니까?", style: TextStyle(fontSize: 20)),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            if (viewModel.dialogType == DialogType.logOut) {
+                              try {
+                                showFullScreenLoading(context);
+                                await context.read<LoginViewModel>().signOut(
+                                  context,
+                                );
+                                Navigator.of(context).pop();
+                                Navigator.of(context).pop();
+                                context.go('/login');
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('로그아웃 실패: $e')),
+                                );
+                              }
+                            } else {
+                              // 회원탈퇴 후 로그아웃
+                              showFullScreenLoading(context);
+                              await context.read<LoginViewModel>().resign();
+                              await context.read<LoginViewModel>().signOut(
+                                context,
+                              );
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              context.go('/login');
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('회원탈퇴가 완료되었습니다.')),
+                              );
+                            }
+                          },
+                          child: const Text("확인"),
+                        ),
+                      ),
+                      SizedBox.fromSize(size: Size(8, 0)),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                          ),
+                          child: const Text(
+                            "취소",
+                            style: TextStyle(color: Colors.black),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
