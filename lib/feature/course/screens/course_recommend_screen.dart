@@ -141,22 +141,36 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
     }
   }
 
+  void _goToHome() {
+    if (context.mounted) {
+      // 라우팅 히스토리를 완전히 교체하여 홈으로 이동
+      context.go('/home');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _backgroundColor,
-      appBar: AppBar(
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          _goToHome();
+        }
+      },
+      child: Scaffold(
         backgroundColor: _backgroundColor,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+        appBar: AppBar(
+          backgroundColor: _backgroundColor,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: _goToHome,
+          ),
+          title: const Text(
+            '코스 추천',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
         ),
-        title: const Text(
-          '코스 추천',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
@@ -277,6 +291,7 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
               ),
           ],
         ),
+      ),
       ),
     );
   }

@@ -147,38 +147,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         return;
       }
 
-      final supabase = SupabaseManager.shared.supabase;
-
-      final response = await supabase.functions.invoke(
-        'smart-task',
-        body: {'user_id': userRowId},
-      );
-
-      final data = response.data as Map<String, dynamic>;
-      final recs = (data['recommendations'] ?? []) as List<dynamic>;
-
-      if (recs.isEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('추천할 코스를 찾지 못했습니다.')));
-        return;
-      }
-
-      final first = recs.first as Map<String, dynamic>;
-      final course = first['course'] as Map<String, dynamic>;
-      final courseId = course['id'] as int;
-
-      final summary = (data['summary'] ?? {}) as Map<String, dynamic>;
-      final reason = _buildRecommendationReason(summary, first);
-
-      context.push(
-        '/detail',
-        extra: {
-          'courseId': courseId,
-          'userId': userRowId,
-          'recommendationReason': reason,
-        },
-      );
+      // 온보딩 화면으로 이동
+      context.push('/onboarding');
     } catch (e) {
       ScaffoldMessenger.of(
         context,
