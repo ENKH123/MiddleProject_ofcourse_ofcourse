@@ -23,8 +23,13 @@ class _AlertScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         automaticallyImplyLeading: false,
-        title: AppBar(title: const Text("알림"), centerTitle: true),
+        title: AppBar(
+          scrolledUnderElevation: 0,
+          title: const Text("알림"),
+          centerTitle: true,
+        ),
       ),
       body: SafeArea(
         child: Consumer<AlertViewModel>(
