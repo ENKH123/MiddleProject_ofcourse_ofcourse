@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/core/app_theme.dart';
+import 'package:of_course/core/components/custom_app_bar.dart';
+import 'package:of_course/core/components/loading_dialog.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/core/models/supabase_user_model.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
+import 'package:of_course/feature/profile/screens/terms_mypage_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../../../core/components/loading_dialog.dart';
-import 'terms_mypage_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -22,18 +22,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('마이페이지'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_rounded),
-            onPressed: () {
-              context.push('/alert');
-            },
-          ),
-        ],
-      ),
+      appBar: CustomAppBar(title: '마이페이지', showBackButton: false),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
@@ -84,10 +73,10 @@ class ProfileScreen extends StatelessWidget {
                           : null,
                       child: (imageUrl == null || imageUrl.isEmpty)
                           ? const Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 60,
-                      )
+                              Icons.person,
+                              color: Colors.white,
+                              size: 60,
+                            )
                           : null,
                     ),
                     const SizedBox(height: 12),
@@ -203,10 +192,10 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _menuButton(
-      BuildContext context, {
-        required String label,
-        required VoidCallback onTap,
-      }) {
+    BuildContext context, {
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: SizedBox(
@@ -226,4 +215,3 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 }
-

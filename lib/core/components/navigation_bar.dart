@@ -50,8 +50,6 @@ class OfcourseBottomNavBarUI extends StatelessWidget {
         }
       },
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: const Color(0xFF003366),
-      unselectedItemColor: Colors.grey,
       showUnselectedLabels: true,
       items: const [
         BottomNavigationBarItem(

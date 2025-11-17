@@ -32,29 +32,28 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final defaultBackgroundColor = backgroundColor ?? const Color(0xFFFAFAFA);
     final defaultIconColor = iconColor ?? Colors.black;
+    final cs = Theme.of(context).colorScheme;
 
     return AppBar(
-      backgroundColor: defaultBackgroundColor,
+      backgroundColor: cs.background,
+      foregroundColor: cs.onBackground,
       elevation: 0,
       leading: showBackButton
           ? IconButton(
-        icon: Icon(Icons.arrow_back, color: defaultIconColor),
-        onPressed: onBackPressed ?? () => Navigator.pop(context),
-      )
+              icon: Icon(Icons.arrow_back, color: cs.onBackground),
+              onPressed: onBackPressed ?? () => Navigator.pop(context),
+            )
           : null,
       title: title != null
           ? Text(
-        title!,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
-      )
+              title!,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            )
           : null,
       iconTheme: IconThemeData(color: defaultIconColor),
       actions: actions,
+      centerTitle: true,
     );
   }
 
@@ -71,9 +70,7 @@ class CustomAppBarTestScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
-      appBar: const CustomAppBar(
-        title: 'CustomAppBar 테스트',
-      ),
+      appBar: const CustomAppBar(title: 'CustomAppBar 테스트'),
       body: const SizedBox.shrink(),
     );
   }
