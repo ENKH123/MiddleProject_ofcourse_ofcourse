@@ -228,7 +228,7 @@ class CompleteButton extends StatelessWidget {
         return SizedBox(
           width: double.maxFinite,
           child: ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Color(0xff003366)),
+            style: ElevatedButton.styleFrom(),
             onPressed: isEnabled
                 ? () async {
                     showFullScreenLoading(context);
