@@ -22,19 +22,26 @@ class AlertScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(28.0),
                 child: Column(
                   children: [
-                    Expanded(
-                      child: RefreshIndicator(
-                        onRefresh: () async {
-                          await Future<void>.delayed(
-                            const Duration(seconds: 1),
-                          );
-                          await viewmodel.fetchAlerts();
-                        },
-                        edgeOffset: 20,
-                        displacement: 20,
-                        strokeWidth: 4,
-                        color: const Color(0xFF003366),
-                        child: scrollableChild,
+                    SizedBox(
+                      width: double.maxFinite,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          GestureDetector(
+                            child: const Text(
+                              "전체삭제",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.grey,
+                              ),
+                            ),
+                            onTap: () {
+                              _showDeleteAllAlertPopup(context, viewmodel);
+                            },
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -56,23 +63,26 @@ class AlertScreen extends StatelessWidget {
             }
 
             return buildRefreshableContent(
-              scrollableChild: ListView.separated(
-                itemCount: viewmodel.alerts!.length,
-                itemBuilder: (context, index) {
-                  return AlertBox(
-                    fromUser: viewmodel.alerts![index].fromUserNickname,
-                    type: viewmodel.alerts![index].type,
-                    userId: viewmodel.alerts![index].to_user_id,
-                    courseId: viewmodel.alerts![index].course_id.toString(),
-                    viewModel: viewmodel,
-                    alertId: viewmodel.alerts![index].id,
-                    relativeTime: viewmodel.alerts![index].created_at
-                        .getRelativeTime(),
-                  );
-                },
-                separatorBuilder: (BuildContext context, int index) {
-                  return const SizedBox(height: 20.0);
-                },
+              scrollableChild: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ListView.separated(
+                  itemCount: viewmodel.alerts!.length,
+                  itemBuilder: (context, index) {
+                    return AlertBox(
+                      fromUser: viewmodel.alerts![index].fromUserNickname,
+                      type: viewmodel.alerts![index].type,
+                      userId: viewmodel.alerts![index].to_user_id,
+                      courseId: viewmodel.alerts![index].course_id.toString(),
+                      viewModel: viewmodel,
+                      alertId: viewmodel.alerts![index].id,
+                      relativeTime: viewmodel.alerts![index].created_at
+                          .getRelativeTime(),
+                    );
+                  },
+                  separatorBuilder: (BuildContext context, int index) {
+                    return const SizedBox(height: 20.0);
+                  },
+                ),
               ),
             );
           },
@@ -80,6 +90,72 @@ class AlertScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+void _showDeleteAllAlertPopup(BuildContext context, AlertProvider provider) {
+  showDialog(
+    context: context,
+
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        child: Center(
+          child: Container(
+            width: 240,
+            height: 160,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 12,
+                children: [
+                  Text(
+                    "모든 알림을 삭제하시겠습니까?",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            provider.deleteAllAlert();
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(SnackBar(content: Text('삭제되었습니다.')));
+                          },
+                          child: const Text("확인"),
+                        ),
+                      ),
+                      SizedBox.fromSize(size: Size(8, 0)),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                          ),
+                          child: const Text(
+                            "취소",
+                            style: TextStyle(color: Colors.black),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
 
 Widget _loadingScreen(AlertProvider viewModel) {

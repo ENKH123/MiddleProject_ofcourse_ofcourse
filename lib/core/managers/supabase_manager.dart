@@ -101,6 +101,13 @@ class SupabaseManager {
     await supabase.from('alert').delete().eq('id', alertId);
   }
 
+  // 알림 전체 삭제
+  Future<void> deleteAllAlert() async {
+    final userEmail = supabase.auth.currentUser?.email ?? "";
+    final userId = await fetchPublicUserId(userEmail);
+    await supabase.from('alert').delete().eq('to_user_id', userId ?? "");
+  }
+
   // 구 목록 가져오기
   Future<List<GuModel>> getGuList() async {
     final data = await supabase.from("gu").select();
