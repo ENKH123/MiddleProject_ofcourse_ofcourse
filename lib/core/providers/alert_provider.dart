@@ -50,6 +50,12 @@ class AlertProvider extends ChangeNotifier {
     fetchAlerts();
   }
 
+  // 알림 전체 삭제
+  Future<void> deleteAllAlert() async {
+    await SupabaseManager.shared.deleteAllAlert();
+    fetchAlerts();
+  }
+
   void unsubscribeRealtime() {
     channel?.unsubscribe();
   }
@@ -57,6 +63,7 @@ class AlertProvider extends ChangeNotifier {
   void resubscribeRealtime() {
     channel?.unsubscribe();
     channel = _subscribeAlertEvent();
+    fetchAlerts();
   }
 
   // 실시간 감지
