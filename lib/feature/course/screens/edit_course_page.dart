@@ -522,6 +522,13 @@ class _EditCoursePageState extends State<EditCoursePage> {
                       initialDescription: set.description,
                       initialTagId: set.tagId,
                       onTagChanged: (tag) => set.tagId = tag.id,
+                      onScrollToTop: (offsetY) {
+                        _scrollController.animateTo(
+                          offsetY - 20,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOutCubic,
+                        );
+                      },
                       onSearchRequested: (query) =>
                           _handleLocationSelected(i, query),
                       onShowMapRequested: _scrollToMap,
