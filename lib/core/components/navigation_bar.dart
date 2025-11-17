@@ -28,8 +28,9 @@ class OfcourseBottomNavBarUI extends StatelessWidget {
             route = '/home';
             break;
           case 1:
-            route = '/write';
-            break;
+            final now = GoRouterState.of(context).uri.toString();
+            context.push('/write', extra: {'from': now});
+            return; // 아래 go() 실행 방지
           case 2:
             route = '/liked';
             break;
@@ -49,8 +50,6 @@ class OfcourseBottomNavBarUI extends StatelessWidget {
         }
       },
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: const Color(0xFF003366),
-      unselectedItemColor: Colors.grey,
       showUnselectedLabels: true,
       items: const [
         BottomNavigationBarItem(

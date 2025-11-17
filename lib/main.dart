@@ -10,10 +10,13 @@ import 'package:of_course/feature/auth/screens/login_screen.dart';
 import 'package:of_course/feature/auth/screens/register_screen.dart';
 import 'package:of_course/feature/auth/screens/terms_agree_screen.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
-import 'package:of_course/feature/course/screens/course_detail_screen.dart';
+import 'package:of_course/feature/course/detail/screens/course_detail_screen.dart';
+import 'package:of_course/feature/course/screens/course_recommend_screen.dart';
 import 'package:of_course/feature/course/screens/edit_course_page.dart';
 import 'package:of_course/feature/course/screens/liked_course_page.dart';
+import 'package:of_course/feature/course/screens/recommend_onboarding_screen.dart';
 import 'package:of_course/feature/course/screens/write_course_page.dart';
+import 'package:of_course/feature/course/screens/write_entry_page.dart';
 import 'package:of_course/feature/home/screens/ofCourse_home_page.dart';
 import 'package:of_course/feature/profile/screens/change_profile_screen.dart';
 import 'package:of_course/feature/profile/screens/profile_screen.dart';
@@ -29,7 +32,7 @@ Future<void> main() async {
   await Supabase.initialize(
     url: 'https://dbhecolzljfrmgtdjwie.supabase.co',
     anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiaGVjb2x6bGpmcm1ndGRqd2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNzc2MTQsImV4cCI6MjA3NzY1MzYxNH0.BsKpELVM0vmihAPd37CDs-fm0sdaVZGeNuBaGlgFOac',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiaGVjb2x6bGpmcm1ndGRqd2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNzc2MTQsImV4cCI6MjA3NzY1MzYxNH0.BsKpELVM0vmihAPd37CDs-fm0sdaVZGeNuBaGlgFOac',
   );
   await FlutterNaverMap().init(
     clientId: 'sr1eyuomlk',
@@ -39,8 +42,8 @@ Future<void> main() async {
           print("사용량 초과 (message: $message)");
           break;
         case NUnauthorizedClientException() ||
-            NClientUnspecifiedException() ||
-            NAnotherAuthFailedException():
+        NClientUnspecifiedException() ||
+        NAnotherAuthFailedException():
           print("인증 실패: $ex");
           break;
       }
@@ -77,7 +80,7 @@ class MyApp extends StatelessWidget {
     final GoRouter router = GoRouter(
       // initialLocation: '/register',
       initialLocation:
-          authProvider.currentUser != null && authProvider.user != null
+      authProvider.currentUser != null && authProvider.user != null
           ? '/home'
           : '/login',
       routes: [
@@ -99,8 +102,22 @@ class MyApp extends StatelessWidget {
             final extra = state.extra as Map<String, dynamic>;
             final courseId = int.parse(extra['courseId'].toString());
             final userId = extra['userId'].toString();
-            return CourseDetailScreen(courseId: courseId, userId: userId);
+            final recommendationReason =
+            extra['recommendationReason'] as String?;
+            return CourseDetailScreen(
+              courseId: courseId,
+              userId: userId,
+              recommendationReason: recommendationReason,
+            );
           },
+        ),
+        GoRoute(
+          path: '/onboarding',
+          builder: (context, state) => const RecommendOnboardingScreen(),
+        ),
+        GoRoute(
+          path: '/recommend',
+          builder: (context, state) => const CourseRecommendScreen(),
         ),
         GoRoute(
           path: '/change_profile',
@@ -111,7 +128,7 @@ class MyApp extends StatelessWidget {
           builder: (context, state) => ReportScreen(
             targetId: "",
             reportTargetType: reportTargetType,
-          ), // 임시 수정
+          ),
         ),
         GoRoute(
           path: '/terms',
@@ -141,7 +158,6 @@ class MyApp extends StatelessWidget {
         ShellRoute(
           builder: (context, state, child) {
             Future<bool> handleNavAttempt(String route) async {
-              // 현재 페이지가 /write일 때만 경고창 표시
               if (!state.uri.toString().startsWith('/write')) return true;
 
               final ok =
@@ -227,7 +243,7 @@ class MyApp extends StatelessWidget {
                       );
                     },
                   ) ??
-                  false;
+                      false;
 
               return ok;
             }
@@ -244,10 +260,31 @@ class MyApp extends StatelessWidget {
               path: '/home',
               builder: (context, state) => const OfcourseHomePage(),
             ),
+
+            //코스 작성 구조 -> WriteEntryPage ->임시저장 없다면 바로 코스작성페이지로
+            //임시저장이 있다면 -> 이어쓸 코스 선택후 코스작성페이지(이어쓰기모드)로
             GoRoute(
               path: '/write',
+              builder: (context, state) {
+                final extra = state.extra as Map<String, dynamic>?;
+                return WriteEntryPage(from: extra?['from']);
+              },
+            ),
+            GoRoute(
+              path: '/write/new',
               builder: (context, state) => const WriteCoursePage(),
             ),
+            GoRoute(
+              path: '/write/continue',
+              builder: (context, state) {
+                final courseId = state.extra as int;
+                return WriteCoursePage(
+                  continueCourseId: courseId, // 이어쓰기 모드 전용
+                );
+              },
+            ),
+
+            //
             GoRoute(
               path: '/liked',
               builder: (context, state) => const LikedCoursePage(),

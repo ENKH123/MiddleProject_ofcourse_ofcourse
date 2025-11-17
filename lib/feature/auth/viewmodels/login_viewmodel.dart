@@ -9,12 +9,26 @@ import 'package:of_course/main.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+enum DialogType { logOut, reSign }
+
 class LoginViewModel extends ChangeNotifier {
+  //TODO: 호출
+  //TODO: 결과
+
   GoogleSignInAccount? _googleUser;
   GoogleSignInAccount? get googleUser => _googleUser;
 
   SupabaseUserModel? userAccount;
 
+  late DialogType _dialogType;
+  DialogType get dialogType => _dialogType;
+
+  void isDialogType(DialogType type) {
+    _dialogType = type;
+    notifyListeners();
+  }
+
+  // 로그인
   Future<void> googleSignIn(BuildContext context) async {
     final scopes = ['email', 'profile'];
 
@@ -32,14 +46,12 @@ class LoginViewModel extends ChangeNotifier {
     _googleUser = await googleSignIn.authenticate();
     // 구글에서 유저 정보 _googleUser로 전달
 
-    print(_googleUser);
     // 구글 계정 없음
     if (_googleUser == null) {
       throw AuthException('Failed to sign in with Google.');
     }
     // 구글 계정 없음
 
-    // 무슨 코드??
     // 토큰 발급 과정?
     final authorization =
         await _googleUser?.authorizationClient.authorizationForScopes(scopes) ??
@@ -56,31 +68,48 @@ class LoginViewModel extends ChangeNotifier {
       idToken: idToken,
       accessToken: authorization?.accessToken,
     );
-    // 무슨 코드??
+    // 토큰 발급 과정?
 
     // supabase public 테이블에 _googleUser로 받은 이메일이 있는지 확인
-    userAccount = await SupabaseManager.shared.getPublicUser(
+    userAccount = await SupabaseManager.shared.fetchPublicUser(
       _googleUser!.email,
     );
+    // supabase public 테이블에 _googleUser로 받은 이메일이 있는지 확인
+
+    // 리얼타임 채널 재구독
     final alertViewModel = context.read<AlertViewModel>();
     alertViewModel.resubscribeRealtime();
-    // supabase public 테이블에 _googleUser로 받은 이메일이 있는지 확인
-    notifyListeners();
+    // 리얼타임 채널 재구독
   }
 
+  // 로그아웃
   Future<void> signOut(BuildContext context) async {
     final alertViewModel = context.read<AlertViewModel>();
     alertViewModel.unsubscribeRealtime();
     await GoogleSignIn.instance.signOut();
     await supabase.auth.signOut(scope: SignOutScope.global);
-    notifyListeners();
   }
 
+  // 회원탈퇴
   Future<void> resign() async {
     await SupabaseManager.shared.resign();
-    notifyListeners();
   }
-}
 
-/// 호출
-/// 결과
+  // // 로그인
+  // Future<void> googleSignIn(BuildContext context) async {
+  //   GoogleAuthManager.shared.googleSignIn(context);
+  //   notifyListeners();
+  // }
+  //
+  // // 로그아웃
+  // Future<void> signOut(BuildContext context) async {
+  //   GoogleAuthManager.shared.signOut(context);
+  //   notifyListeners();
+  // }
+  //
+  // // 회원탈퇴
+  // Future<void> resign() async {
+  //   await SupabaseManager.shared.resign();
+  //   notifyListeners();
+  // }
+}

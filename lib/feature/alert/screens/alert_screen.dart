@@ -21,7 +21,6 @@ class AlertScreen extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.all(28.0),
                 child: Column(
-                  // spacing: 20, // extension.dart의 Column.spacing을 사용한다고 가정
                   children: [
                     Expanded(
                       child: RefreshIndicator(
@@ -43,16 +42,11 @@ class AlertScreen extends StatelessWidget {
               );
             }
 
-            // 💡 Case 2: 알림 리스트가 비어있을 때 (새로고침 가능)
             if (viewmodel.alerts!.isEmpty) {
               return buildRefreshableContent(
-                // ListView를 사용하여 스크롤 기능을 제공하고 RefreshIndicator가 작동하게 합니다.
                 scrollableChild: ListView(
-                  // physics: const AlwaysScrollableScrollPhysics(), // 항상 스크롤 가능하도록 설정
                   children: [
-                    // SizedBox를 사용하여 화면의 대부분을 차지하도록 하고, Center로 메시지를 중앙에 배치합니다.
                     SizedBox(
-                      // 현재 화면 높이를 기준으로 적절한 높이를 설정하여 당기는 영역을 확보합니다.
                       height: MediaQuery.of(context).size.height * 0.7,
                       child: _emptyScreen(viewmodel),
                     ),
@@ -61,9 +55,7 @@ class AlertScreen extends StatelessWidget {
               );
             }
 
-            // ✅ Case 3: 알림 리스트에 내용이 있을 때 (새로고침 가능)
             return buildRefreshableContent(
-              // AlertBox 목록을 보여주는 ListView.separated를 사용합니다.
               scrollableChild: ListView.separated(
                 itemCount: viewmodel.alerts!.length,
                 itemBuilder: (context, index) {
@@ -106,7 +98,7 @@ void _showAlertErrorPopup(BuildContext context) {
 
     builder: (BuildContext context) {
       return Dialog(
-        backgroundColor: Colors.transparent, // Dialog 배경을 투명하게 (선택 사항)
+        backgroundColor: Colors.transparent,
         child: Center(
           child: Container(
             width: 240,
@@ -143,35 +135,6 @@ void _showAlertErrorPopup(BuildContext context) {
       );
     },
   );
-}
-
-class AlertAppBar extends StatelessWidget {
-  const AlertAppBar({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: IconButton(
-              onPressed: () {
-                context.push('/home'); // ✅ 홈으로 이동
-              },
-              icon: const Icon(Icons.arrow_back_ios_new),
-            ),
-          ),
-        ),
-        const Expanded(
-          child: Center(
-            child: Text("알림", style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ),
-        const Expanded(child: SizedBox()),
-      ],
-    );
-  }
 }
 
 class AlertBox extends StatelessWidget {
@@ -258,10 +221,8 @@ class AlertBox extends StatelessWidget {
                 Text(
                   'Go to View',
                   style: TextStyle(
-                    // fontSize: 18,
                     color: Colors.blue,
-                    decoration:
-                        TextDecoration.underline, // 클릭 가능하다는 시각적 힌트 추가 (선택 사항)
+                    decoration: TextDecoration.underline,
                     decorationColor: Colors.blue,
                   ),
                 ),
