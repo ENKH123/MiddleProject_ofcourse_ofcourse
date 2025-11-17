@@ -171,127 +171,127 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              _errorMessage!,
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: _spacingMedium),
-            ElevatedButton(
-              onPressed: _loadRecommendation,
-              child: const Text('다시 시도'),
-            ),
-          ],
-        ),
-      )
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(_spacingMedium),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(_spacingMedium),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(_borderRadius),
-                border: Border.all(color: Colors.grey[300]!),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _errorMessage != null
+            ? Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.lightbulb_outline,
-                        color: _mainColor,
-                        size: 24,
-                      ),
-                      const SizedBox(width: _spacingSmall),
-                      const Text(
-                        '코스 추천 사유',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: _spacingMedium),
-                  if (_recommendationReason != null)
-                    Text(
-                      _recommendationReason!,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                        height: 1.5,
-                      ),
-                    )
-                  else
-                    const Text(
-                      '추천 사유를 불러올 수 없습니다.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                ],
+              const SizedBox(height: _spacingMedium),
+              ElevatedButton(
+                onPressed: _loadRecommendation,
+                child: const Text('다시 시도'),
               ),
-            ),
-            const SizedBox(height: _spacingLarge), // 여기 간격 크게
-            if (_recommendedCourseId != null)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () =>
-                      _navigateToDetail(_recommendedCourseId!),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _mainColor,
-                    foregroundColor: Colors.white,
-                    padding:
-                    const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                      BorderRadius.circular(_borderRadius),
-                    ),
-                  ),
-                  child: const Text(
-                    '추천 코스 상세 보기',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              )
-            else
+            ],
+          ),
+        )
+            : SingleChildScrollView(
+          padding: const EdgeInsets.all(_spacingMedium),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(_spacingMedium),
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius:
-                  BorderRadius.circular(_borderRadius),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(_borderRadius),
+                  border: Border.all(color: Colors.grey[300]!),
                 ),
-                child: const Text(
-                  '추천할 코스가 없습니다.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.lightbulb_outline,
+                          color: _mainColor,
+                          size: 24,
+                        ),
+                        const SizedBox(width: _spacingSmall),
+                        const Text(
+                          '코스 추천 사유',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: _spacingMedium),
+                    if (_recommendationReason != null)
+                      Text(
+                        _recommendationReason!,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[700],
+                          height: 1.5,
+                        ),
+                      )
+                    else
+                      const Text(
+                        '추천 사유를 불러올 수 없습니다.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                  ],
                 ),
               ),
-          ],
+              const SizedBox(height: _spacingLarge), // 여기 간격 크게
+              if (_recommendedCourseId != null)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () =>
+                        _navigateToDetail(_recommendedCourseId!),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _mainColor,
+                      foregroundColor: Colors.white,
+                      padding:
+                      const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                        BorderRadius.circular(_borderRadius),
+                      ),
+                    ),
+                    child: const Text(
+                      '추천 코스 상세 보기',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(_spacingMedium),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius:
+                    BorderRadius.circular(_borderRadius),
+                  ),
+                  child: const Text(
+                    '추천할 코스가 없습니다.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }

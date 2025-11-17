@@ -92,7 +92,7 @@ class _RecommendOnboardingScreenState extends State<RecommendOnboardingScreen>
 
             if (responseData != null) {
               final parsedData =
-                  RecommendationParser.parseFirstRecommendation(responseData);
+              RecommendationParser.parseFirstRecommendation(responseData);
               debugPrint('맞춤형 추천 로딩 완료: $parsedData');
 
               if (parsedData != null) {
