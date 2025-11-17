@@ -44,6 +44,21 @@ class AlertScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: () async {
+                          await Future<void>.delayed(
+                            const Duration(seconds: 1),
+                          );
+                          await viewmodel.fetchAlerts();
+                        },
+                        edgeOffset: 20,
+                        displacement: 20,
+                        strokeWidth: 4,
+                        color: const Color(0xFF003366),
+                        child: scrollableChild,
+                      ),
+                    ),
                   ],
                 ),
               );
