@@ -10,7 +10,7 @@ import 'package:of_course/feature/auth/screens/login_screen.dart';
 import 'package:of_course/feature/auth/screens/register_screen.dart';
 import 'package:of_course/feature/auth/screens/terms_agree_screen.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
-import 'package:of_course/feature/course/screens/course_detail_screen.dart';
+import 'package:of_course/feature/course/detail/screens/course_detail_screen.dart';
 import 'package:of_course/feature/course/screens/course_recommend_screen.dart';
 import 'package:of_course/feature/course/screens/edit_course_page.dart';
 import 'package:of_course/feature/course/screens/liked_course_page.dart';
@@ -32,7 +32,7 @@ Future<void> main() async {
   await Supabase.initialize(
     url: 'https://dbhecolzljfrmgtdjwie.supabase.co',
     anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiaGVjb2x6bGpmcm1ndGRqd2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNzc2MTQsImV4cCI6MjA3NzY1MzYxNH0.BsKpELVM0vmihAPd37CDs-fm0sdaVZGeNuBaGlgFOac',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiaGVjb2x6bGpmcm1ndGRqd2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNzc2MTQsImV4cCI6MjA3NzY1MzYxNH0.BsKpELVM0vmihAPd37CDs-fm0sdaVZGeNuBaGlgFOac',
   );
   await FlutterNaverMap().init(
     clientId: 'sr1eyuomlk',
@@ -42,8 +42,8 @@ Future<void> main() async {
           print("사용량 초과 (message: $message)");
           break;
         case NUnauthorizedClientException() ||
-            NClientUnspecifiedException() ||
-            NAnotherAuthFailedException():
+        NClientUnspecifiedException() ||
+        NAnotherAuthFailedException():
           print("인증 실패: $ex");
           break;
       }
@@ -78,7 +78,7 @@ class MyApp extends StatelessWidget {
     final GoRouter router = GoRouter(
       // initialLocation: '/register',
       initialLocation:
-          authProvider.currentUser != null && authProvider.user != null
+      authProvider.currentUser != null && authProvider.user != null
           ? '/home'
           : '/login',
       routes: [
@@ -101,7 +101,7 @@ class MyApp extends StatelessWidget {
             final courseId = int.parse(extra['courseId'].toString());
             final userId = extra['userId'].toString();
             final recommendationReason =
-                extra['recommendationReason'] as String?;
+            extra['recommendationReason'] as String?;
             return CourseDetailScreen(
               courseId: courseId,
               userId: userId,
@@ -123,8 +123,10 @@ class MyApp extends StatelessWidget {
         ),
         GoRoute(
           path: '/report',
-          builder: (context, state) =>
-              ReportScreen(targetId: "", reportTargetType: reportTargetType),
+          builder: (context, state) => ReportScreen(
+            targetId: "",
+            reportTargetType: reportTargetType,
+          ),
         ),
         GoRoute(
           path: '/terms',
@@ -239,7 +241,7 @@ class MyApp extends StatelessWidget {
                       );
                     },
                   ) ??
-                  false;
+                      false;
 
               return ok;
             }
