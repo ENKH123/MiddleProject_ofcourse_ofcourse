@@ -764,41 +764,58 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: _backgroundColor,
-      appBar: _buildAppBar(),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              child: Column(
-                children: [
-                  _buildHeader(),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          _handleBackNavigation();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: _backgroundColor,
+        appBar: _buildAppBar(),
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                child: Column(
+                  children: [
+                    _buildHeader(),
 
-                  if (_recommendationReason != null) ...[
-                    _buildRecommendationReason(),
-                    const SizedBox(height: 24), // 사유 카드 아래 여백 추가
+                    if (_recommendationReason != null) ...[
+                      _buildRecommendationReason(),
+                      const SizedBox(height: 24), // 사유 카드 아래 여백 추가
+                    ],
+
+                    _buildMapSection(),
+
+                    const SizedBox(height: _spacingLarge),
+                    _buildSetsSection(),
+                    const SizedBox(height: _spacingLarge),
+                    _buildEngagementSection(),
+                    const SizedBox(height: _spacingMedium),
+                    _buildCommentsSection(),
+                    const SizedBox(height: _spacingLarge),
                   ],
-
-                  _buildMapSection(),
-
-                  const SizedBox(height: _spacingLarge),
-                  _buildSetsSection(),
-                  const SizedBox(height: _spacingLarge),
-                  _buildEngagementSection(),
-                  const SizedBox(height: _spacingMedium),
-                  _buildCommentsSection(),
-                  const SizedBox(height: _spacingLarge),
-                ],
+                ),
               ),
             ),
-          ),
 
-          _buildCommentInputSection(),
-        ],
+            _buildCommentInputSection(),
+          ],
+        ),
       ),
     );
+  }
+
+  void _handleBackNavigation() {
+    // recommendationReason이 있으면 온보딩을 통해 온 것이므로 홈으로 이동
+    if (widget.recommendationReason != null) {
+      context.go('/home');
+    } else {
+      Navigator.pop(context);
+    }
   }
 
   PreferredSizeWidget _buildAppBar() {
@@ -807,7 +824,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.pop(context),
+        onPressed: _handleBackNavigation,
       ),
       title: const Text(
         '코스 세부정보',
