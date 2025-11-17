@@ -5,7 +5,7 @@ import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/core/models/alert_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AlertViewModel extends ChangeNotifier {
+class AlertProvider extends ChangeNotifier {
   // 알림 목록
   List<AlertModel>? _alerts;
   List<AlertModel>? get alerts => _alerts;
@@ -17,7 +17,7 @@ class AlertViewModel extends ChangeNotifier {
 
   late RealtimeChannel? channel;
 
-  AlertViewModel() {
+  AlertProvider() {
     _init();
   }
 
@@ -50,6 +50,12 @@ class AlertViewModel extends ChangeNotifier {
     fetchAlerts();
   }
 
+  // 알림 전체 삭제
+  Future<void> deleteAllAlert() async {
+    await SupabaseManager.shared.deleteAllAlert();
+    fetchAlerts();
+  }
+
   void unsubscribeRealtime() {
     channel?.unsubscribe();
   }
@@ -57,6 +63,7 @@ class AlertViewModel extends ChangeNotifier {
   void resubscribeRealtime() {
     channel?.unsubscribe();
     channel = _subscribeAlertEvent();
+    fetchAlerts();
   }
 
   // 실시간 감지

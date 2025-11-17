@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/core/extensions/extension.dart';
-import 'package:of_course/feature/alert/viewmodels/alert_viewmodel.dart';
+import 'package:of_course/core/providers/alert_provider.dart';
 import 'package:provider/provider.dart';
 
 class AlertScreen extends StatelessWidget {
@@ -12,7 +12,7 @@ class AlertScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text("알림"), centerTitle: true),
       body: SafeArea(
-        child: Consumer<AlertViewModel>(
+        child: Consumer<AlertProvider>(
           builder: (context, viewmodel, child) {
             if (viewmodel.alerts == null) {
               return Container();
@@ -22,6 +22,28 @@ class AlertScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(28.0),
                 child: Column(
                   children: [
+                    SizedBox(
+                      width: double.maxFinite,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          GestureDetector(
+                            child: const Text(
+                              "전체삭제",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.grey,
+                              ),
+                            ),
+                            onTap: () {
+                              _showDeleteAllAlertPopup(context, viewmodel);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
                     Expanded(
                       child: RefreshIndicator(
                         onRefresh: () async {
@@ -56,23 +78,26 @@ class AlertScreen extends StatelessWidget {
             }
 
             return buildRefreshableContent(
-              scrollableChild: ListView.separated(
-                itemCount: viewmodel.alerts!.length,
-                itemBuilder: (context, index) {
-                  return AlertBox(
-                    fromUser: viewmodel.alerts![index].fromUserNickname,
-                    type: viewmodel.alerts![index].type,
-                    userId: viewmodel.alerts![index].to_user_id,
-                    courseId: viewmodel.alerts![index].course_id.toString(),
-                    viewModel: viewmodel,
-                    alertId: viewmodel.alerts![index].id,
-                    relativeTime: viewmodel.alerts![index].created_at
-                        .getRelativeTime(),
-                  );
-                },
-                separatorBuilder: (BuildContext context, int index) {
-                  return const SizedBox(height: 20.0);
-                },
+              scrollableChild: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ListView.separated(
+                  itemCount: viewmodel.alerts!.length,
+                  itemBuilder: (context, index) {
+                    return AlertBox(
+                      fromUser: viewmodel.alerts![index].fromUserNickname,
+                      type: viewmodel.alerts![index].type,
+                      userId: viewmodel.alerts![index].to_user_id,
+                      courseId: viewmodel.alerts![index].course_id.toString(),
+                      viewModel: viewmodel,
+                      alertId: viewmodel.alerts![index].id,
+                      relativeTime: viewmodel.alerts![index].created_at
+                          .getRelativeTime(),
+                    );
+                  },
+                  separatorBuilder: (BuildContext context, int index) {
+                    return const SizedBox(height: 20.0);
+                  },
+                ),
               ),
             );
           },
@@ -82,11 +107,77 @@ class AlertScreen extends StatelessWidget {
   }
 }
 
-Widget _loadingScreen(AlertViewModel viewModel) {
+void _showDeleteAllAlertPopup(BuildContext context, AlertProvider provider) {
+  showDialog(
+    context: context,
+
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        child: Center(
+          child: Container(
+            width: 240,
+            height: 160,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 12,
+                children: [
+                  Text(
+                    "모든 알림을 삭제하시겠습니까?",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            provider.deleteAllAlert();
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(SnackBar(content: Text('삭제되었습니다.')));
+                          },
+                          child: const Text("확인"),
+                        ),
+                      ),
+                      SizedBox.fromSize(size: Size(8, 0)),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                          ),
+                          child: const Text(
+                            "취소",
+                            style: TextStyle(color: Colors.black),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Widget _loadingScreen(AlertProvider viewModel) {
   return Center(child: const Text("로딩중"));
 }
 
-Widget _emptyScreen(AlertViewModel viewModel) {
+Widget _emptyScreen(AlertProvider viewModel) {
   return const Center(child: Text("새로운 알림이 없습니다."));
 }
 
@@ -144,7 +235,7 @@ class AlertBox extends StatelessWidget {
   final String userId;
   final String relativeTime;
   final int alertId;
-  final AlertViewModel viewModel;
+  final AlertProvider viewModel;
   const AlertBox({
     super.key,
     required this.fromUser,

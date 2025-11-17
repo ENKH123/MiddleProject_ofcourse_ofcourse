@@ -26,7 +26,7 @@ class ChangeProfileViewModel extends ChangeNotifier {
 
     final email = supabase.auth.currentUser?.email;
     if (email != null) {
-      user = await SupabaseManager.shared.getPublicUser(email);
+      user = await SupabaseManager.shared.fetchPublicUser(email);
     }
 
     nickname = user?.nickname ?? '';
