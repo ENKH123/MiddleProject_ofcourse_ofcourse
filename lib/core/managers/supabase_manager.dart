@@ -22,7 +22,8 @@ class SupabaseManager {
   }
 
   // 회원가입 여부 검증
-  Future<SupabaseUserModel?> getPublicUser(String gmail) async {
+  // 로그인 된 사용자의 정보 가져오기
+  Future<SupabaseUserModel?> fetchPublicUser(String gmail) async {
     final Map<String, dynamic>? data = await supabase
         .from("users")
         .select()
@@ -32,6 +33,20 @@ class SupabaseManager {
       return null;
     }
     return SupabaseUserModel.fromJson(data);
+  }
+
+  Future<String?> fetchPublicUserId(String gmail) async {
+    final Map<String, dynamic>? data = await supabase
+        .from("users")
+        .select('id')
+        .eq('email', gmail)
+        .maybeSingle();
+    if (data == null) {
+      return null;
+    }
+
+    final userId = data['id'].toString();
+    return userId;
   }
 
   // 회원탈퇴
@@ -68,7 +83,7 @@ class SupabaseManager {
   // 알림 목록 조회
   Future<List<AlertModel>?> fetchAlerts() async {
     final currentUser = supabase.auth.currentUser;
-    final user = await SupabaseManager.shared.getPublicUser(
+    final user = await SupabaseManager.shared.fetchPublicUser(
       currentUser?.email ?? "",
     );
 

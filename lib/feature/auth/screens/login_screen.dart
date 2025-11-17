@@ -65,7 +65,7 @@ class AppLogo extends StatelessWidget {
 }
 
 class GoogleLoginButton extends StatelessWidget {
-  final Future<void> Function() clickEvent;
+  final Future<void> Function(BuildContext) clickEvent;
   final void Function() onSignInSuccess;
   const GoogleLoginButton({
     super.key,
@@ -87,7 +87,7 @@ class GoogleLoginButton extends StatelessWidget {
             fixedSize: Size(280, 48),
           ),
           onPressed: () async {
-            await clickEvent();
+            await clickEvent(context);
             onSignInSuccess();
           },
           child: Row(
