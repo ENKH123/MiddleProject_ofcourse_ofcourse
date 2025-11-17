@@ -81,7 +81,7 @@ class LoginViewModel extends ChangeNotifier {
     alertViewModel.resubscribeRealtime();
     // 리얼타임 채널 재구독
 
-    SupabaseManager.shared.fetchAlerts();
+    alertViewModel.fetchAlerts();
   }
 
   // 로그아웃
