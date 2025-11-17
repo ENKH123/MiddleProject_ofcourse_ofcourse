@@ -5,6 +5,7 @@ import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/core/models/tag_color_model.dart';
 import 'package:of_course/feature/report/models/report_models.dart';
 import 'package:of_course/feature/report/screens/report_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/course_detail_models.dart';
 
@@ -228,12 +229,18 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             .delete()
             .eq('course_id', widget.courseId)
             .eq('user_id', userRowId);
+
+        // learningData 업데이트: label을 0으로 설정
+        await _updateLearningData(supabase, userRowId, widget.courseId, 0);
       } else {
         // 좋아요 추가
         await supabase.from('liked_courses').insert({
           'course_id': widget.courseId,
           'user_id': userRowId,
         });
+
+        // learningData 업데이트: label을 1로 설정
+        await _updateLearningData(supabase, userRowId, widget.courseId, 1);
       }
 
       // 좋아요 정보 다시 가져오기
@@ -251,6 +258,54 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           context,
         ).showSnackBar(SnackBar(content: Text('좋아요 처리 중 오류가 발생했습니다: $e')));
       }
+    }
+  }
+
+  /// learningData 테이블 업데이트 (upsert)
+  Future<void> _updateLearningData(
+      SupabaseClient supabase,
+      String userId,
+      int courseId,
+      int label,
+      ) async {
+    try {
+      // 먼저 코스 제목 가져오기
+      final courseData = await supabase
+          .from('courses')
+          .select('title')
+          .eq('id', courseId)
+          .maybeSingle();
+
+      final courseTitle = courseData?['title'] as String? ?? '';
+
+      // learningData에서 기존 레코드 확인
+      final existingData = await supabase
+          .from('learningData')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('course_id', courseId)
+          .maybeSingle();
+
+      if (existingData != null) {
+        // 기존 레코드가 있으면 업데이트
+        await supabase
+            .from('learningData')
+            .update({
+          'label': label,
+        })
+            .eq('id', existingData['id']);
+      } else {
+        // 기존 레코드가 없으면 새로 생성
+        await supabase.from('learningData').insert({
+          'user_id': userId,
+          'course_id': courseId,
+          'label': label,
+          'title': courseTitle,
+        });
+      }
+    } catch (e) {
+      debugPrint('learningData 업데이트 오류: $e');
+      // learningData 업데이트 실패해도 좋아요 기능은 계속 진행
     }
   }
 
@@ -281,10 +336,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       final response = await supabase
           .from('comments')
           .insert({
-            'course_id': widget.courseId,
-            'user_id': userRowId,
-            'comment': commentText,
-          })
+        'course_id': widget.courseId,
+        'user_id': userRowId,
+        'comment': commentText,
+      })
           .select('''
         *,
         user:users!comments_user_id_fkey(nickname, profile_img)
@@ -441,8 +496,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         final imageUrls = [set['img_01'], set['img_02'], set['img_03']]
             .where(
               (url) =>
-                  url != null && url != "null" && url.toString().isNotEmpty,
-            )
+          url != null && url != "null" && url.toString().isNotEmpty,
+        )
             .toList();
 
         for (final url in imageUrls) {
@@ -520,10 +575,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   void _navigateToReport(
-    String targetId,
-    ReportTargetType targetType, {
-    String? commentAuthor,
-  }) {
+      String targetId,
+      ReportTargetType targetType, {
+        String? commentAuthor,
+      }) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -696,9 +751,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 final hex = TagColorModel.getColorHex(tag);
                 final bg = hex != null
                     ? Color(
-                        int.parse(hex.replaceFirst('#', ''), radix: 16) +
-                            0xFF000000,
-                      )
+                  int.parse(hex.replaceFirst('#', ''), radix: 16) +
+                      0xFF000000,
+                )
                     : Colors.grey.shade200;
                 return Container(
                   padding: const EdgeInsets.symmetric(
@@ -1102,3 +1157,4 @@ Widget _zoomButton(IconData icon, VoidCallback onPressed) {
     ),
   );
 }
+
