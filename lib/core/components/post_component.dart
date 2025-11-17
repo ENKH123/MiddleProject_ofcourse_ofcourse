@@ -75,12 +75,12 @@ class PostCard extends StatelessWidget {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: url == null
-                            ? Container(color: Colors.grey[300])
+                            ? const SizedBox.shrink() // 완전 투명
                             : Image.network(
                                 url,
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) =>
-                                    Container(color: Colors.grey[300]),
+                                    const SizedBox.shrink(),
                               ),
                       ),
                     ),
