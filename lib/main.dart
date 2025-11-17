@@ -123,10 +123,8 @@ class MyApp extends StatelessWidget {
         ),
         GoRoute(
           path: '/report',
-          builder: (context, state) => ReportScreen(
-            targetId: "",
-            reportTargetType: reportTargetType,
-          ),
+          builder: (context, state) =>
+              ReportScreen(targetId: "", reportTargetType: reportTargetType),
         ),
         GoRoute(
           path: '/terms',
