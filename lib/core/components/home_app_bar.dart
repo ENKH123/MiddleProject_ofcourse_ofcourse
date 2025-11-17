@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/core/models/gu_model.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
-import 'package:of_course/feature/alert/viewmodels/alert_viewmodel.dart';
+import 'package:of_course/core/providers/alert_provider.dart';
 import 'package:provider/provider.dart';
 
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -37,6 +37,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: backgroundColor ?? _defaultBackgroundColor,
       elevation: 0,
+      scrolledUnderElevation: 0,
       automaticallyImplyLeading: false,
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -201,9 +202,9 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget _buildNotificationIcon() {
-    return Consumer<AlertViewModel>(
-      builder: (context, alertViewModel, child) {
-        final alertCount = alertViewModel.alerts?.length ?? 0;
+    return Consumer<AlertProvider>(
+      builder: (context, alertProvider, child) {
+        final alertCount = alertProvider.alerts?.length ?? 0;
         final hasUnreadNotifications = alertCount > 0;
 
         return Stack(

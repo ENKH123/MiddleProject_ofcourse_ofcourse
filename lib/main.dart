@@ -3,9 +3,8 @@ import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/core/app_theme.dart';
 import 'package:of_course/core/components/navigation_bar.dart';
-import 'package:of_course/core/viewmodels/auth_provider.dart';
+import 'package:of_course/core/providers/alert_provider.dart';
 import 'package:of_course/feature/alert/screens/alert_screen.dart';
-import 'package:of_course/feature/alert/viewmodels/alert_viewmodel.dart';
 import 'package:of_course/feature/auth/screens/login_screen.dart';
 import 'package:of_course/feature/auth/screens/register_screen.dart';
 import 'package:of_course/feature/auth/screens/terms_agree_screen.dart';
@@ -28,13 +27,15 @@ import 'package:of_course/feature/report/screens/report_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'core/providers/auth_provider.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
     url: 'https://dbhecolzljfrmgtdjwie.supabase.co',
     anonKey:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiaGVjb2x6bGpmcm1ndGRqd2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNzc2MTQsImV4cCI6MjA3NzY1MzYxNH0.BsKpELVM0vmihAPd37CDs-fm0sdaVZGeNuBaGlgFOac',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiaGVjb2x6bGpmcm1ndGRqd2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNzc2MTQsImV4cCI6MjA3NzY1MzYxNH0.BsKpELVM0vmihAPd37CDs-fm0sdaVZGeNuBaGlgFOac',
   );
   await FlutterNaverMap().init(
     clientId: 'sr1eyuomlk',
@@ -44,8 +45,8 @@ Future<void> main() async {
           print("사용량 초과 (message: $message)");
           break;
         case NUnauthorizedClientException() ||
-        NClientUnspecifiedException() ||
-        NAnotherAuthFailedException():
+            NClientUnspecifiedException() ||
+            NAnotherAuthFailedException():
           print("인증 실패: $ex");
           break;
       }
@@ -58,13 +59,15 @@ Future<void> main() async {
         ChangeNotifierProvider(
           create: (context) => AuthProvider(),
         ), // 전역 프로바이더 // 로그인 상태 감지
-        ChangeNotifierProvider(create: (_) => AlertViewModel()), // 알림 ViewModel
         ChangeNotifierProvider(
           create: (_) => ProfileViewModel(),
         ), // 프로필 ViewModel
         ChangeNotifierProvider(
           create: (_) => ChangeProfileViewModel(),
         ), //프로필변경 viewmodel
+        ChangeNotifierProvider(
+          create: (_) => AlertProvider(),
+        ), // 알림 ViewModel // 알림 감지
       ],
       child: const MyApp(),
     ),
@@ -86,7 +89,7 @@ class MyApp extends StatelessWidget {
     final GoRouter router = GoRouter(
       // initialLocation: '/register',
       initialLocation:
-      authProvider.currentUser != null && authProvider.user != null
+          authProvider.currentUser != null && authProvider.user != null
           ? '/home'
           : '/login',
       routes: [
@@ -109,7 +112,7 @@ class MyApp extends StatelessWidget {
             final courseId = int.parse(extra['courseId'].toString());
             final userId = extra['userId'].toString();
             final recommendationReason =
-            extra['recommendationReason'] as String?;
+                extra['recommendationReason'] as String?;
             return CourseDetailScreen(
               courseId: courseId,
               userId: userId,
@@ -131,10 +134,8 @@ class MyApp extends StatelessWidget {
         ),
         GoRoute(
           path: '/report',
-          builder: (context, state) => ReportScreen(
-            targetId: "",
-            reportTargetType: reportTargetType,
-          ),
+          builder: (context, state) =>
+              ReportScreen(targetId: "", reportTargetType: reportTargetType),
         ),
         GoRoute(
           path: '/terms',
@@ -249,7 +250,7 @@ class MyApp extends StatelessWidget {
                       );
                     },
                   ) ??
-                      false;
+                  false;
 
               return ok;
             }

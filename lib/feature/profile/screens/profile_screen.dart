@@ -9,7 +9,6 @@ import 'package:provider/provider.dart';
 
 import '../../../core/components/custom_app_bar.dart';
 import '../../../core/components/loading_dialog.dart';
-import 'terms_mypage_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -17,6 +16,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ProfileViewModel>();
+    LoginViewModel viewModel = context.watch<LoginViewModel>();
 
     return Scaffold(
       appBar: const CustomAppBar(title: '마이페이지', showBackButton: false),
@@ -116,25 +116,13 @@ class ProfileScreen extends StatelessWidget {
                     builder: (context) => const TermsOfUseScreen(),
                   ),
                 ),
-
                 const SizedBox(height: 4),
-
                 SizedBox(
                   height: 48,
                   child: ElevatedButton(
                     onPressed: () async {
-                      showFullScreenLoading(context);
-                      try {
-                        await context.read<LoginViewModel>().signOut();
-                        context.go('/login');
-                      } catch (e) {
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text('로그아웃 실패: $e')));
-                      }
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                      }
+                      viewModel.isDialogType(DialogType.logOut);
+                      _showSignOutPopup(context, viewModel);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red.shade100,
@@ -147,21 +135,12 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () async {
-                      showFullScreenLoading(context);
-                      await context.read<LoginViewModel>().resign();
-                      await context.read<LoginViewModel>().signOut();
-                      context.go('/login');
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('회원탈퇴가 완료되었습니다.')),
-                        );
-                      }
+                      viewModel.isDialogType(DialogType.reSign);
+                      _showSignOutPopup(context, viewModel);
                     },
                     child: const Text(
                       '회원탈퇴',
