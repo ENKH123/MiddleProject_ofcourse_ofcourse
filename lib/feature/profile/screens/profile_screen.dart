@@ -9,7 +9,6 @@ import 'package:provider/provider.dart';
 
 import '../../../core/components/custom_app_bar.dart';
 import '../../../core/components/loading_dialog.dart';
-import 'terms_mypage_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -125,7 +124,7 @@ class ProfileScreen extends StatelessWidget {
                     onPressed: () async {
                       showFullScreenLoading(context);
                       try {
-                        await context.read<LoginViewModel>().signOut();
+                        await context.read<LoginViewModel>().signOut(context);
                         context.go('/login');
                       } catch (e) {
                         ScaffoldMessenger.of(
@@ -154,7 +153,7 @@ class ProfileScreen extends StatelessWidget {
                     onPressed: () async {
                       showFullScreenLoading(context);
                       await context.read<LoginViewModel>().resign();
-                      await context.read<LoginViewModel>().signOut();
+                      await context.read<LoginViewModel>().signOut(context);
                       context.go('/login');
                       if (context.mounted) {
                         Navigator.of(context).pop();
