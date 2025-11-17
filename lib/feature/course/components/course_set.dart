@@ -10,12 +10,15 @@ class WriteCourseSet extends StatefulWidget {
   final Function(String)? onSearchRequested;
   final Function(double, double)? onLocationSaved;
   final Function(List<File>)? onImagesChanged;
-  final Function(List<String>)? onExistingImagesChanged; // ⭐ 기존 URL 리스트 변경 전달
+  final Function(List<String>)? onExistingImagesChanged;
   final Function(String)? onDescriptionChanged;
   final Function(TagModel)? onTagChanged;
+
+  final VoidCallback? onShowMapRequested;
+  final ValueSetter<double>? onScrollToTop; // ⭐ 검색창 눌렀을 때 부모 스크롤 제어
+
   final List<TagModel> tagList;
   final bool highlight;
-  final VoidCallback? onShowMapRequested;
 
   final List<String>? existingImageUrls;
   final String? initialQuery;
@@ -31,8 +34,9 @@ class WriteCourseSet extends StatefulWidget {
     this.onImagesChanged,
     this.onExistingImagesChanged,
     this.onDescriptionChanged,
-    this.highlight = false,
     this.onShowMapRequested,
+    this.onScrollToTop,
+    this.highlight = false,
     this.existingImageUrls,
     this.initialQuery,
     this.initialDescription,
@@ -46,12 +50,18 @@ class WriteCourseSet extends StatefulWidget {
 class _WriteCourseSetState extends State<WriteCourseSet> {
   final ImagePicker _picker = ImagePicker();
   final List<File> _images = [];
-  late List<String> _existingImages; // ✅ 현재 세트에 남아있는 기존 URL 리스트
+  late List<String> _existingImages;
+
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _textController = TextEditingController();
+
   TagModel? _selectedTag;
   List<Map<String, dynamic>> _searchResults = [];
-  static const _kakaoRestKey = '05df8363e23a77cc74e7c20a667b6c7e';
+
+  OverlayEntry? _overlayEntry;
+  final LayerLink _layerLink = LayerLink();
+  final GlobalKey _searchFieldKey = GlobalKey(debugLabel: "search_key");
+  static const _kakaoRestKey = "05df8363e23a77cc74e7c20a667b6c7e";
 
   @override
   void initState() {
@@ -65,9 +75,7 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
         _selectedTag = widget.tagList.firstWhere(
           (t) => t.id == widget.initialTagId,
         );
-      } catch (_) {
-        _selectedTag = null;
-      }
+      } catch (_) {}
     }
 
     _existingImages = widget.existingImageUrls != null
@@ -79,152 +87,122 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
     });
   }
 
-  // ---------------------------
-  // 기존 URL 이미지 삭제
-  // ---------------------------
-  void _removeExistingImage(int index) {
-    setState(() {
-      _existingImages.removeAt(index);
-    });
-    // ✅ 부모(EditCoursePage)에게 "현재 남은 URL 리스트" 통째로 전달
-    widget.onExistingImagesChanged?.call(_existingImages);
+  @override
+  void dispose() {
+    _overlayEntry?.remove();
+    super.dispose();
   }
 
-  // ---------------------------
-  // 새로 추가한 로컬 이미지 삭제
-  // ---------------------------
-  void _removeImage(int index) {
-    setState(() {
-      _images.removeAt(index);
-    });
-    widget.onImagesChanged?.call(_images);
+  Future<void> _fetchKakaoSuggestions(String query) async {
+    if (query.trim().isEmpty) {
+      _removeOverlay();
+      return;
+    }
+
+    try {
+      final url = Uri.parse(
+        "https://dapi.kakao.com/v2/local/search/keyword.json?query=${Uri.encodeQueryComponent(query)}",
+      );
+
+      final response = await http.get(
+        url,
+        headers: {"Authorization": "KakaoAK $_kakaoRestKey"},
+      );
+
+      final data = jsonDecode(response.body);
+      final List docs = data["documents"] ?? [];
+
+      _searchResults = docs.map((d) {
+        return {
+          "name": d["place_name"],
+          "address": d["road_address_name"] ?? d["address_name"],
+          "lat": double.parse(d["y"]),
+          "lng": double.parse(d["x"]),
+        };
+      }).toList();
+
+      if (_searchResults.isEmpty) {
+        _removeOverlay();
+      } else {
+        _showOverlay();
+      }
+    } catch (e) {
+      debugPrint("❌ 검색 오류: $e");
+    }
   }
 
-  // ---------------------------
-  // 이미지 추가
-  // ---------------------------
-  Future<void> _pickImage() async {
-    if (_existingImages.length + _images.length >= 3) return;
-
-    showModalBottomSheet(
-      context: context,
+  OverlayEntry _createOverlay() {
+    return OverlayEntry(
       builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text("앨범에서 선택"),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final XFile? picked = await _picker.pickImage(
-                    source: ImageSource.gallery,
-                  );
-                  if (picked != null) {
-                    setState(() => _images.add(File(picked.path)));
-                    widget.onImagesChanged?.call(_images);
-                  }
-                },
+        return Positioned.fill(
+          child: CompositedTransformFollower(
+            link: _layerLink,
+            offset: const Offset(0, 48), // 검색창 바로 아래
+            showWhenUnlinked: false,
+            child: Material(
+              elevation: 6,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                constraints: const BoxConstraints(maxHeight: 280),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ListView.separated(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  itemCount: _searchResults.length,
+                  separatorBuilder: (_, __) => Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final item = _searchResults[index];
+                    return ListTile(
+                      title: Text(item["name"]),
+                      subtitle: Text(item["address"] ?? ""),
+                      onTap: () {
+                        _removeOverlay();
+                        FocusScope.of(context).unfocus();
+
+                        _searchController.text = item["name"];
+
+                        widget.onSearchRequested?.call(item["name"]);
+                        widget.onLocationSaved?.call(item["lat"], item["lng"]);
+
+                        widget.onShowMapRequested?.call();
+                      },
+                    );
+                  },
+                ),
               ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text("사진 촬영"),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final XFile? picked = await _picker.pickImage(
-                    source: ImageSource.camera,
-                  );
-                  if (picked != null) {
-                    setState(() => _images.add(File(picked.path)));
-                    widget.onImagesChanged?.call(_images);
-                  }
-                },
-              ),
-            ],
+            ),
           ),
         );
       },
     );
   }
 
-  // ---------------------------
-  // 검색 버튼 클릭
-  // ---------------------------
-  void _onSearch() {
-    final query = _searchController.text.trim();
-    if (query.isEmpty) return;
+  void _handleSearchFieldTap() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final renderBox =
+          _searchFieldKey.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox == null) return;
 
-    FocusScope.of(context).unfocus();
-    _fetchKakaoSuggestions(query);
+      final offset = renderBox.localToGlobal(Offset.zero); // 화면 기준 Y좌표
+      widget.onScrollToTop?.call(offset.dy);
+    });
   }
 
-  // ---------------------------
-  // 카카오 API 검색
-  // ---------------------------
-  Future<void> _fetchKakaoSuggestions(String query) async {
-    try {
-      final url = Uri.parse(
-        'https://dapi.kakao.com/v2/local/search/keyword.json?query=${Uri.encodeQueryComponent(query)}',
-      );
-      final response = await http.get(
-        url,
-        headers: {'Authorization': 'KakaoAK $_kakaoRestKey'},
-      );
-
-      final data = jsonDecode(response.body);
-      final List docs = data['documents'];
-
-      setState(() {
-        _searchResults = docs.map((d) {
-          return {
-            'name': d['place_name'],
-            'address': d['road_address_name'] ?? d['address_name'],
-            'lat': double.parse(d['y']),
-            'lng': double.parse(d['x']),
-          };
-        }).toList();
-      });
-
-      if (_searchResults.isNotEmpty) {
-        _showSearchResults();
-      }
-    } catch (e) {
-      debugPrint("❌ 카카오 검색 오류: $e");
-    }
+  void _showOverlay() {
+    _removeOverlay();
+    _overlayEntry = _createOverlay();
+    Overlay.of(context).insert(_overlayEntry!);
   }
 
-  void _showSearchResults() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return ListView.builder(
-          itemCount: _searchResults.length,
-          itemBuilder: (context, index) {
-            final item = _searchResults[index];
-            return ListTile(
-              title: Text(item['name']),
-              subtitle: Text(item['address'] ?? ''),
-              onTap: () {
-                Navigator.pop(context);
-
-                _searchController.text = item['name'];
-
-                widget.onSearchRequested?.call(item['name']);
-                widget.onLocationSaved?.call(item['lat'], item['lng']);
-                widget.onShowMapRequested?.call();
-              },
-            );
-          },
-        );
-      },
-    );
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
   }
 
-  // ---------------------------
-  // 이미지 박스 UI
-  // ---------------------------
-  Widget _buildImageBox(ImageProvider image, VoidCallback onRemove) {
+  Widget _buildImageBox(ImageProvider img, VoidCallback onRemove) {
     return Stack(
       children: [
         Container(
@@ -233,7 +211,7 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
           margin: const EdgeInsets.only(right: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            image: DecorationImage(image: image, fit: BoxFit.cover),
+            image: DecorationImage(image: img, fit: BoxFit.cover),
           ),
         ),
         Positioned(
@@ -257,7 +235,7 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 450),
+      duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         border: Border.all(
@@ -269,37 +247,54 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 검색
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  decoration: const InputDecoration(hintText: '주소나 매장명 검색'),
-                ),
+          // --------------------------
+          // 검색창 (네이버 지도 스타일)
+          // --------------------------
+          CompositedTransformTarget(
+            link: _layerLink,
+            child: Container(
+              key: _searchFieldKey,
+              child: TextField(
+                controller: _searchController,
+                onTap: _handleSearchFieldTap, // ⭐ 추가
+                onChanged: (v) => _fetchKakaoSuggestions(v),
+                decoration: const InputDecoration(hintText: "주소나 매장명 검색"),
               ),
-              const SizedBox(width: 8),
-              ElevatedButton(onPressed: _onSearch, child: const Text("검색")),
-            ],
+            ),
           ),
 
           const SizedBox(height: 12),
 
-          // 이미지
+          // --------------------------
+          // 이미지 선택 UI
+          // --------------------------
           Row(
             children: [
               for (int i = 0; i < _existingImages.length; i++)
-                _buildImageBox(
-                  NetworkImage(_existingImages[i]),
-                  () => _removeExistingImage(i),
-                ),
+                _buildImageBox(NetworkImage(_existingImages[i]), () {
+                  setState(() {
+                    _existingImages.removeAt(i);
+                  });
+                  widget.onExistingImagesChanged?.call(_existingImages);
+                }),
 
               for (int i = 0; i < _images.length; i++)
-                _buildImageBox(FileImage(_images[i]), () => _removeImage(i)),
+                _buildImageBox(FileImage(_images[i]), () {
+                  setState(() => _images.removeAt(i));
+                  widget.onImagesChanged?.call(_images);
+                }),
 
               if (_existingImages.length + _images.length < 3)
                 GestureDetector(
-                  onTap: _pickImage,
+                  onTap: () async {
+                    final XFile? picked = await _picker.pickImage(
+                      source: ImageSource.gallery,
+                    );
+                    if (picked != null) {
+                      setState(() => _images.add(File(picked.path)));
+                      widget.onImagesChanged?.call(_images);
+                    }
+                  },
                   child: Container(
                     width: 100,
                     height: 100,
@@ -315,27 +310,29 @@ class _WriteCourseSetState extends State<WriteCourseSet> {
 
           const SizedBox(height: 12),
 
+          // --------------------------
           // 설명
+          // --------------------------
           TextField(
             controller: _textController,
             maxLength: 200,
             maxLines: null,
-            decoration: const InputDecoration(hintText: '내용을 입력해주세요'),
+            decoration: const InputDecoration(hintText: "내용을 입력해주세요"),
           ),
 
           const SizedBox(height: 12),
 
-          // 태그
+          // --------------------------
+          // 태그 선택
+          // --------------------------
           DropdownButtonFormField<TagModel>(
             value: _selectedTag,
             items: widget.tagList
-                .map(
-                  (tag) => DropdownMenuItem(value: tag, child: Text(tag.name)),
-                )
+                .map((t) => DropdownMenuItem(value: t, child: Text(t.name)))
                 .toList(),
-            onChanged: (value) {
-              setState(() => _selectedTag = value);
-              if (value != null) widget.onTagChanged?.call(value);
+            onChanged: (v) {
+              setState(() => _selectedTag = v);
+              widget.onTagChanged?.call(v!);
             },
           ),
         ],
