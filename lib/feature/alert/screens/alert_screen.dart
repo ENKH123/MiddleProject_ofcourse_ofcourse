@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/core/extensions/extension.dart';
-import 'package:of_course/feature/alert/viewmodels/alert_viewmodel.dart';
+import 'package:of_course/core/providers/alert_provider.dart';
 import 'package:provider/provider.dart';
 
 class AlertScreen extends StatelessWidget {
@@ -12,7 +12,7 @@ class AlertScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text("알림"), centerTitle: true),
       body: SafeArea(
-        child: Consumer<AlertViewModel>(
+        child: Consumer<AlertProvider>(
           builder: (context, viewmodel, child) {
             if (viewmodel.alerts == null) {
               return Container();
@@ -82,11 +82,11 @@ class AlertScreen extends StatelessWidget {
   }
 }
 
-Widget _loadingScreen(AlertViewModel viewModel) {
+Widget _loadingScreen(AlertProvider viewModel) {
   return Center(child: const Text("로딩중"));
 }
 
-Widget _emptyScreen(AlertViewModel viewModel) {
+Widget _emptyScreen(AlertProvider viewModel) {
   return const Center(child: Text("새로운 알림이 없습니다."));
 }
 
@@ -144,7 +144,7 @@ class AlertBox extends StatelessWidget {
   final String userId;
   final String relativeTime;
   final int alertId;
-  final AlertViewModel viewModel;
+  final AlertProvider viewModel;
   const AlertBox({
     super.key,
     required this.fromUser,
