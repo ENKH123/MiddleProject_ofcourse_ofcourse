@@ -14,6 +14,7 @@ import 'package:of_course/feature/course/screens/course_detail_screen.dart';
 import 'package:of_course/feature/course/screens/course_recommend_screen.dart';
 import 'package:of_course/feature/course/screens/edit_course_page.dart';
 import 'package:of_course/feature/course/screens/liked_course_page.dart';
+import 'package:of_course/feature/course/screens/recommend_onboarding_screen.dart';
 import 'package:of_course/feature/course/screens/write_course_page.dart';
 import 'package:of_course/feature/course/screens/write_entry_page.dart';
 import 'package:of_course/feature/home/screens/ofCourse_home_page.dart';
@@ -109,6 +110,10 @@ class MyApp extends StatelessWidget {
           },
         ),
         GoRoute(
+          path: '/onboarding',
+          builder: (context, state) => const RecommendOnboardingScreen(),
+        ),
+        GoRoute(
           path: '/recommend',
           builder: (context, state) => const CourseRecommendScreen(),
         ),
@@ -121,7 +126,7 @@ class MyApp extends StatelessWidget {
           builder: (context, state) => ReportScreen(
             targetId: "",
             reportTargetType: reportTargetType,
-          ), // 임시 수정
+          ),
         ),
         GoRoute(
           path: '/terms',
