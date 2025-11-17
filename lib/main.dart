@@ -22,6 +22,8 @@ import 'package:of_course/feature/profile/screens/change_profile_screen.dart';
 import 'package:of_course/feature/profile/screens/profile_screen.dart';
 import 'package:of_course/feature/profile/screens/terms_mypage_screen.dart';
 import 'package:of_course/feature/profile/screens/view_my_post_page.dart';
+import 'package:of_course/feature/profile/viewmodels/change_profile_viewmodel.dart';
+import 'package:of_course/feature/profile/viewmodels/profile_viewmodel.dart';
 import 'package:of_course/feature/report/screens/report_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -57,6 +59,12 @@ Future<void> main() async {
           create: (context) => AuthProvider(),
         ), // 전역 프로바이더 // 로그인 상태 감지
         ChangeNotifierProvider(create: (_) => AlertViewModel()), // 알림 ViewModel
+        ChangeNotifierProvider(
+          create: (_) => ProfileViewModel(),
+        ), // 프로필 ViewModel
+        ChangeNotifierProvider(
+          create: (_) => ChangeProfileViewModel(),
+        ), //프로필변경 viewmodel
       ],
       child: const MyApp(),
     ),
