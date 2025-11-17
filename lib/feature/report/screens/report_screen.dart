@@ -7,9 +7,6 @@ import 'package:of_course/core/managers/supabase_manager.dart';
 
 import '../models/report_models.dart';
 
-///ID: FO_03_03_01
-
-/// 신고 화면 위젯
 class ReportScreen extends StatefulWidget {
   final String targetId;
   final ReportTargetType reportTargetType;
@@ -27,45 +24,30 @@ class ReportScreen extends StatefulWidget {
 }
 
 class _ReportScreenState extends State<ReportScreen> {
-  /// 신고 상세 내용 입력 컨트롤러
-  late TextEditingController _detailsController;
+  static const int _maxImages = 3;
+  static const int _maxDetailsLength = 1000;
 
-  /// 선택된 신고 사유
+  final TextEditingController _detailsController = TextEditingController();
+
   ReportReason? _selectedReason;
-
-  /// 첨부된 신고 이미지 목록 (최대 3개)
-  List<XFile> _reportImages = [];
-
-  /// 이미지 피커 인스턴스
+  final List<XFile> _reportImages = [];
   final ImagePicker _picker = ImagePicker();
-
-  /// 신고 제출 중 로딩 상태
   bool _isSubmitting = false;
 
   @override
-  void initState() {
-    super.initState();
-    _detailsController = TextEditingController();
-  }
-
-  @override
   void dispose() {
-    // 컨트롤러 메모리 해제
     _detailsController.dispose();
     super.dispose();
   }
 
-  /// 폼 유효성 검사
   bool get _isFormValid {
     return _selectedReason != null &&
-        _detailsController.text.length <= 1000 &&
-        _reportImages.length <= 3;
+        _detailsController.text.length <= _maxDetailsLength &&
+        _reportImages.length <= _maxImages;
   }
 
   Future<void> _handleImageUpload() async {
-    if (_reportImages.length >= 3) {
-      return;
-    }
+    if (_reportImages.length >= _maxImages) return;
 
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
@@ -76,13 +58,14 @@ class _ReportScreenState extends State<ReportScreen> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('이미지를 선택하는 중 오류가 발생했습니다: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('이미지를 선택하는 중 오류가 발생했습니다: $e'),
+        ),
+      );
     }
   }
 
-  /// 신고 제출 처리
   Future<void> _submitReport() async {
     if (!_isFormValid || _isSubmitting) return;
 
@@ -95,7 +78,6 @@ class _ReportScreenState extends State<ReportScreen> {
         throw Exception('신고 사유를 선택해주세요.');
       }
 
-      // Supabase에 신고 제출
       await SupabaseManager.shared.submitReport(
         targetId: widget.targetId,
         targetType: widget.reportTargetType,
@@ -104,12 +86,10 @@ class _ReportScreenState extends State<ReportScreen> {
         imagePaths: _reportImages.map((file) => file.path).toList(),
       );
 
-      // 성공 시 완료 팝업 표시
       if (mounted) {
         _showCompletionDialog();
       }
     } catch (e) {
-      // 에러 발생 시 스낵바 표시
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -127,28 +107,21 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
-  /// 취소 확인 다이얼로그 표시
   void _showCancelDialog() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return _buildCancelDialog();
-      },
+      builder: (context) => _buildCancelDialog(),
     );
   }
 
-  /// 완료 확인 다이얼로그 표시
   void _showCompletionDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
-        return _buildCompletionDialog();
-      },
+      builder: (context) => _buildCompletionDialog(),
     );
   }
 
-  /// 취소 확인 다이얼로그 위젯
   Widget _buildCancelDialog() {
     return Dialog(
       backgroundColor: const Color(0xFFFAFAFA),
@@ -169,15 +142,12 @@ class _ReportScreenState extends State<ReportScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            // OK 버튼 (빨간색)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // 다이얼로그 닫기
-                  Navigator.pop(context);
-                  // 신고 화면 닫기
-                  Navigator.pop(context);
+                  Navigator.pop(context); // 다이얼로그 닫기
+                  Navigator.pop(context); // 신고 화면 닫기
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
@@ -197,9 +167,7 @@ class _ReportScreenState extends State<ReportScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context); // 다이얼로그만 닫기
-                },
+                onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF5F5F5),
                   foregroundColor: Colors.black,
@@ -220,7 +188,6 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  /// 완료 확인 다이얼로그 위젯
   Widget _buildCompletionDialog() {
     return Dialog(
       backgroundColor: const Color(0xFFFAFAFA),
@@ -268,6 +235,168 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
+  Widget _buildLabel(String label) {
+    return Text(
+      label,
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
+  Widget _buildDetailsField() {
+    return Stack(
+      children: [
+        TextFormField(
+          controller: _detailsController,
+          maxLines: 5,
+          maxLength: _maxDetailsLength,
+          buildCounter: (
+              context, {
+                required int currentLength,
+                required bool isFocused,
+                int? maxLength,
+              }) {
+            return null;
+          },
+          decoration: const InputDecoration(
+            hintText: '신고 사유를 작성해주세요',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+            ),
+            contentPadding: EdgeInsets.only(
+              left: 12,
+              right: 12,
+              top: 12,
+              bottom: 32,
+            ),
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        Positioned(
+          bottom: 8,
+          right: 12,
+          child: Text(
+            '${_detailsController.text.length}/$_maxDetailsLength',
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImageSection() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        ..._reportImages.asMap().entries.map((entry) {
+          final index = entry.key;
+          final file = entry.value;
+
+          return Stack(
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[400]!),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    File(file.path),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.image, size: 50);
+                    },
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 4,
+                right: 4,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _reportImages.removeAt(index);
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }),
+        if (_reportImages.length < _maxImages)
+          GestureDetector(
+            onTap: _handleImageUpload,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.grey[400]!,
+                  style: BorderStyle.solid,
+                ),
+              ),
+              child: const Icon(
+                Icons.add,
+                size: 48,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return ElevatedButton(
+      onPressed: (_isFormValid && !_isSubmitting) ? _submitReport : null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.red,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      child: _isSubmitting
+          ? const SizedBox(
+        height: 20,
+        width: 20,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        ),
+      )
+          : const Text(
+        '신고하기',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -275,14 +404,13 @@ class _ReportScreenState extends State<ReportScreen> {
       appBar: CustomAppBar(
         title: '신고하기',
         showBackButton: true,
-        onBackPressed: () => _showCancelDialog(),
+        onBackPressed: _showCancelDialog,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 신고 사용자 입력 필드
             _buildLabel('신고 사용자'),
             const SizedBox(height: 8),
             TextFormField(
@@ -298,7 +426,7 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
             const SizedBox(height: 24),
 
-            // 신고 사유 선택 드롭다운
+            // 신고 사유
             _buildLabel('신고 사유'),
             const SizedBox(height: 8),
             DropdownButtonFormField<ReportReason>(
@@ -323,168 +451,20 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
             const SizedBox(height: 24),
 
-            // 신고 상세 내용 입력 필드
-            _buildLabel('상세 내용 (최대 1000자)'),
+            _buildLabel('상세 내용 (최대 $_maxDetailsLength자)'),
             const SizedBox(height: 8),
-            Stack(
-              children: [
-                TextFormField(
-                  controller: _detailsController,
-                  maxLines: 5,
-                  maxLength: 1000,
-                  buildCounter:
-                      (
-                      context, {
-                    required currentLength,
-                    required isFocused,
-                    maxLength,
-                  }) => null,
-                  decoration: InputDecoration(
-                    hintText: '신고 사유를 작성해주세요',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.only(
-                      left: 12,
-                      right: 12,
-                      top: 12,
-                      bottom: 32,
-                    ),
-                  ),
-                  onChanged: (_) => setState(() {}),
-                ),
-                Positioned(
-                  bottom: 8,
-                  right: 12,
-                  child: Text(
-                    '${_detailsController.text.length}/1000',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                ),
-              ],
-            ),
+            _buildDetailsField(),
             const SizedBox(height: 24),
 
-            // 이미지 업로드 섹션
-            _buildLabel('이미지 (최대 3개)'),
+            _buildLabel('이미지 (최대 $_maxImages개)'),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                // 기존에 업로드된 이미지들 표시
-                ..._reportImages.asMap().entries.map((entry) {
-                  return Stack(
-                    children: [
-                      // 이미지 컨테이너
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey[400]!),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(
-                            File(entry.value.path),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Icon(Icons.image, size: 50);
-                            },
-                          ),
-                        ),
-                      ),
-                      // 이미지 삭제 버튼
-                      Positioned(
-                        top: 4,
-                        right: 4,
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _reportImages.removeAt(entry.key);
-                            });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.close,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                }),
-                // 이미지 추가 버튼 (최대 3개까지)
-                if (_reportImages.length < 3)
-                  GestureDetector(
-                    onTap: _handleImageUpload,
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Colors.grey[400]!,
-                          style: BorderStyle.solid,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.add,
-                        size: 48,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            _buildImageSection(),
             const SizedBox(height: 32),
 
-            // 신고 제출 버튼
-            ElevatedButton(
-              onPressed: (_isFormValid && !_isSubmitting) ? _submitReport : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: _isSubmitting
-                  ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-                  : const Text(
-                '신고하기',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
+            _buildSubmitButton(),
           ],
         ),
       ),
-    );
-  }
-
-  /// 라벨 텍스트 위젯 생성
-  Widget _buildLabel(String label) {
-    return Text(
-      label,
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
     );
   }
 }
