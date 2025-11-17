@@ -279,11 +279,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   /// learningData 테이블 업데이트 (upsert)
   Future<void> _updateLearningData(
-      SupabaseClient supabase,
-      String userId,
-      int courseId,
-      int label,
-      ) async {
+    SupabaseClient supabase,
+    String userId,
+    int courseId,
+    int label,
+  ) async {
     try {
       // 먼저 코스 제목 가져오기
       final courseData = await supabase
@@ -306,9 +306,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         // 기존 레코드가 있으면 업데이트
         await supabase
             .from('learningData')
-            .update({
-          'label': label,
-        })
+            .update({'label': label})
             .eq('id', existingData['id']);
       } else {
         // 기존 레코드가 없으면 새로 생성
@@ -352,10 +350,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       final response = await supabase
           .from('comments')
           .insert({
-        'course_id': widget.courseId,
-        'user_id': userRowId,
-        'comment': commentText,
-      })
+            'course_id': widget.courseId,
+            'user_id': userRowId,
+            'comment': commentText,
+          })
           .select('''
         *,
         user:users!comments_user_id_fkey(nickname, profile_img)
@@ -512,8 +510,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         final imageUrls = [set['img_01'], set['img_02'], set['img_03']]
             .where(
               (url) =>
-          url != null && url != "null" && url.toString().isNotEmpty,
-        )
+                  url != null && url != "null" && url.toString().isNotEmpty,
+            )
             .toList();
 
         for (final url in imageUrls) {
@@ -591,10 +589,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   void _navigateToReport(
-      String targetId,
-      ReportTargetType targetType, {
-        String? commentAuthor,
-      }) {
+    String targetId,
+    ReportTargetType targetType, {
+    String? commentAuthor,
+  }) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -661,12 +659,18 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   /// 두 좌표 간 거리 계산 (하버사인 공식, 미터 단위)
-  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+  double _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const double earthRadius = 6371000; // 지구 반지름 (미터)
     final double dLat = _toRadians(lat2 - lat1);
     final double dLon = _toRadians(lon2 - lon1);
 
-    final double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final double a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(_toRadians(lat1)) *
             math.cos(_toRadians(lat2)) *
             math.sin(dLon / 2) *
@@ -707,7 +711,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     if (_courseDetail == null) return;
 
     final set = _courseDetail!.sets.firstWhere(
-          (s) => s.setId == setId,
+      (s) => s.setId == setId,
       orElse: () => _courseDetail!.sets.first,
     );
 
@@ -822,6 +826,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     return AppBar(
       backgroundColor: _backgroundColor,
       elevation: 0,
+      scrolledUnderElevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: _handleBackNavigation,
@@ -882,9 +887,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 final hex = TagColorModel.getColorHex(tag);
                 final bg = hex != null
                     ? Color(
-                  int.parse(hex.replaceFirst('#', ''), radix: 16) +
-                      0xFF000000,
-                )
+                        int.parse(hex.replaceFirst('#', ''), radix: 16) +
+                            0xFF000000,
+                      )
                     : Colors.grey.shade200;
                 return Container(
                   padding: const EdgeInsets.symmetric(
@@ -918,11 +923,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.lightbulb_outline,
-              color: _mainColor,
-              size: 20,
-            ),
+            Icon(Icons.lightbulb_outline, color: _mainColor, size: 20),
             const SizedBox(width: _spacingSmall),
             Expanded(
               child: Column(
@@ -930,10 +931,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 children: [
                   const Text(
                     '코스 추천 사유',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: _spacingSmall),
                   Text(
@@ -1081,9 +1079,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     Expanded(
                       child: Text(
                         set.setAddress,
-                        style: TextStyle(
-                          color: _mainColor,
-                        ),
+                        style: TextStyle(color: _mainColor),
                       ),
                     ),
                   ],
@@ -1303,4 +1299,3 @@ Widget _zoomButton(IconData icon, VoidCallback onPressed) {
     ),
   );
 }
-
