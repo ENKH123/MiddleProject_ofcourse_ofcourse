@@ -1,7 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // 앱 전역 상태
 final themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.system);
+
+// 저장용 key
+const _themeModeKey = 'theme_mode';
+
+//앱 시작할 때 호출해서, 저장된 테마 불러오기
+Future<void> loadSavedThemeMode() async {
+  final prefs = await SharedPreferences.getInstance();
+  final intValue = prefs.getInt(_themeModeKey);
+
+  if (intValue == null) return;
+  if (intValue >= 0 && intValue < ThemeMode.values.length) {
+    themeModeNotifier.value = ThemeMode.values[intValue];
+  }
+}
+
+// 사용자가 테마를 바꿀 때 저장하기
+Future<void> saveThemeMode(ThemeMode mode) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setInt(_themeModeKey, mode.index);
+}
 
 Future<ThemeMode?> showThemeModeDialog(
   BuildContext context, {
@@ -38,30 +59,34 @@ Future<ThemeMode?> showThemeModeDialog(
                 children: [
                   const SizedBox(height: 4),
                   const Text(
-                    '테마 변경',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                    '테마 설정',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
 
-                  // 시스템 모드
-                  radioItem('시스템 모드 따라가기', ThemeMode.system, () {
-                    setState(() => selected = ThemeMode.system);
-                    Navigator.pop(context, ThemeMode.system);
-                  }),
-
-                  // 라이트 모드
-                  radioItem('라이트 모드', ThemeMode.light, () {
+                  // 라이트
+                  radioItem('라이트 모드', ThemeMode.light, () async {
                     setState(() => selected = ThemeMode.light);
-                    Navigator.pop(context, ThemeMode.light);
+                    themeModeNotifier.value = ThemeMode.light;
+                    await saveThemeMode(ThemeMode.light);
+                    Navigator.of(context).pop(ThemeMode.light);
                   }),
 
-                  // 다크 모드
-                  radioItem('다크 모드', ThemeMode.dark, () {
+                  // 다크
+                  radioItem('다크 모드', ThemeMode.dark, () async {
                     setState(() => selected = ThemeMode.dark);
-                    Navigator.pop(context, ThemeMode.dark);
+                    themeModeNotifier.value = ThemeMode.dark;
+                    await saveThemeMode(ThemeMode.dark);
+                    Navigator.of(context).pop(ThemeMode.dark);
                   }),
 
-                  const SizedBox(height: 4),
+                  // 시스템
+                  radioItem('시스템 설정 따르기', ThemeMode.system, () async {
+                    setState(() => selected = ThemeMode.system);
+                    themeModeNotifier.value = ThemeMode.system;
+                    await saveThemeMode(ThemeMode.system);
+                    Navigator.of(context).pop(ThemeMode.system);
+                  }),
                 ],
               );
             },
@@ -177,7 +202,7 @@ final ThemeData darkTheme = ThemeData(
     surface: const Color(0xFF002245),
     onSurface: const Color(0xFFFAFAFA),
     surfaceContainer: const Color(0xFF516C87), //흰 vs 회색 버튼 색상
-    surfaceBright: const Color(0xFF516C87), // 세트 색상
+    surfaceBright: const Color(0xFF0F3A60), // 세트 및 코스 색상
     surfaceContainerHigh: const Color(0xfffafafa), // 흰 vs 포인트
     surfaceContainerHighest: const Color(0xff9E9E9E), //회색
   ),

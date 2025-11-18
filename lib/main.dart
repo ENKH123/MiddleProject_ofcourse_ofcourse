@@ -52,6 +52,7 @@ Future<void> main() async {
       }
     },
   );
+  await loadSavedThemeMode();
   runApp(
     MultiProvider(
       providers: [
@@ -306,14 +307,14 @@ class MyApp extends StatelessWidget {
     );
 
     return ValueListenableBuilder<ThemeMode>(
-      valueListenable: themeModeNotifier, // ★
+      valueListenable: themeModeNotifier,
       builder: (_, mode, __) {
         return MaterialApp.router(
           title: 'Of Course',
           debugShowCheckedModeBanner: false,
+          themeMode: mode, // 선택된 모드 적용
           theme: lightTheme, //라이트 모드
           darkTheme: darkTheme, //다크 모드
-          themeMode: mode, // 선택된 모드 적용
           routerConfig: router,
         );
       },
