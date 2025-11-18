@@ -7,6 +7,7 @@ import 'package:of_course/core/models/supabase_user_model.dart';
 import 'package:of_course/core/providers/alert_provider.dart';
 import 'package:of_course/main.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 enum DialogType { logOut, reSign }
@@ -15,6 +16,12 @@ class LoginViewModel extends ChangeNotifier {
   //TODO: 호출
   //TODO: 결과
 
+  late SharedPreferences _prefs; // SharedPreferences 객체
+  SharedPreferences get prefs => _prefs; // SharedPreferences 객체
+
+  bool _onboarding = false;
+  bool get onboarding => _onboarding;
+
   GoogleSignInAccount? _googleUser;
   GoogleSignInAccount? get googleUser => _googleUser;
 
@@ -22,6 +29,28 @@ class LoginViewModel extends ChangeNotifier {
 
   late DialogType _dialogType;
   DialogType get dialogType => _dialogType;
+
+  LoginViewModel() {
+    _initSharedPreferences();
+  }
+
+  // SharedPreferences 초기화 함수
+  Future<void> _initSharedPreferences() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+
+  // 데이터를 저장하는 함수
+  Future<void> finishOnboarding() async {
+    _prefs.setBool('onboarding', true);
+    notifyListeners();
+  }
+
+  // 데이터를 로드하는 함수
+  Future<void> isFinished() async {
+    final myData = _prefs.getBool('onboarding');
+    _onboarding = myData ?? false;
+    notifyListeners();
+  }
 
   void isDialogType(DialogType type) {
     _dialogType = type;
@@ -96,22 +125,4 @@ class LoginViewModel extends ChangeNotifier {
   Future<void> resign() async {
     await SupabaseManager.shared.resign();
   }
-
-  // // 로그인
-  // Future<void> googleSignIn(BuildContext context) async {
-  //   GoogleAuthManager.shared.googleSignIn(context);
-  //   notifyListeners();
-  // }
-  //
-  // // 로그아웃
-  // Future<void> signOut(BuildContext context) async {
-  //   GoogleAuthManager.shared.signOut(context);
-  //   notifyListeners();
-  // }
-  //
-  // // 회원탈퇴
-  // Future<void> resign() async {
-  //   await SupabaseManager.shared.resign();
-  //   notifyListeners();
-  // }
 }
