@@ -22,12 +22,12 @@ class AlertProvider extends ChangeNotifier {
   }
 
   Future<void> _init() async {
+    channel = _subscribeAlertEvent();
     _publicUserId = await SupabaseManager.shared.fetchPublicUserId(
       currentUser?.email ?? "",
     );
     // 처음 뷰모델 생성시 알림 불러오기
     fetchAlerts();
-    channel = _subscribeAlertEvent();
   }
 
   @override
@@ -82,8 +82,6 @@ class AlertProvider extends ChangeNotifier {
               value: publicUserId,
             ),
             callback: (payload) {
-              print("payload : $payload");
-              print("_alerts : ${_alerts}");
               fetchAlerts();
               // _alerts?.add(payload.newRecord as AlertModel);
               notifyListeners();
