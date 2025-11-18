@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
-import 'package:of_course/feature/auth/viewmodels/onboarding_viewmodel.dart';
+import 'package:of_course/feature/onboarding/viewmodels/onboarding_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class OnboardingScreen extends StatelessWidget {
