@@ -90,6 +90,11 @@ final ThemeData lightTheme = ThemeData(
         surfaceContainerHighest: const Color(0xffa5a5a5), //회색
       ),
 
+  dialogTheme: const DialogThemeData(
+    backgroundColor: const Color(0xFFC5D5E4),
+    titleTextStyle: TextStyle(color: const Color(0xFF030303)),
+  ),
+
   scaffoldBackgroundColor: const Color(0xFFFAFAFA),
   canvasColor: const Color(0xFFFAFAFA),
 
@@ -174,7 +179,12 @@ final ThemeData darkTheme = ThemeData(
     surfaceContainer: const Color(0xFF516C87), //흰 vs 회색 버튼 색상
     surfaceBright: const Color(0xFF516C87), // 세트 색상
     surfaceContainerHigh: const Color(0xfffafafa), // 흰 vs 포인트
-    surfaceContainerHighest: const Color(0xffC6C6C6), //회색
+    surfaceContainerHighest: const Color(0xff9E9E9E), //회색
+  ),
+
+  dialogTheme: const DialogThemeData(
+    backgroundColor: const Color(0xff003366),
+    titleTextStyle: TextStyle(color: const Color(0xfffafafa)),
   ),
 
   scaffoldBackgroundColor: const Color(0xFF002245),
