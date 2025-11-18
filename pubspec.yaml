@@ -47,6 +47,7 @@ dependencies:
   google_sign_in: ^7.2.0
   supabase_progress_uploads: ^1.0.4
   flutter_native_splash: ^2.4.7
+  shared_preferences: ^2.5.3
 
 flutter_launcher_icons:
   android: true # 안드로이드 플랫폼에 런처 아이콘 적용 여부
