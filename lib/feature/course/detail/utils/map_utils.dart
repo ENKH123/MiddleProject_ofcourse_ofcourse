@@ -3,14 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 
 class MapUtils {
-  /// 두 좌표 간 거리 계산 (하버사인 공식, 미터 단위)
   static double calculateDistance(
     double lat1,
     double lon1,
     double lat2,
     double lon2,
   ) {
-    const double earthRadius = 6371000; // 지구 반지름 (미터)
+    const double earthRadius = 6371000;
     final double dLat = _toRadians(lat2 - lat1);
     final double dLon = _toRadians(lon2 - lon1);
 
@@ -26,7 +25,6 @@ class MapUtils {
 
   static double _toRadians(double degrees) => degrees * (math.pi / 180.0);
 
-  /// 지도 탭 이벤트 처리 - 가장 가까운 마커 찾기
   static String? findClosestMarker(
     NLatLng tappedLocation,
     Map<String, NLatLng> markerPositions, {
