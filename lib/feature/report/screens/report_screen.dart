@@ -1,13 +1,14 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+
 import 'package:of_course/core/components/custom_app_bar.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
 
 import '../models/report_models.dart';
+import '../viewmodels/report_view_model.dart';
 
-class ReportScreen extends StatefulWidget {
+class ReportScreen extends StatelessWidget {
   final String targetId;
   final ReportTargetType reportTargetType;
   final String reportingUser;
@@ -20,19 +21,44 @@ class ReportScreen extends StatefulWidget {
   });
 
   @override
-  State<ReportScreen> createState() => _ReportScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => ReportViewModel(
+        targetId: targetId,
+        reportTargetType: reportTargetType,
+      ),
+      child: _ReportScreenBody(
+        reportingUser: reportingUser,
+      ),
+    );
+  }
 }
 
-class _ReportScreenState extends State<ReportScreen> {
-  static const int _maxImages = 3;
-  static const int _maxDetailsLength = 1000;
+class _ReportScreenBody extends StatefulWidget {
+  final String reportingUser;
 
-  final TextEditingController _detailsController = TextEditingController();
+  const _ReportScreenBody({
+    super.key,
+    required this.reportingUser,
+  });
 
-  ReportReason? _selectedReason;
-  final List<XFile> _reportImages = [];
-  final ImagePicker _picker = ImagePicker();
-  bool _isSubmitting = false;
+  @override
+  State<_ReportScreenBody> createState() => _ReportScreenBodyState();
+}
+
+class _ReportScreenBodyState extends State<_ReportScreenBody> {
+  late final TextEditingController _detailsController;
+
+  @override
+  void initState() {
+    super.initState();
+    final vm = context.read<ReportViewModel>();
+    _detailsController = TextEditingController(text: vm.details);
+
+    _detailsController.addListener(() {
+      vm.setDetails(_detailsController.text);
+    });
+  }
 
   @override
   void dispose() {
@@ -40,77 +66,27 @@ class _ReportScreenState extends State<ReportScreen> {
     super.dispose();
   }
 
-  bool get _isFormValid {
-    return _selectedReason != null &&
-        _detailsController.text.length <= _maxDetailsLength &&
-        _reportImages.length <= _maxImages;
-  }
-
-  Future<void> _handleImageUpload() async {
-    if (_reportImages.length >= _maxImages) return;
+  Future<void> _submitReport() async {
+    final vm = context.read<ReportViewModel>();
 
     try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-
-      if (image != null) {
-        setState(() {
-          _reportImages.add(image);
-        });
-      }
+      await vm.submitReport();
+      _showCompletionDialog();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('이미지를 선택하는 중 오류가 발생했습니다: $e'),
+          content: Text('신고 제출 중 오류가 발생했습니다: $e'),
+          backgroundColor: Colors.red,
         ),
       );
-    }
-  }
-
-  Future<void> _submitReport() async {
-    if (!_isFormValid || _isSubmitting) return;
-
-    setState(() {
-      _isSubmitting = true;
-    });
-
-    try {
-      if (_selectedReason == null) {
-        throw Exception('신고 사유를 선택해주세요.');
-      }
-
-      await SupabaseManager.shared.submitReport(
-        targetId: widget.targetId,
-        targetType: widget.reportTargetType,
-        reportReason: _selectedReason!,
-        reason: _detailsController.text,
-        imagePaths: _reportImages.map((file) => file.path).toList(),
-      );
-
-      if (mounted) {
-        _showCompletionDialog();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('신고 제출 중 오류가 발생했습니다: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-        });
-      }
     }
   }
 
   void _showCancelDialog() {
     showDialog(
       context: context,
-      builder: (context) => _buildCancelDialog(),
+      builder: (context) => _buildCancelDialog(context),
     );
   }
 
@@ -118,11 +94,247 @@ class _ReportScreenState extends State<ReportScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => _buildCompletionDialog(),
+      builder: (context) => _buildCompletionDialog(context),
     );
   }
 
-  Widget _buildCancelDialog() {
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<ReportViewModel>();
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAFAFA),
+      appBar: CustomAppBar(
+        title: '신고하기',
+        showBackButton: true,
+        onBackPressed: _showCancelDialog,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildLabel('신고 사용자'),
+            const SizedBox(height: 8),
+            TextFormField(
+              initialValue: widget.reportingUser,
+              readOnly: true,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.grey[200],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            _buildLabel('신고 사유'),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<ReportReason>(
+              value: vm.selectedReason,
+              decoration: InputDecoration(
+                hintText: '신고 사유를 선택하세요',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              items: ReportReason.values.map((reason) {
+                return DropdownMenuItem(
+                  value: reason,
+                  child: Text(reason.label),
+                );
+              }).toList(),
+              onChanged: vm.setReason,
+            ),
+            const SizedBox(height: 24),
+
+            _buildLabel('상세 내용 (최대 ${vm.maxDetailsLength}자)'),
+            const SizedBox(height: 8),
+            _buildDetailsField(vm),
+            const SizedBox(height: 24),
+
+            _buildLabel('이미지 (최대 ${vm.maxImages}개)'),
+            const SizedBox(height: 8),
+            _buildImageSection(vm),
+            const SizedBox(height: 32),
+
+            _buildSubmitButton(vm),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String label) {
+    return Text(
+      label,
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
+  Widget _buildDetailsField(ReportViewModel vm) {
+    return Stack(
+      children: [
+        TextFormField(
+          controller: _detailsController,
+          maxLines: 5,
+          maxLength: vm.maxDetailsLength,
+          buildCounter: (
+              context, {
+                required int currentLength,
+                required bool isFocused,
+                int? maxLength,
+              }) {
+            return null;
+          },
+          decoration: const InputDecoration(
+            hintText: '신고 사유를 작성해주세요',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+            ),
+            contentPadding: EdgeInsets.only(
+              left: 12,
+              right: 12,
+              top: 12,
+              bottom: 32,
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 8,
+          right: 12,
+          child: Text(
+            '${_detailsController.text.length}/${vm.maxDetailsLength}',
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImageSection(ReportViewModel vm) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        ...vm.reportImages.asMap().entries.map((entry) {
+          final index = entry.key;
+          final file = entry.value;
+
+          return Stack(
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[400]!),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    File(file.path),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.image, size: 50);
+                    },
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 4,
+                right: 4,
+                child: GestureDetector(
+                  onTap: () => vm.removeImageAt(index),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }),
+        if (vm.reportImages.length < vm.maxImages)
+          GestureDetector(
+            onTap: () async {
+              try {
+                await vm.pickImageFromGallery();
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('이미지를 선택하는 중 오류가 발생했습니다: $e'),
+                  ),
+                );
+              }
+            },
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.grey[400]!,
+                  style: BorderStyle.solid,
+                ),
+              ),
+              child: const Icon(
+                Icons.add,
+                size: 48,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSubmitButton(ReportViewModel vm) {
+    return ElevatedButton(
+      onPressed: (vm.isFormValid && !vm.isSubmitting) ? _submitReport : null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.red,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      child: vm.isSubmitting
+          ? const SizedBox(
+        height: 20,
+        width: 20,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        ),
+      )
+          : const Text(
+        '신고하기',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCancelDialog(BuildContext context) {
     return Dialog(
       backgroundColor: const Color(0xFFFAFAFA),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -146,8 +358,8 @@ class _ReportScreenState extends State<ReportScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context); // 다이얼로그 닫기
-                  Navigator.pop(context); // 신고 화면 닫기
+                  Navigator.pop(context); // dialog 닫기
+                  Navigator.pop(context); // 화면 닫기
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
@@ -188,7 +400,7 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  Widget _buildCompletionDialog() {
+  Widget _buildCompletionDialog(BuildContext context) {
     return Dialog(
       backgroundColor: const Color(0xFFFAFAFA),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -212,8 +424,8 @@ class _ReportScreenState extends State<ReportScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context); // 다이얼로그 닫기
-                  Navigator.pop(context); // 신고 화면 닫기
+                  Navigator.pop(context); // dialog
+                  Navigator.pop(context); // screen
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
@@ -229,239 +441,6 @@ class _ReportScreenState extends State<ReportScreen> {
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String label) {
-    return Text(
-      label,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-  }
-
-  Widget _buildDetailsField() {
-    return Stack(
-      children: [
-        TextFormField(
-          controller: _detailsController,
-          maxLines: 5,
-          maxLength: _maxDetailsLength,
-          buildCounter: (
-              context, {
-                required int currentLength,
-                required bool isFocused,
-                int? maxLength,
-              }) {
-            return null;
-          },
-          decoration: const InputDecoration(
-            hintText: '신고 사유를 작성해주세요',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(8)),
-            ),
-            contentPadding: EdgeInsets.only(
-              left: 12,
-              right: 12,
-              top: 12,
-              bottom: 32,
-            ),
-          ),
-          onChanged: (_) => setState(() {}),
-        ),
-        Positioned(
-          bottom: 8,
-          right: 12,
-          child: Text(
-            '${_detailsController.text.length}/$_maxDetailsLength',
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildImageSection() {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        ..._reportImages.asMap().entries.map((entry) {
-          final index = entry.key;
-          final file = entry.value;
-
-          return Stack(
-            children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[400]!),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.file(
-                    File(file.path),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.image, size: 50);
-                    },
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _reportImages.removeAt(index);
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.close,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        }),
-        if (_reportImages.length < _maxImages)
-          GestureDetector(
-            onTap: _handleImageUpload,
-            child: Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.grey[400]!,
-                  style: BorderStyle.solid,
-                ),
-              ),
-              child: const Icon(
-                Icons.add,
-                size: 48,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildSubmitButton() {
-    return ElevatedButton(
-      onPressed: (_isFormValid && !_isSubmitting) ? _submitReport : null,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.red,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-      child: _isSubmitting
-          ? const SizedBox(
-        height: 20,
-        width: 20,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-        ),
-      )
-          : const Text(
-        '신고하기',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
-      appBar: CustomAppBar(
-        title: '신고하기',
-        showBackButton: true,
-        onBackPressed: _showCancelDialog,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildLabel('신고 사용자'),
-            const SizedBox(height: 8),
-            TextFormField(
-              initialValue: widget.reportingUser,
-              readOnly: true,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.grey[200],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // 신고 사유
-            _buildLabel('신고 사유'),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<ReportReason>(
-              value: _selectedReason,
-              decoration: InputDecoration(
-                hintText: '신고 사유를 선택하세요',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              items: ReportReason.values.map((reason) {
-                return DropdownMenuItem(
-                  value: reason,
-                  child: Text(reason.label),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedReason = value;
-                });
-              },
-            ),
-            const SizedBox(height: 24),
-
-            _buildLabel('상세 내용 (최대 $_maxDetailsLength자)'),
-            const SizedBox(height: 8),
-            _buildDetailsField(),
-            const SizedBox(height: 24),
-
-            _buildLabel('이미지 (최대 $_maxImages개)'),
-            const SizedBox(height: 8),
-            _buildImageSection(),
-            const SizedBox(height: 32),
-
-            _buildSubmitButton(),
           ],
         ),
       ),

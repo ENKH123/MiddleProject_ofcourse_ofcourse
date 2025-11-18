@@ -1,12 +1,10 @@
 import 'dart:io';
-
+import 'package:of_course/feature/report/models/report_models.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:of_course/core/models/gu_model.dart';
 import 'package:of_course/core/models/supabase_user_model.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
-import 'package:of_course/feature/report/models/report_models.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../models/alert_model.dart';
 
 class SupabaseManager {
@@ -778,7 +776,6 @@ class SupabaseManager {
     };
   }
 
-  // 신고 제출
   Future<void> submitReport({
     required String targetId,
     required ReportTargetType targetType,
@@ -787,13 +784,11 @@ class SupabaseManager {
     required List<String> imagePaths,
   }) async {
     try {
-      // 현재 사용자 ID 가져오기
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) {
         throw Exception('로그인이 필요합니다.');
       }
 
-      // 이미지 업로드 및 URL 가져오기
       final List<String> imageUrls = [];
       for (int i = 0; i < imagePaths.length && i < 3; i++) {
         final imageFile = File(imagePaths[i]);
@@ -801,24 +796,18 @@ class SupabaseManager {
           final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
           final filePath = '$userId/$fileName';
 
-          // Supabase Storage에 이미지 업로드
           await supabase.storage.from('report').upload(filePath, imageFile);
 
-          // 공개 URL 가져오기
-          final imageUrl = supabase.storage
-              .from('report')
-              .getPublicUrl(filePath);
+          final imageUrl =
+          supabase.storage.from('report').getPublicUrl(filePath);
 
           imageUrls.add(imageUrl);
         }
       }
 
-      // target_type을 문자열로 변환
-      final targetTypeString = targetType == ReportTargetType.course
-          ? 'course'
-          : 'comment';
+      final targetTypeString =
+      targetType == ReportTargetType.course ? 'course' : 'comment';
 
-      // 신고 데이터 삽입
       await supabase.from('report').insert({
         'target_id': targetId,
         'target_type': targetTypeString,
@@ -834,7 +823,6 @@ class SupabaseManager {
     }
   }
 
-  // 좋아요한 코스 ID 목록 가져오기
   Future<List<int>> getLikedCourseIds(String userId) async {
     try {
       final likedCourses = await supabase
@@ -851,13 +839,11 @@ class SupabaseManager {
     }
   }
 
-  // 태그 기반 랜덤 코스 가져오기
   Future<int?> getRandomCourseByTags(
     List<String> tagNames,
     List<int> excludeCourseIds,
   ) async {
     try {
-      // 태그 이름으로 태그 ID 찾기 (각 태그에 대해 개별 쿼리)
       final List<int> tagIds = [];
       for (final tagName in tagNames) {
         final tag = await supabase
@@ -872,7 +858,6 @@ class SupabaseManager {
 
       if (tagIds.isEmpty) return null;
 
-      // 해당 태그를 가진 코스 세트 찾기 (각 태그 ID에 대해 개별 쿼리)
       final Set<int> courseIdSet = {};
       for (final tagId in tagIds) {
         final sets = await supabase
@@ -886,14 +871,12 @@ class SupabaseManager {
 
       if (courseIdSet.isEmpty) return null;
 
-      // 제외할 코스 ID 필터링
       final courseIds = courseIdSet
           .where((id) => !excludeCourseIds.contains(id))
           .toList();
 
       if (courseIds.isEmpty) return null;
 
-      // 랜덤으로 하나 선택
       courseIds.shuffle();
       return courseIds.first;
     } catch (e) {
@@ -902,15 +885,12 @@ class SupabaseManager {
     }
   }
 
-  // 완전 랜덤 코스 가져오기
   Future<int?> getRandomCourse({required List<int> excludeCourseIds}) async {
     try {
-      // 모든 코스 가져오기
       final courses = await supabase.from('courses').select('id');
 
       if (courses.isEmpty) return null;
 
-      // 제외할 코스 ID 필터링
       final availableCourseIds = (courses as List)
           .map((course) => course['id'] as int)
           .where((id) => !excludeCourseIds.contains(id))
@@ -918,7 +898,6 @@ class SupabaseManager {
 
       if (availableCourseIds.isEmpty) return null;
 
-      // 랜덤으로 하나 선택
       availableCourseIds.shuffle();
       return availableCourseIds.first;
     } catch (e) {
