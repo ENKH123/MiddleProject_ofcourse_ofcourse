@@ -71,14 +71,13 @@ class ProfileScreen extends StatelessWidget {
 
                 const SizedBox(height: 25),
 
-                // ✅ 버튼들 – padding / 폭 확실히
                 _menuButton(
                   context,
                   label: '프로필 수정',
                   onTap: () async {
                     final changed = await context.push<bool>('/change_profile');
                     if (changed == true) {
-                      vm.loadUser(); // 변경 후 다시 로딩
+                      await vm.loadUser(force: true); // 강제 새로고침
                     }
                   },
                 ),
@@ -165,7 +164,7 @@ class ProfileScreen extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6), // ✅ 위/아래 padding 명확히
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: SizedBox(
         height: 48,
         child: ElevatedButton(

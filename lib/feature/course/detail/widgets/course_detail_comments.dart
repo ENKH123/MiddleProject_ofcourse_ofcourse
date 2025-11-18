@@ -149,10 +149,11 @@ class _CourseDetailCommentInputState extends State<CourseDetailCommentInput> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cs.background,
         boxShadow: [
           BoxShadow(
             color: Colors.grey[300]!,
@@ -173,7 +174,6 @@ class _CourseDetailCommentInputState extends State<CourseDetailCommentInput> {
                   maxLines: 1,
                   decoration: InputDecoration(
                     hintText: '댓글 작성',
-                    hintStyle: TextStyle(color: Color(0xff030303)),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
