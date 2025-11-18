@@ -35,7 +35,7 @@ class PostCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: cs.surfaceContainer,
+          color: cs.surfaceBright,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(

@@ -177,7 +177,7 @@ final ThemeData darkTheme = ThemeData(
     surface: const Color(0xFF002245),
     onSurface: const Color(0xFFFAFAFA),
     surfaceContainer: const Color(0xFF516C87), //흰 vs 회색 버튼 색상
-    surfaceBright: const Color(0xFF516C87), // 세트 색상
+    surfaceBright: const Color(0xFF0F3A60), // 세트 및 코스 색상
     surfaceContainerHigh: const Color(0xfffafafa), // 흰 vs 포인트
     surfaceContainerHighest: const Color(0xff9E9E9E), //회색
   ),
