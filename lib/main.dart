@@ -3,7 +3,8 @@ import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/core/app_theme.dart';
 import 'package:of_course/core/components/navigation_bar.dart';
-import 'package:of_course/core/providers/alert_provider.dart';
+import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/feature/alert/providers/alert_provider.dart';
 import 'package:of_course/feature/alert/screens/alert_screen.dart';
 import 'package:of_course/feature/auth/screens/login_screen.dart';
 import 'package:of_course/feature/auth/screens/register_screen.dart';
@@ -31,12 +32,7 @@ import 'core/providers/auth_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await Supabase.initialize(
-    url: 'https://dbhecolzljfrmgtdjwie.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiaGVjb2x6bGpmcm1ndGRqd2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwNzc2MTQsImV4cCI6MjA3NzY1MzYxNH0.BsKpELVM0vmihAPd37CDs-fm0sdaVZGeNuBaGlgFOac',
-  );
+  await SupabaseManager.initialize();
   await FlutterNaverMap().init(
     clientId: 'sr1eyuomlk',
     onAuthFailed: (ex) {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
-import 'package:of_course/core/models/gu_model.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
+import 'package:of_course/feature/home/models/gu_model.dart';
 
 class OfcourseHomeViewModel extends ChangeNotifier {
   final SupabaseManager supabase = SupabaseManager.shared;

@@ -490,12 +490,101 @@ class WriteCourseViewModel extends ChangeNotifier {
         false;
   }
 
+  Future<bool> _confirm(BuildContext context, String title) async {
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: true,
+          useRootNavigator: false,
+          builder: (ctx) {
+            return Center(
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  width: 290,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 22,
+                    horizontal: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        size: 40,
+                        color: Colors.orange,
+                      ),
+                      const SizedBox(height: 12),
+
+                      // TITLE
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // 확인 버튼
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx, true),
+                        child: Container(
+                          height: 44,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            "확인",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // 취소 버튼
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx, false),
+                        child: Container(
+                          height: 40,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Color(0xFFF2F2F2),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Text("취소"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ) ??
+        false;
+  }
+
   // ─────────────────────────────────────────────────────────────
   // 뒤로가기 처리
   // ─────────────────────────────────────────────────────────────
   Future<bool> handleBackPressed() async {
     final context = mapKey.currentContext!;
-    final ok = await _showConfirmDialog(context, "코스 작성을 취소하시겠습니까?");
+    final ok = await _confirm(
+      context,
+      "코스 작성을 취소하시겠습니까?\n 작성중인 코스는 저장되지 않습니다.",
+    );
 
     if (ok) {
       context.pushReplacement('/home');
@@ -505,7 +594,10 @@ class WriteCourseViewModel extends ChangeNotifier {
   }
 
   void onCancelPressed(BuildContext context) async {
-    final ok = await _showConfirmDialog(context, "작성 중인 내용을 취소하시겠습니까?");
+    final ok = await _confirm(
+      context,
+      "작성 중인 내용을 취소하시겠습니까? \n 작성중인 코스는 저장되지 않습니다.",
+    );
     if (ok) context.push('/home');
   }
 
