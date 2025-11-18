@@ -81,16 +81,17 @@ final ThemeData lightTheme = ThemeData(
         brightness: Brightness.light,
       ).copyWith(
         surface: const Color(0xFFFAFAFA),
-        //background: const Color(0xFFFAFAFA),
         primary: const Color(0xFF003366),
         onPrimary: const Color(0xFFFAFAFA), // 버튼 텍스트 색
         onSurface: const Color(0xFF030303), // 기본 텍스트 색
         surfaceContainer: const Color(0xFFFAFAFA),
+        surfaceBright: const Color(0xFFC5D5E4), // 세트 색상
+        surfaceContainerHigh: const Color(0xff003366), // 포인트 vs 흰
+        surfaceContainerHighest: const Color(0xffa5a5a5), //회색
       ),
 
   scaffoldBackgroundColor: const Color(0xFFFAFAFA),
   canvasColor: const Color(0xFFFAFAFA),
-  cardColor: const Color(0xFF003366),
 
   // surfaceTintColor: Colors.transparent,
   textTheme: const TextTheme(
@@ -166,16 +167,18 @@ final ThemeData darkTheme = ThemeData(
     onSecondary: const Color(0xFF030303),
     error: Colors.redAccent,
     onError: const Color(0xFFFAFAFA),
-    //background: const Color(0xFF003366), // 전체 배경색
-    //onBackground: const Color(0xFFFAFAFA), // 기본 글자색
+    background: const Color(0xFF002245), // 전체 배경색
+    onBackground: const Color(0xFFFAFAFA), // 기본 글자색
     surface: const Color(0xFF002245),
     onSurface: const Color(0xFFFAFAFA),
     surfaceContainer: const Color(0xFF516C87), //흰 vs 회색 버튼 색상
+    surfaceBright: const Color(0xFF516C87), // 세트 색상
+    surfaceContainerHigh: const Color(0xfffafafa), // 흰 vs 포인트
+    surfaceContainerHighest: const Color(0xffC6C6C6), //회색
   ),
 
   scaffoldBackgroundColor: const Color(0xFF002245),
   canvasColor: const Color(0xFF002245),
-  cardColor: const Color(0xFFC5D5E4),
 
   //surfaceTintColor: Colors.transparent,
   textTheme: const TextTheme(

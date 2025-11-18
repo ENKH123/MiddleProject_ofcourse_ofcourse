@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/feature/course/detail/viewmodels/course_detail_viewmodel.dart';
 import 'package:of_course/feature/course/detail/widgets/course_detail_comments.dart';
@@ -34,7 +33,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   final GlobalKey _mapSectionKey = GlobalKey();
   final CourseDetailMapController _mapController = CourseDetailMapController();
 
-  static const Color _backgroundColor = Color(0xFFFAFAFA);
+  //static const Color _backgroundColor = Color(0xFFFAFAFA);
   static const double _spacingMedium = 16.0;
   static const double _spacingLarge = 24.0;
 
@@ -71,9 +70,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().contains('로그인')
-                ? '로그인이 필요합니다.'
-                : '좋아요 처리 중 오류가 발생했습니다: $e'),
+            content: Text(
+              e.toString().contains('로그인')
+                  ? '로그인이 필요합니다.'
+                  : '좋아요 처리 중 오류가 발생했습니다: $e',
+            ),
           ),
         );
       }
@@ -84,17 +85,19 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     try {
       await _viewModel.submitComment(commentText);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('댓글이 작성되었습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('댓글이 작성되었습니다.')));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().contains('로그인')
-                ? '로그인이 필요합니다.'
-                : '댓글 작성 중 오류가 발생했습니다: ${e.toString()}'),
+            content: Text(
+              e.toString().contains('로그인')
+                  ? '로그인이 필요합니다.'
+                  : '댓글 작성 중 오류가 발생했습니다: ${e.toString()}',
+            ),
             duration: const Duration(seconds: 5),
           ),
         );
@@ -119,9 +122,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               try {
                 await _viewModel.deleteComment(commentId);
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('댓글이 삭제되었습니다.')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('댓글이 삭제되었습니다.')));
                 }
               } catch (e) {
                 if (mounted) {
@@ -146,9 +149,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('게시글 삭제'),
-        content: const Text(
-          '정말 이 코스를 삭제하시겠습니까?\n연관된 댓글과 좋아요도 함께 삭제됩니다.',
-        ),
+        content: const Text('정말 이 코스를 삭제하시겠습니까?\n연관된 댓글과 좋아요도 함께 삭제됩니다.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -162,9 +163,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text(
-                        '코스 및 관련 세트, 이미지, 댓글, 좋아요가 모두 삭제되었습니다.',
-                      ),
+                      content: Text('코스 및 관련 세트, 이미지, 댓글, 좋아요가 모두 삭제되었습니다.'),
                     ),
                   );
                   Navigator.pop(context, true);
@@ -257,13 +256,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return ChangeNotifierProvider.value(
       value: _viewModel,
       child: Consumer<CourseDetailViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.isLoading) {
             return Scaffold(
-              backgroundColor: _backgroundColor,
+              backgroundColor: cs.background,
               appBar: _buildAppBar(),
               body: const Center(child: CircularProgressIndicator()),
             );
@@ -271,7 +271,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
           if (viewModel.errorMessage != null) {
             return Scaffold(
-              backgroundColor: _backgroundColor,
+              backgroundColor: cs.background,
               appBar: _buildAppBar(),
               body: Center(
                 child: Column(
@@ -295,11 +295,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           final courseDetail = viewModel.courseDetail;
           if (courseDetail == null) {
             return Scaffold(
-              backgroundColor: _backgroundColor,
+              backgroundColor: cs.background,
               appBar: _buildAppBar(),
-              body: const Center(
-                child: Text('코스 정보를 불러올 수 없습니다.'),
-              ),
+              body: const Center(child: Text('코스 정보를 불러올 수 없습니다.')),
             );
           }
 
@@ -319,7 +317,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               }
             },
             child: Scaffold(
-              backgroundColor: _backgroundColor,
+              backgroundColor: cs.background, // 코스 배경
               appBar: _buildAppBar(),
               body: Column(
                 children: [
@@ -335,9 +333,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             onReport: courseDetail.isAuthor
                                 ? null
                                 : () => _navigateToReport(
-                                      courseDetail.courseId,
-                                      ReportTargetType.course,
-                                    ),
+                                    courseDetail.courseId,
+                                    ReportTargetType.course,
+                                  ),
                           ),
                           if (widget.recommendationReason != null) ...[
                             CourseDetailRecommendationReason(
@@ -379,9 +377,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       ),
                     ),
                   ),
-                  CourseDetailCommentInput(
-                    onSubmit: _handleSubmitComment,
-                  ),
+                  CourseDetailCommentInput(onSubmit: _handleSubmitComment),
                 ],
               ),
             ),
@@ -393,7 +389,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: _backgroundColor,
       elevation: 0,
       scrolledUnderElevation: 0,
       leading: IconButton(
@@ -414,9 +409,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         children: [
           IconButton(
             icon: Icon(
-              viewModel.isLiked
-                  ? Icons.favorite
-                  : Icons.favorite_border,
+              viewModel.isLiked ? Icons.favorite : Icons.favorite_border,
               color: viewModel.isLiked ? Colors.red : Colors.grey,
             ),
             onPressed: _handleToggleLike,
@@ -431,4 +424,3 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 }
-

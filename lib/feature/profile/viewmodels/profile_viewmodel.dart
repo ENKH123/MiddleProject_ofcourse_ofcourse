@@ -9,14 +9,29 @@ class ProfileViewModel extends ChangeNotifier {
   SupabaseUserModel? user;
   bool isLoading = false;
 
+  String? _loadedEmail;
+
   Future<void> loadUser() async {
+    final currentEmail = supabase.auth.currentUser?.email;
+
+    // 로그인 안 되어 있으면 상태 초기화
+    if (currentEmail == null) {
+      user = null;
+      _loadedEmail = null;
+      isLoading = false;
+      notifyListeners();
+      return;
+    }
+
+    if (_loadedEmail == currentEmail && user != null) {
+      return;
+    } // 이미 같은 이메일로 로딩된 상태면 다시 안 불러와도 됨
+
     isLoading = true;
     notifyListeners();
 
-    final email = supabase.auth.currentUser?.email;
-    if (email != null) {
-      user = await SupabaseManager.shared.fetchPublicUser(email);
-    }
+    user = await SupabaseManager.shared.fetchPublicUser(currentEmail);
+    _loadedEmail = currentEmail;
 
     isLoading = false;
     notifyListeners();
@@ -30,5 +45,12 @@ class ProfileViewModel extends ChangeNotifier {
     if (raw.startsWith('http')) return raw;
 
     return supabase.storage.from('profile').getPublicUrl(raw);
+  }
+
+  void clear() {
+    user = null;
+    _loadedEmail = null;
+    isLoading = false;
+    notifyListeners();
   }
 }
