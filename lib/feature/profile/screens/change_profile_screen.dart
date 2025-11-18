@@ -14,6 +14,7 @@ class ChangeProfileScreen extends StatelessWidget {
     final vm = context.watch<ChangeProfileViewModel>();
 
     return Scaffold(
+      resizeToAvoidBottomInset: true, // 키보드 충돌 방지
       appBar: AppBar(
         title: const Text('프로필 변경'),
         centerTitle: true,
