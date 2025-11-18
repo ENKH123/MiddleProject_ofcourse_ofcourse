@@ -10,8 +10,8 @@ import 'package:of_course/feature/auth/screens/register_screen.dart';
 import 'package:of_course/feature/auth/screens/terms_agree_screen.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
 import 'package:of_course/feature/course/detail/screens/course_detail_screen.dart';
+import 'package:of_course/feature/course/liked_course/screens/liked_course_page.dart';
 import 'package:of_course/feature/course/screens/course_recommend_screen.dart';
-import 'package:of_course/feature/course/screens/liked_course_page.dart';
 import 'package:of_course/feature/course/screens/recommend_onboarding_screen.dart';
 import 'package:of_course/feature/course/write_and_edit/screens/edit_course_page.dart';
 import 'package:of_course/feature/course/write_and_edit/screens/write_course_page.dart';
@@ -286,9 +286,7 @@ class MyApp extends StatelessWidget {
               path: '/write/continue',
               builder: (context, state) {
                 final courseId = state.extra as int;
-                return WriteCoursePage(
-                  continueCourseId: courseId, // 이어쓰기 모드 전용
-                );
+                return WriteCoursePage(continueCourseId: courseId);
               },
             ),
 

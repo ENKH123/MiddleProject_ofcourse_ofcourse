@@ -71,10 +71,7 @@ class _CourseDetailMapState extends State<CourseDetailMap> {
       final marker = NMarker(
         id: set.setId,
         position: pos,
-        caption: NOverlayCaption(
-          text: setNumber.toString(),
-          textSize: 14,
-        ),
+        caption: NOverlayCaption(text: setNumber.toString(), textSize: 14),
       );
 
       marker.setOnTapListener((overlay) {
@@ -118,17 +115,14 @@ class _CourseDetailMapState extends State<CourseDetailMap> {
       );
 
       _mapController!.updateCamera(
-        NCameraUpdate.fitBounds(
-          bounds,
-          padding: const EdgeInsets.all(60),
-        ),
+        NCameraUpdate.fitBounds(bounds, padding: const EdgeInsets.all(60)),
       );
     }
   }
 
   void moveToMarker(String setId) {
     final set = widget.courseDetail.sets.firstWhere(
-          (s) => s.setId == setId,
+      (s) => s.setId == setId,
       orElse: () => widget.courseDetail.sets.first,
     );
 
@@ -194,10 +188,7 @@ class _ZoomButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onPressed;
 
-  const _ZoomButton({
-    required this.icon,
-    required this.onPressed,
-  });
+  const _ZoomButton({required this.icon, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -206,10 +197,7 @@ class _ZoomButton extends StatelessWidget {
         color: Colors.white,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 4,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 4),
         ],
       ),
       child: InkWell(
@@ -217,11 +205,7 @@ class _ZoomButton extends StatelessWidget {
         customBorder: const CircleBorder(),
         child: Padding(
           padding: const EdgeInsets.all(8),
-          child: Icon(
-            icon,
-            size: 22,
-            color: Colors.black87,
-          ),
+          child: Icon(icon, size: 22, color: Colors.black87),
         ),
       ),
     );
