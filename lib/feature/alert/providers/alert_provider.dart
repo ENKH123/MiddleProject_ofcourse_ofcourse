@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
-import 'package:of_course/core/models/alert_model.dart';
+import 'package:of_course/feature/alert/data/alert_data_source.dart';
+import 'package:of_course/feature/alert/models/alert_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AlertProvider extends ChangeNotifier {
@@ -10,7 +10,7 @@ class AlertProvider extends ChangeNotifier {
   List<AlertModel>? _alerts;
   List<AlertModel>? get alerts => _alerts;
 
-  final currentUser = SupabaseManager.shared.supabase.auth.currentUser;
+  final currentUser = Supabase.instance.client.auth.currentUser;
 
   String? _publicUserId;
   String? get publicUserId => _publicUserId;
@@ -23,7 +23,7 @@ class AlertProvider extends ChangeNotifier {
 
   Future<void> _init() async {
     channel = _subscribeAlertEvent();
-    _publicUserId = await SupabaseManager.shared.fetchPublicUserId(
+    _publicUserId = await AlertDataSource.instance.fetchPublicUserId(
       currentUser?.email ?? "",
     );
     // 처음 뷰모델 생성시 알림 불러오기
@@ -40,19 +40,19 @@ class AlertProvider extends ChangeNotifier {
 
   // 알림 불러오기
   Future<void> fetchAlerts() async {
-    _alerts = await SupabaseManager.shared.fetchAlerts();
+    _alerts = await AlertDataSource.instance.fetchAlerts();
     notifyListeners();
   }
 
   // 알림 삭제
   Future<void> deleteAlert(int alertId) async {
-    await SupabaseManager.shared.deleteAlert(alertId);
+    await AlertDataSource.instance.deleteAlert(alertId);
     fetchAlerts();
   }
 
   // 알림 전체 삭제
   Future<void> deleteAllAlert() async {
-    await SupabaseManager.shared.deleteAllAlert();
+    await AlertDataSource.instance.deleteAllAlert();
     fetchAlerts();
   }
 
@@ -70,7 +70,7 @@ class AlertProvider extends ChangeNotifier {
   RealtimeChannel? _subscribeAlertEvent() {
     if (publicUserId != null) {
       // 데이터 변경(추가, 삭제) 될 때마다 알림 불러오기
-      return SupabaseManager.shared.supabase
+      return Supabase.instance.client
           .channel('listen_alert')
           .onPostgresChanges(
             event: PostgresChangeEvent.all,

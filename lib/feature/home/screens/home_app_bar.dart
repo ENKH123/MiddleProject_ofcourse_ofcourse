@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
-import 'package:of_course/core/models/gu_model.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
-import 'package:of_course/core/providers/alert_provider.dart';
+import 'package:of_course/feature/alert/providers/alert_provider.dart';
+import 'package:of_course/feature/home/models/gu_model.dart';
 import 'package:provider/provider.dart';
 
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
