@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
-// MapUtils 안 쓰면 이 import 제거해도 됨
-// import 'package:of_course/feature/course/detail/utils/map_utils.dart';
 import 'package:of_course/feature/course/models/course_detail_models.dart';
 
 class CourseDetailMap extends StatefulWidget {
@@ -79,7 +77,6 @@ class _CourseDetailMapState extends State<CourseDetailMap> {
         ),
       );
 
-      // 마커 직접 탭했을 때만 카드 + 카메라 이동
       marker.setOnTapListener((overlay) {
         widget.onMarkerTap(set.setId);
         moveToMarker(set.setId);
@@ -172,7 +169,7 @@ class _CourseDetailMapState extends State<CourseDetailMap> {
           child: Stack(
             children: [
               NaverMap(
-                forceGesture: true, // 이게 포인트: 스크롤뷰 안에서도 맵 제스처 우선
+                forceGesture: true,
                 onMapReady: (controller) {
                   _mapController = controller;
                   _initMarkers();
