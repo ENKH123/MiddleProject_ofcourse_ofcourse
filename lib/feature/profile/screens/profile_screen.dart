@@ -220,6 +220,7 @@ void _showSignOutPopup(BuildContext context, LoginViewModel viewModel) {
                                 await context.read<LoginViewModel>().signOut(
                                   context,
                                 );
+                                context.read<ProfileViewModel>().clear();
                                 Navigator.of(context).pop();
                                 Navigator.of(context).pop();
                                 context.go('/login');
