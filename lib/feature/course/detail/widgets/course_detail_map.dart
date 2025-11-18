@@ -77,7 +77,6 @@ class _CourseDetailMapState extends State<CourseDetailMap> {
         ),
       );
 
-      // 마커 직접 탭했을 때만 카드 + 카메라 이동
       marker.setOnTapListener((overlay) {
         widget.onMarkerTap(set.setId);
         moveToMarker(set.setId);
