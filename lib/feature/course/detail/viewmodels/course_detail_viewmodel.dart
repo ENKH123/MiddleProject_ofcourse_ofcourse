@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/feature/course/models/course_detail_models.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CourseDetailViewModel extends ChangeNotifier {
   CourseDetail? _courseDetail;
@@ -36,7 +34,6 @@ class CourseDetailViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 코스 디테일을 먼저 가져오기
       final data = await SupabaseManager.shared.getCourseDetail(
         courseId,
         userId,
@@ -51,20 +48,17 @@ class CourseDetailViewModel extends ChangeNotifier {
 
       final courseDetail = CourseDetail.fromJson(data);
 
-      // 코스 정보를 먼저 표시 (점진적 로딩)
       _courseDetail = courseDetail;
       _comments = List.from(courseDetail.comments);
       _isLoading = false;
       notifyListeners();
 
-      // 좋아요 정보는 백그라운드에서 가져와서 업데이트
       _loadLikeInfo().then((likeInfo) {
         _isLiked = likeInfo['isLiked'] as bool;
         _likeCount = likeInfo['likeCount'] as int;
         notifyListeners();
       }).catchError((e) {
         debugPrint('좋아요 정보 로드 오류: $e');
-        // 좋아요 정보 로드 실패해도 기본값으로 계속 진행
         _isLiked = false;
         _likeCount = 0;
         notifyListeners();
@@ -85,7 +79,6 @@ class CourseDetailViewModel extends ChangeNotifier {
     try {
       final supabase = SupabaseManager.shared.supabase;
 
-      // 한 번의 쿼리로 좋아요 개수와 사용자 좋아요 여부를 모두 가져오기
       final likedCourses = await supabase
           .from('liked_courses')
           .select('user_id')
@@ -94,7 +87,6 @@ class CourseDetailViewModel extends ChangeNotifier {
       final likeList = likedCourses as List;
       final likeCount = likeList.length;
 
-      // 사용자 좋아요 여부 확인 (메모리에서 필터링)
       bool isLiked = false;
       if (userId.isNotEmpty) {
         isLiked = likeList.any((item) => item['user_id'] == userId);
@@ -122,13 +114,11 @@ class CourseDetailViewModel extends ChangeNotifier {
             .delete()
             .eq('course_id', courseId)
             .eq('user_id', userRowId);
-        await _updateLearningData(supabase, userRowId, courseId, 0);
       } else {
         await supabase.from('liked_courses').insert({
           'course_id': courseId,
           'user_id': userRowId,
         });
-        await _updateLearningData(supabase, userRowId, courseId, 1);
       }
 
       final likeInfo = await _loadLikeInfo();
@@ -138,46 +128,6 @@ class CourseDetailViewModel extends ChangeNotifier {
     } catch (e) {
       debugPrint('좋아요 처리 오류: $e');
       rethrow;
-    }
-  }
-
-  Future<void> _updateLearningData(
-    SupabaseClient supabase,
-    String userId,
-    int courseId,
-    int label,
-  ) async {
-    try {
-      final courseData = await supabase
-          .from('courses')
-          .select('title')
-          .eq('id', courseId)
-          .maybeSingle();
-
-      final courseTitle = courseData?['title'] as String? ?? '';
-
-      final existingData = await supabase
-          .from('learningData')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('course_id', courseId)
-          .maybeSingle();
-
-      if (existingData != null) {
-        await supabase
-            .from('learningData')
-            .update({'label': label})
-            .eq('id', existingData['id']);
-      } else {
-        await supabase.from('learningData').insert({
-          'user_id': userId,
-          'course_id': courseId,
-          'label': label,
-          'title': courseTitle,
-        });
-      }
-    } catch (e) {
-      debugPrint('learningData 업데이트 오류: $e');
     }
   }
 
@@ -276,8 +226,8 @@ class CourseDetailViewModel extends ChangeNotifier {
         final imageUrls = [set['img_01'], set['img_02'], set['img_03']]
             .where(
               (url) =>
-                  url != null && url != "null" && url.toString().isNotEmpty,
-            )
+          url != null && url != "null" && url.toString().isNotEmpty,
+        )
             .toList();
 
         for (final url in imageUrls) {
@@ -309,4 +259,3 @@ class CourseDetailViewModel extends ChangeNotifier {
     }
   }
 }
-
