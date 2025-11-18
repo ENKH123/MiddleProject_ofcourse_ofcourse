@@ -58,17 +58,15 @@ class _LikedCoursePageState extends State<LikedCoursePage> {
           : selectedCategories.add(tag);
     });
 
-    _loadLikedCourses(); // ✅ 태그 선택 시 즉시 필터 반영
+    _loadLikedCourses();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //backgroundColor: const Color(0xFFFAFAFA),
       body: SafeArea(
         child: Column(
           children: [
-            /// ✅ 태그 선택 바
             Padding(
               padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
               child: SingleChildScrollView(
@@ -129,7 +127,6 @@ class _LikedCoursePageState extends State<LikedCoursePage> {
 
             const SizedBox(height: 12),
 
-            /// ✅ 좋아요한 코스 리스트 출력
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),

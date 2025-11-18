@@ -83,7 +83,7 @@ class _OfcourseHomePageState extends State<OfcourseHomePage> {
 
           Expanded(
             child: ListView.separated(
-              controller: OfcourseHomePage.scrollController, // ⭐ 적용
+              controller: OfcourseHomePage.scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemCount: courseList.length,
