@@ -1,10 +1,12 @@
 import 'dart:io';
-import 'package:of_course/feature/report/models/report_models.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:of_course/core/models/gu_model.dart';
 import 'package:of_course/core/models/supabase_user_model.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
+import 'package:of_course/feature/report/models/report_models.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/alert_model.dart';
 
 class SupabaseManager {
@@ -131,7 +133,7 @@ class SupabaseManager {
     });
   }
 
-  // 닉네임 중복 여부 검증
+  // 닉네임 중복 검증
   Future<bool> isDuplicatedNickname(String value) async {
     final Map<String, dynamic>? isDuplicated = await supabase
         .from("users")
@@ -798,15 +800,17 @@ class SupabaseManager {
 
           await supabase.storage.from('report').upload(filePath, imageFile);
 
-          final imageUrl =
-          supabase.storage.from('report').getPublicUrl(filePath);
+          final imageUrl = supabase.storage
+              .from('report')
+              .getPublicUrl(filePath);
 
           imageUrls.add(imageUrl);
         }
       }
 
-      final targetTypeString =
-      targetType == ReportTargetType.course ? 'course' : 'comment';
+      final targetTypeString = targetType == ReportTargetType.course
+          ? 'course'
+          : 'comment';
 
       await supabase.from('report').insert({
         'target_id': targetId,

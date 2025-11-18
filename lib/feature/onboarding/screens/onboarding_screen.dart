@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
-import 'package:of_course/feature/auth/viewmodels/onboarding_viewmodel.dart';
+import 'package:of_course/feature/onboarding/viewmodels/onboarding_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 class OnboardingScreen extends StatelessWidget {
@@ -34,7 +34,7 @@ class _OnboardingScreen extends StatelessWidget {
               // 페이지 목록
               itemBuilder: (BuildContext context, int index) {
                 return SizedBox.expand(
-                  child: OnboardingBox(viewmodel: viewmodel),
+                  child: OnboardingBox(path: viewmodel.onboardingImages[index]),
                 );
               },
             ),
@@ -133,19 +133,14 @@ class DotsIndicator extends StatelessWidget {
 
 // 온보딩 화면
 class OnboardingBox extends StatelessWidget {
-  final OnboardingViewModel viewmodel;
-  const OnboardingBox({super.key, required this.viewmodel});
+  final String path;
+  const OnboardingBox({super.key, required this.path});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      child: Center(
-        child: Text(
-          'Page index : ${viewmodel.currentPage + 1}',
-          style: TextStyle(fontSize: 20),
-        ),
-      ),
+      child: Center(child: Image.asset(path)),
     );
   }
 }
