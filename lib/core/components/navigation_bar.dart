@@ -30,7 +30,7 @@ class OfcourseBottomNavBarUI extends StatelessWidget {
             if (currentLocation.startsWith('/home')) {
               OfcourseHomePage.scrollController.animateTo(
                 0,
-                duration: const Duration(milliseconds: 300),
+                duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOut,
               );
               return;

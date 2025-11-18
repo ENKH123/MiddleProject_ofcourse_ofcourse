@@ -6,7 +6,7 @@ class CourseSetData {
   double? lng;
   int? tagId;
   int? gu;
-  List<String> existingImages = []; // ← 추가
+  List<String> existingImages = [];
   List<File> images = [];
   String? description;
 
