@@ -15,17 +15,19 @@ class AlertProvider extends ChangeNotifier {
   String? _publicUserId;
   String? get publicUserId => _publicUserId;
 
-  late RealtimeChannel? channel;
+  RealtimeChannel? channel;
 
   AlertProvider() {
     _init();
   }
 
   Future<void> _init() async {
-    channel = _subscribeAlertEvent();
     _publicUserId = await SupabaseManager.shared.fetchPublicUserId(
       currentUser?.email ?? "",
     );
+    if (_publicUserId != null) {
+      channel = await _subscribeAlertEvent();
+    }
     // 처음 뷰모델 생성시 알림 불러오기
     fetchAlerts();
   }
