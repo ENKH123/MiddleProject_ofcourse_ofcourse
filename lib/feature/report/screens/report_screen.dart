@@ -1,9 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
 import 'package:of_course/core/components/custom_app_bar.dart';
+import 'package:provider/provider.dart';
 
 import '../models/report_models.dart';
 import '../viewmodels/report_view_model.dart';
@@ -27,9 +26,7 @@ class ReportScreen extends StatelessWidget {
         targetId: targetId,
         reportTargetType: reportTargetType,
       ),
-      child: _ReportScreenBody(
-        reportingUser: reportingUser,
-      ),
+      child: _ReportScreenBody(reportingUser: reportingUser),
     );
   }
 }
@@ -37,10 +34,7 @@ class ReportScreen extends StatelessWidget {
 class _ReportScreenBody extends StatefulWidget {
   final String reportingUser;
 
-  const _ReportScreenBody({
-    super.key,
-    required this.reportingUser,
-  });
+  const _ReportScreenBody({super.key, required this.reportingUser});
 
   @override
   State<_ReportScreenBody> createState() => _ReportScreenBodyState();
@@ -101,9 +95,9 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ReportViewModel>();
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
       appBar: CustomAppBar(
         title: '신고하기',
         showBackButton: true,
@@ -121,7 +115,7 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
               readOnly: true,
               decoration: InputDecoration(
                 filled: true,
-                fillColor: Colors.grey[200],
+                fillColor: cs.surfaceContainerHighest,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -169,10 +163,7 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
   Widget _buildLabel(String label) {
     return Text(
       label,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-      ),
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
     );
   }
 
@@ -183,14 +174,15 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
           controller: _detailsController,
           maxLines: 5,
           maxLength: vm.maxDetailsLength,
-          buildCounter: (
-              context, {
+          buildCounter:
+              (
+                context, {
                 required int currentLength,
                 required bool isFocused,
                 int? maxLength,
               }) {
-            return null;
-          },
+                return null;
+              },
           decoration: const InputDecoration(
             hintText: '신고 사유를 작성해주세요',
             border: OutlineInputBorder(
@@ -276,9 +268,7 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
               } catch (e) {
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('이미지를 선택하는 중 오류가 발생했습니다: $e'),
-                  ),
+                  SnackBar(content: Text('이미지를 선택하는 중 오류가 발생했습니다: $e')),
                 );
               }
             },
@@ -293,11 +283,7 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
                   style: BorderStyle.solid,
                 ),
               ),
-              child: const Icon(
-                Icons.add,
-                size: 48,
-                color: Colors.black87,
-              ),
+              child: const Icon(Icons.add, size: 48, color: Colors.black87),
             ),
           ),
       ],
@@ -311,32 +297,26 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
         backgroundColor: Colors.red,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       child: vm.isSubmitting
           ? const SizedBox(
-        height: 20,
-        width: 20,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-        ),
-      )
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
           : const Text(
-        '신고하기',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+              '신고하기',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
     );
   }
 
   Widget _buildCancelDialog(BuildContext context) {
     return Dialog(
-      backgroundColor: const Color(0xFFFAFAFA),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -346,11 +326,7 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
             const SizedBox(height: 8),
             const Text(
               '신고하기를 취소 하시겠습니까?',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.black,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -402,7 +378,6 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
 
   Widget _buildCompletionDialog(BuildContext context) {
     return Dialog(
-      backgroundColor: const Color(0xFFFAFAFA),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -412,11 +387,7 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
             const SizedBox(height: 8),
             const Text(
               '신고가 완료되었습니다!',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.black,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
