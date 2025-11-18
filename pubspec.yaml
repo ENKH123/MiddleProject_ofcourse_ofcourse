@@ -46,11 +46,32 @@ dependencies:
   http: ^1.5.0
   google_sign_in: ^7.2.0
   supabase_progress_uploads: ^1.0.4
+  flutter_native_splash: ^2.4.7
+
+flutter_launcher_icons:
+  android: true # 안드로이드 플랫폼에 런처 아이콘 적용 여부
+  ios: true # iOS 플랫폼에 런처 아이콘 적용 여부
+  image_path: "assets/appLogo1024.png" # 런처 아이콘으로 사용할 이미지 경로
+  adaptive_icon_background: "#FAFAFA" # 안드로이드 적응형 아이콘의 배경색 (흰색)
+  adaptive_icon_foreground: "assets/appLogo1024.png" # 안드로이드 적응형 아이콘의 전경 이미지 경로
+  min_sdk_android: 21 # 안드로이드 최소 SDK 버전 (API 21(Android 5.0) 이상)
+
+flutter_native_splash:
+  color: "#FAFAFA" # 스플래시 화면의 배경색 설정 (흰색)
+  image: "assets/appLogo512background.png" # 스플래시 화면에 표시될 이미지 설정 (앱 로고)
+  fullscreen: true
+#  android: true # 안드로이드 플랫폼에 스플래시 화면 적용
+#  ios: true # iOS 플랫폼에 스플래시 화면 적용
+  android_12: # Android 12 이상을 위한 추가 설정
+    color: "#FAFAFA" # Android 12 이상 스플래시 화면의 배경색 (흰색)
+    image: "assets/appLogo512background.png" # Android 12 이상 스플래시 화면에 표시될 이미지
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.1
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
