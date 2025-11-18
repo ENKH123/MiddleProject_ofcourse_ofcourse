@@ -24,7 +24,9 @@ class AuthProvider extends ChangeNotifier {
     if (_currentUser != null) {
       await _fetchUser();
     }
-    _isInitialized = true;
+    if (_currentUser != null && _user != null) {
+      _isInitialized = true;
+    }
     notifyListeners();
   }
 
