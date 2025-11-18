@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
-import 'package:of_course/feature/course/detail/utils/map_utils.dart';
 import 'package:of_course/feature/course/models/course_detail_models.dart';
 
 class CourseDetailMap extends StatefulWidget {
@@ -45,7 +44,9 @@ class _CourseDetailMapState extends State<CourseDetailMap> {
   @override
   void initState() {
     super.initState();
-    widget.controller?._attach(this);
+    _controller = widget.controller;
+    _controller?._attach(this);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_mapController != null) {
         _initMarkers();
@@ -67,13 +68,21 @@ class _CourseDetailMapState extends State<CourseDetailMap> {
       final pos = NLatLng(set.lat, set.lng);
       points.add(pos);
 
-      _markers.add(
-        NMarker(
-          id: set.setId,
-          position: pos,
-          caption: NOverlayCaption(text: setNumber.toString(), textSize: 14),
+      final marker = NMarker(
+        id: set.setId,
+        position: pos,
+        caption: NOverlayCaption(
+          text: setNumber.toString(),
+          textSize: 14,
         ),
       );
+
+      marker.setOnTapListener((overlay) {
+        widget.onMarkerTap(set.setId);
+        moveToMarker(set.setId);
+      });
+
+      _markers.add(marker);
       _markerPositions[set.setId] = pos;
       setNumber++;
     }
@@ -83,7 +92,7 @@ class _CourseDetailMapState extends State<CourseDetailMap> {
 
       if (points.length >= 2) {
         final polylineOverlay = NPolylineOverlay(
-          id: "course_polyline_path",
+          id: 'course_polyline_path',
           coords: points,
           color: _mainColor,
           width: 5,
@@ -109,39 +118,31 @@ class _CourseDetailMapState extends State<CourseDetailMap> {
       );
 
       _mapController!.updateCamera(
-        NCameraUpdate.fitBounds(bounds, padding: const EdgeInsets.all(60)),
+        NCameraUpdate.fitBounds(
+          bounds,
+          padding: const EdgeInsets.all(60),
+        ),
       );
-    }
-  }
-
-  void _handleMapTap(NLatLng latLng) {
-    final closestMarkerId = MapUtils.findClosestMarker(
-      latLng,
-      _markerPositions,
-    );
-    if (closestMarkerId != null) {
-      widget.onMarkerTap(closestMarkerId);
     }
   }
 
   void moveToMarker(String setId) {
     final set = widget.courseDetail.sets.firstWhere(
-      (s) => s.setId == setId,
+          (s) => s.setId == setId,
       orElse: () => widget.courseDetail.sets.first,
     );
 
     if (set.lat == 0.0 || set.lng == 0.0) return;
+    if (_mapController == null) return;
 
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (_mapController != null) {
-        _mapController!.updateCamera(
-          NCameraUpdate.withParams(
-            target: NLatLng(set.lat, set.lng),
-            zoom: 15.0,
-          ),
-        );
-      }
-    });
+    final target = NLatLng(set.lat, set.lng);
+
+    final cameraUpdate = NCameraUpdate.scrollAndZoomTo(
+      target: target,
+      zoom: 16.0,
+    );
+
+    _mapController!.updateCamera(cameraUpdate);
   }
 
   @override
@@ -168,12 +169,10 @@ class _CourseDetailMapState extends State<CourseDetailMap> {
           child: Stack(
             children: [
               NaverMap(
+                forceGesture: true,
                 onMapReady: (controller) {
                   _mapController = controller;
                   _initMarkers();
-                },
-                onMapTapped: (point, latLng) {
-                  _handleMapTap(latLng);
                 },
                 options: const NaverMapViewOptions(
                   zoomGesturesEnable: true,
@@ -191,14 +190,16 @@ class _CourseDetailMapState extends State<CourseDetailMap> {
                     _ZoomButton(
                       icon: Icons.add,
                       onPressed: () {
-                        _mapController?.updateCamera(NCameraUpdate.zoomIn());
+                        _mapController
+                            ?.updateCamera(NCameraUpdate.zoomIn());
                       },
                     ),
                     const SizedBox(height: 8),
                     _ZoomButton(
                       icon: Icons.remove,
                       onPressed: () {
-                        _mapController?.updateCamera(NCameraUpdate.zoomOut());
+                        _mapController
+                            ?.updateCamera(NCameraUpdate.zoomOut());
                       },
                     ),
                   ],
@@ -228,7 +229,10 @@ class _ZoomButton extends StatelessWidget {
         color: Colors.white,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 4),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 4,
+          ),
         ],
       ),
       child: InkWell(
@@ -236,10 +240,13 @@ class _ZoomButton extends StatelessWidget {
         customBorder: const CircleBorder(),
         child: Padding(
           padding: const EdgeInsets.all(8),
-          child: Icon(icon, size: 22, color: Colors.black87),
+          child: Icon(
+            icon,
+            size: 22,
+            color: Colors.black87,
+          ),
         ),
       ),
     );
   }
 }
-
