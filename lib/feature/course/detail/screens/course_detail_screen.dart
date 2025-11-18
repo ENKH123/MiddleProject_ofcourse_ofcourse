@@ -6,9 +6,9 @@ import 'package:of_course/feature/course/detail/widgets/course_detail_header.dar
 import 'package:of_course/feature/course/detail/widgets/course_detail_map.dart';
 import 'package:of_course/feature/course/detail/widgets/course_detail_recommendation_reason.dart';
 import 'package:of_course/feature/course/detail/widgets/course_detail_sets.dart';
-import 'package:of_course/feature/report/models/report_models.dart';
 import 'package:of_course/feature/report/screens/report_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:of_course/feature/report/models/report_models.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   final int courseId;

@@ -39,6 +39,3 @@ class ReportData {
         reportImages.length <= 3;
   }
 }
-
-
-
