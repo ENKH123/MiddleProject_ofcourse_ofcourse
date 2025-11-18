@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:of_course/feature/course/models/course_detail_models.dart';
-import 'package:of_course/feature/report/models/report_models.dart';
-import 'package:of_course/feature/report/screens/report_screen.dart';
 
 class CourseDetailComments extends StatelessWidget {
   final List<Comment> comments;
@@ -25,11 +23,15 @@ class CourseDetailComments extends StatelessWidget {
     }
 
     return Column(
-      children: comments.map((c) => _CommentItem(
-            comment: c,
-            onDelete: () => onDeleteComment(c.commentId),
-            onReport: () => onReportComment(c.commentId, c.commentAuthor),
-          )).toList(),
+      children: comments
+          .map(
+            (c) => _CommentItem(
+              comment: c,
+              onDelete: () => onDeleteComment(c.commentId),
+              onReport: () => onReportComment(c.commentId, c.commentAuthor),
+            ),
+          )
+          .toList(),
     );
   }
 }
@@ -48,10 +50,7 @@ class _CommentItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
           CircleAvatar(
@@ -116,8 +115,7 @@ class CourseDetailCommentInput extends StatefulWidget {
       _CourseDetailCommentInputState();
 }
 
-class _CourseDetailCommentInputState
-    extends State<CourseDetailCommentInput> {
+class _CourseDetailCommentInputState extends State<CourseDetailCommentInput> {
   final TextEditingController _controller = TextEditingController();
   bool _isEmpty = true;
 
@@ -152,10 +150,7 @@ class _CourseDetailCommentInputState
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -178,6 +173,7 @@ class _CourseDetailCommentInputState
                   maxLines: 1,
                   decoration: InputDecoration(
                     hintText: '댓글 작성',
+                    hintStyle: TextStyle(color: Color(0xff030303)),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -210,4 +206,3 @@ class _CourseDetailCommentInputState
     );
   }
 }
-

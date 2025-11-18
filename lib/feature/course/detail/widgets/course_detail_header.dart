@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:of_course/core/models/tag_color_model.dart';
 import 'package:of_course/feature/course/detail/utils/date_utils.dart';
 import 'package:of_course/feature/course/models/course_detail_models.dart';
@@ -20,6 +19,7 @@ class CourseDetailHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -44,10 +44,7 @@ class CourseDetailHeader extends StatelessWidget {
                   child: const Text('삭제', style: TextStyle(color: Colors.red)),
                 ),
               ] else if (onReport != null) ...[
-                TextButton(
-                  onPressed: onReport,
-                  child: const Text('신고'),
-                ),
+                TextButton(onPressed: onReport, child: const Text('신고')),
               ],
             ],
           ),
@@ -56,12 +53,12 @@ class CourseDetailHeader extends StatelessWidget {
             children: [
               Text(
                 '작성자: ${courseDetail.authorName}',
-                style: TextStyle(color: Colors.grey[600]),
+                style: TextStyle(color: cs.surfaceContainerHighest),
               ),
               const SizedBox(width: 16),
               Text(
                 '작성일: ${CourseDateUtils.formatDate(courseDetail.createdAt)}',
-                style: TextStyle(color: Colors.grey[600]),
+                style: TextStyle(color: cs.surfaceContainerHighest),
               ),
             ],
           ),
@@ -86,7 +83,13 @@ class CourseDetailHeader extends StatelessWidget {
                     color: bg,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text('#$tag', style: const TextStyle(fontSize: 12)),
+                  child: Text(
+                    '#$tag',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xff030303),
+                    ),
+                  ),
                 );
               }).toList(),
             ),
@@ -96,4 +99,3 @@ class CourseDetailHeader extends StatelessWidget {
     );
   }
 }
-
