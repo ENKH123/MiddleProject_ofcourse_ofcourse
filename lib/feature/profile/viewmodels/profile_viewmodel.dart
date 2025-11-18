@@ -8,6 +8,7 @@ class ProfileViewModel extends ChangeNotifier {
 
   SupabaseUserModel? user;
   bool isLoading = false;
+  DateTime? lastBackPressTime;
 
   /// 현재 로그인한 유저 정보 로딩
   Future<void> loadUser({bool force = false}) async {
@@ -50,5 +51,24 @@ class ProfileViewModel extends ChangeNotifier {
     user = null;
     isLoading = false;
     notifyListeners();
+  }
+
+  bool handleWillPop() {
+    final now = DateTime.now();
+
+    // 최초 클릭
+    if (lastBackPressTime == null) {
+      lastBackPressTime = now;
+      return false;
+    }
+
+    // 2초 초과 → 다시 초기화
+    if (now.difference(lastBackPressTime!) > const Duration(seconds: 2)) {
+      lastBackPressTime = now;
+      return false;
+    }
+
+    // 2초 이내 두 번째 클릭 → 종료
+    return true;
   }
 }

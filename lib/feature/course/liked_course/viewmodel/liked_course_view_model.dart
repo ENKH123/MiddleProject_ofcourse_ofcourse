@@ -11,7 +11,7 @@ class LikedCourseViewModel extends ChangeNotifier {
   List<Map<String, dynamic>> courseList = [];
 
   bool isLoading = false;
-
+  DateTime? lastBackPressTime;
   LikedCourseViewModel() {
     init();
   }
@@ -69,5 +69,24 @@ class LikedCourseViewModel extends ChangeNotifier {
 
     notifyListeners();
     loadLikedCourses();
+  }
+
+  bool handleWillPop() {
+    final now = DateTime.now();
+
+    // 첫 클릭 → 초기화 후 종료 막기
+    if (lastBackPressTime == null) {
+      lastBackPressTime = now;
+      return false;
+    }
+
+    // 2초 지난 경우 → 다시 초기화 후 종료 막기
+    if (now.difference(lastBackPressTime!) > const Duration(seconds: 2)) {
+      lastBackPressTime = now;
+      return false;
+    }
+
+    // 2초 내 두 번째 클릭 → 종료 허용
+    return true;
   }
 }
