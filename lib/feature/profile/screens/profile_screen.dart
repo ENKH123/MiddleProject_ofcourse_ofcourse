@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/core/app_theme.dart';
+import 'package:of_course/core/components/custom_app_bar.dart';
+import 'package:of_course/core/components/loading_dialog.dart';
 import 'package:of_course/core/managers/supabase_manager.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
 import 'package:of_course/feature/profile/screens/terms_mypage_screen.dart';
 import 'package:of_course/feature/profile/viewmodels/profile_viewmodel.dart';
 import 'package:provider/provider.dart';
-
-import '../../../core/components/custom_app_bar.dart';
-import '../../../core/components/loading_dialog.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -191,6 +190,7 @@ void _showSignOutPopup(BuildContext context, LoginViewModel viewModel) {
     // 다이얼로그 외부를 탭해도 닫히지 않게 설정 (배경 클릭 방지)
     // barrierDismissible: false,
     builder: (BuildContext context) {
+      final cs = Theme.of(context).colorScheme;
       return Dialog(
         backgroundColor: Colors.transparent, // Dialog 배경 투명하게
         child: Center(
@@ -198,7 +198,7 @@ void _showSignOutPopup(BuildContext context, LoginViewModel viewModel) {
             width: 240,
             height: 200,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cs.background,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Padding(
