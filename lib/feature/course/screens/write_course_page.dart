@@ -644,6 +644,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return WillPopScope(
       onWillPop: () async {
         final ok =
@@ -654,7 +655,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
               builder: (ctx) {
                 return Center(
                   child: Material(
-                    color: Colors.transparent,
+                    color: cs.background,
                     child: Container(
                       width: 290,
                       padding: const EdgeInsets.symmetric(
@@ -662,7 +663,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                         horizontal: 16,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cs.background,
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Column(
@@ -680,6 +681,7 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
+                              color: Color(0xff030303),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -720,7 +722,10 @@ class _WriteCoursePageState extends State<WriteCoursePage> {
                                 color: Color(0xFFF2F2F2),
                                 borderRadius: BorderRadius.circular(14),
                               ),
-                              child: const Text("취소"),
+                              child: const Text(
+                                "취소",
+                                style: TextStyle(color: Color(0xff030303)),
+                              ),
                             ),
                           ),
                         ],

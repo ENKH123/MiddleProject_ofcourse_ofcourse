@@ -9,8 +9,8 @@ import 'package:provider/provider.dart';
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   static const double _buttonHeight = 36.0;
   static const double _spacing = 8.0;
-  static const Color _defaultBackgroundColor = Color(0xFFFAFAFA);
-  static const Color _randomButtonColor = Color(0xFF003366);
+  // static const Color _defaultBackgroundColor = Color(0xFFFAFAFA);
+  // static const Color _randomButtonColor = Color(0xFF003366);
   static const int _maxNotificationCount = 99;
 
   final GuModel? selectedGu;
@@ -62,7 +62,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           height: _buttonHeight,
           padding: const EdgeInsets.symmetric(horizontal: _spacing),
           decoration: BoxDecoration(
-            color: cs.surfaceContainer,
+            //color: cs.surfaceContainer,
             borderRadius: BorderRadius.circular(_spacing),
             border: Border.all(color: Colors.grey[300]!),
           ),
@@ -95,7 +95,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     items.addAll(
       guList.map(
-            (gu) => DropdownMenuItem<GuModel>(
+        (gu) => DropdownMenuItem<GuModel>(
           value: gu,
           child: Text(
             gu.name,
@@ -158,9 +158,9 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   String _buildRecommendationReason(
-      Map<String, dynamic> summary,
-      Map<String, dynamic> rec,
-      ) {
+    Map<String, dynamic> summary,
+    Map<String, dynamic> rec,
+  ) {
     final percent = rec['similarity_percent'] ?? 0;
 
     final matchedTags = rec['matched_tags'] as List<dynamic>? ?? [];
@@ -262,4 +262,3 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
-

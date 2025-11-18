@@ -58,10 +58,10 @@ class _SetCard extends StatelessWidget {
         ? Color(int.parse(hex.replaceFirst('#', ''), radix: 16) + 0xFF000000)
         : Colors.grey[200]!;
 
+    final cs = Theme.of(context).colorScheme;
     return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      color: cs.surfaceBright,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -106,21 +106,26 @@ class _SetCard extends StatelessWidget {
                 onTap: () => onAddressTap(set.setId),
                 child: Row(
                   children: [
-                    Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
+                    Icon(
+                      Icons.location_on,
+                      size: 16,
+                      color: cs.surfaceContainerHigh,
+                    ),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         set.setAddress,
-                        style: const TextStyle(
-                          color: Color(0xFF003366),
-                        ),
+                        style: TextStyle(color: cs.surfaceContainerHigh),
                       ),
                     ),
                   ],
                 ),
               ),
             if (set.setAddress.isNotEmpty) const SizedBox(height: 8),
-            Text(set.setDescription),
+            Text(
+              set.setDescription,
+              style: TextStyle(color: cs.surfaceContainerHigh),
+            ),
             if (set.tag.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -135,7 +140,10 @@ class _SetCard extends StatelessWidget {
                   ),
                   child: Text(
                     '#${set.tag}',
-                    style: const TextStyle(fontSize: 12),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xff030303),
+                    ),
                   ),
                 ),
               ),
@@ -145,4 +153,3 @@ class _SetCard extends StatelessWidget {
     );
   }
 }
-
