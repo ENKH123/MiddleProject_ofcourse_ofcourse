@@ -36,20 +36,26 @@ class LoginViewModel extends ChangeNotifier {
 
   // SharedPreferences 초기화 함수
   Future<void> _initSharedPreferences() async {
-    _prefs = await SharedPreferences.getInstance();
+    _prefs = await SharedPreferences.getInstance(); // 여기서 _prefs 초기화
+    await _isFinished(); // 그 후 데이터 로드
   }
 
   // 데이터를 저장하는 함수
   Future<void> finishOnboarding() async {
-    _prefs.setBool('onboarding', true);
+    await _prefs.setBool('onboarding', true);
+    _onboarding = true;
+    print('Onboarding finished: $_onboarding');
     notifyListeners();
   }
 
   // 데이터를 로드하는 함수
-  Future<void> isFinished() async {
-    final myData = _prefs.getBool('onboarding');
-    _onboarding = myData ?? false;
+  Future<void> _isFinished() async {
+    final data = _prefs.getBool('onboarding');
+    print(data);
+    _onboarding = data ?? false;
+    print(data);
     notifyListeners();
+    print(data);
   }
 
   void isDialogType(DialogType type) {
