@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:of_course/feature/auth/screens/onboarding_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../viewmodels/login_viewmodel.dart';
@@ -32,6 +33,7 @@ class LoginScreen extends StatelessWidget {
                 ),
                 // 앱 로고
                 AppLogo(),
+                ?viewmodel.onboarding ? null : OnboardingScreen(),
               ],
             );
           },
