@@ -17,170 +17,191 @@ class ProfileScreen extends StatelessWidget {
     final vm = context.watch<ProfileViewModel>();
     LoginViewModel viewModel = context.watch<LoginViewModel>();
 
-    return Scaffold(
-      resizeToAvoidBottomInset: true, // 키보드 충돌 방지
-      appBar: const CustomAppBar(title: '마이페이지', showBackButton: false),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: FutureBuilder(
-          future: (vm.user == null && !vm.isLoading) ? vm.loadUser() : null,
-          builder: (context, snapshot) {
-            final user = vm.user;
+    return WillPopScope(
+      onWillPop: () async {
+        final shouldExit = vm.handleWillPop();
 
-            if (vm.isLoading && user == null) {
-              return const Center(child: CircularProgressIndicator());
-            }
+        if (!shouldExit) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("한 번 더 누르면 앱이 종료됩니다."),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
 
-            final imageUrl = vm.getProfileImageUrl();
-            final nickname = user?.nickname ?? '닉네임 없음';
+        return shouldExit;
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        appBar: const CustomAppBar(title: '마이페이지', showBackButton: false),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: FutureBuilder(
+            future: (vm.user == null && !vm.isLoading) ? vm.loadUser() : null,
+            builder: (context, snapshot) {
+              final user = vm.user;
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 8),
+              if (vm.isLoading && user == null) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-                // 프로필 이미지 + 닉네임
-                Center(
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 60,
-                        backgroundColor: const Color(0xff003366),
-                        backgroundImage:
-                            (imageUrl != null && imageUrl.isNotEmpty)
-                            ? NetworkImage(imageUrl)
-                            : null,
-                        child: (imageUrl == null || imageUrl.isEmpty)
-                            ? const Icon(
-                                Icons.person,
-                                color: Colors.white,
-                                size: 60,
-                              )
-                            : null,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        nickname,
-                        style: const TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
+              final imageUrl = vm.getProfileImageUrl();
+              final nickname = user?.nickname ?? '닉네임 없음';
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 60,
+                          backgroundColor: const Color(0xff003366),
+                          backgroundImage:
+                              (imageUrl != null && imageUrl.isNotEmpty)
+                              ? NetworkImage(imageUrl)
+                              : null,
+                          child: (imageUrl == null || imageUrl.isEmpty)
+                              ? const Icon(
+                                  Icons.person,
+                                  color: Colors.white,
+                                  size: 60,
+                                )
+                              : null,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          nickname,
+                          style: const TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  _menuButton(
+                    context,
+                    label: '프로필 수정',
+                    onTap: () async {
+                      final changed = await context.push<bool>(
+                        '/change_profile',
+                      );
+                      if (changed == true) {
+                        await vm.loadUser(force: true);
+                      }
+                    },
+                  ),
+
+                  _menuButton(
+                    context,
+                    label: '내가 만든 코스',
+                    onTap: () async {
+                      final userId = await SupabaseManager.shared
+                          .getMyUserRowId();
+                      if (userId == null) return;
+                      context.push('/mypost', extra: userId);
+                    },
+                  ),
+
+                  _menuButton(
+                    context,
+                    label: '테마 선택',
+                    onTap: () async {
+                      final picked = await showThemeModeDialog(
+                        context,
+                        current: themeModeNotifier.value,
+                      );
+                      if (picked != null) {
+                        themeModeNotifier.value = picked;
+                      }
+                    },
+                  ),
+
+                  _menuButton(
+                    context,
+                    label: '약관 확인',
+                    onTap: () => showDialog(
+                      context: context,
+                      barrierColor: Colors.black54,
+                      barrierDismissible: true,
+                      builder: (context) => const TermsOfUseScreen(),
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        viewModel.isDialogType(DialogType.logOut);
+                        _showSignOutPopup(context, viewModel);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade100,
+                        foregroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 25),
-
-                _menuButton(
-                  context,
-                  label: '프로필 수정',
-                  onTap: () async {
-                    final changed = await context.push<bool>('/change_profile');
-                    if (changed == true) {
-                      await vm.loadUser(force: true); // 강제 새로고침
-                    }
-                  },
-                ),
-                _menuButton(
-                  context,
-                  label: '내가 만든 코스',
-                  onTap: () async {
-                    final userId = await SupabaseManager.shared
-                        .getMyUserRowId();
-                    if (userId == null) return;
-                    context.push('/mypost', extra: userId);
-                  },
-                ),
-                _menuButton(
-                  context,
-                  label: '테마 선택',
-                  onTap: () async {
-                    final picked = await showThemeModeDialog(
-                      context,
-                      current: themeModeNotifier.value,
-                    );
-                    if (picked != null) {
-                      themeModeNotifier.value = picked;
-                    }
-                  },
-                ),
-                _menuButton(
-                  context,
-                  label: '약관 확인',
-                  onTap: () => showDialog(
-                    context: context,
-                    barrierColor: Colors.black54,
-                    barrierDismissible: true,
-                    builder: (context) => const TermsOfUseScreen(),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                SizedBox(
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      viewModel.isDialogType(DialogType.logOut);
-                      _showSignOutPopup(context, viewModel);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade100,
-                      foregroundColor: Colors.red,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
+                      child: const Text('로그아웃'),
                     ),
-                    child: const Text('로그아웃'),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () async {
-                      viewModel.isDialogType(DialogType.reSign);
-                      _showSignOutPopup(context, viewModel);
-                    },
-                    child: const Text(
-                      '회원탈퇴',
-                      style: TextStyle(
-                        color: Colors.red,
-                        decoration: TextDecoration.underline,
-                        decorationColor: Colors.red,
+                  const SizedBox(height: 10),
+
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () async {
+                        viewModel.isDialogType(DialogType.reSign);
+                        _showSignOutPopup(context, viewModel);
+                      },
+                      child: const Text(
+                        '회원탈퇴',
+                        style: TextStyle(
+                          color: Colors.red,
+                          decoration: TextDecoration.underline,
+                          decorationColor: Colors.red,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _menuButton(
-    BuildContext context, {
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: SizedBox(
-        height: 48,
-        child: ElevatedButton(
-          onPressed: onTap,
-          style: ElevatedButton.styleFrom(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
+                ],
+              );
+            },
           ),
-          child: Text(label),
         ),
       ),
     );
   }
+}
+
+Widget _menuButton(
+  BuildContext context, {
+  required String label,
+  required VoidCallback onTap,
+}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: SizedBox(
+      height: 48,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: Text(label),
+      ),
+    ),
+  );
 }
 
 void _showSignOutPopup(BuildContext context, LoginViewModel viewModel) {
