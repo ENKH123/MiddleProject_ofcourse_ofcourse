@@ -141,7 +141,6 @@ class TermBox extends StatelessWidget {
           ),
           GestureDetector(
             onTap: () async {
-              print("전체보기 눌림");
               final uri = Uri.parse(termsLink);
               if (await canLaunchUrl(uri)) {
                 await launchUrl(uri);
