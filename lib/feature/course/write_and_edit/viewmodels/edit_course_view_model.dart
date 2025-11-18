@@ -409,23 +409,88 @@ class EditCourseViewModel extends ChangeNotifier {
     return await showDialog<bool>(
           context: context,
           barrierDismissible: true,
-          builder: (_) {
-            return AlertDialog(
-              title: const Text("알림"),
-              content: Text(title),
-              actions: [
-                TextButton(
-                  child: const Text("취소"),
-                  onPressed: () => Navigator.pop(context, false),
+          useRootNavigator: false,
+          builder: (ctx) {
+            return Center(
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  width: 290,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 22,
+                    horizontal: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.edit, size: 40, color: Colors.orange),
+                      const SizedBox(height: 12),
+
+                      // TITLE
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // 확인 버튼
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx, true),
+                        child: Container(
+                          height: 44,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            "확인",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // 취소 버튼
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx, false),
+                        child: Container(
+                          height: 40,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Color(0xFFF2F2F2),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Text("취소"),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                ElevatedButton(
-                  child: const Text("확인"),
-                  onPressed: () => Navigator.pop(context, true),
-                ),
-              ],
+              ),
             );
           },
         ) ??
         false;
+  }
+
+  Future<void> onPressSave(BuildContext context) async {
+    final ok = await _confirm(context, "해당 내용으로 코스를 수정하시겠습니까?");
+    if (ok) {
+      await saveEdit(context);
+    }
   }
 }

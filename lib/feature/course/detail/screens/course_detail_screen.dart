@@ -6,9 +6,9 @@ import 'package:of_course/feature/course/detail/widgets/course_detail_header.dar
 import 'package:of_course/feature/course/detail/widgets/course_detail_map.dart';
 import 'package:of_course/feature/course/detail/widgets/course_detail_recommendation_reason.dart';
 import 'package:of_course/feature/course/detail/widgets/course_detail_sets.dart';
+import 'package:of_course/feature/report/models/report_models.dart';
 import 'package:of_course/feature/report/screens/report_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:of_course/feature/report/models/report_models.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   final int courseId;
@@ -56,11 +56,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   void _handleBackNavigation() {
-    if (widget.recommendationReason != null) {
-      context.go('/home');
-    } else {
-      Navigator.pop(context);
-    }
+    Navigator.pop(context, true);
   }
 
   Future<void> _handleToggleLike() async {
@@ -186,10 +182,19 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  void _handleEditCourse() {
+  Future<void> _handleEditCourse() async {
     final courseDetail = _viewModel.courseDetail;
     if (courseDetail == null) return;
-    context.push('/editcourse', extra: int.parse(courseDetail.courseId));
+
+    final result = await context.push(
+      '/editcourse',
+      extra: int.parse(courseDetail.courseId),
+    );
+
+    if (result == true) {
+      await _viewModel.loadCourseDetail();
+      setState(() {});
+    }
   }
 
   void _navigateToReport(
