@@ -18,8 +18,9 @@ class ProfileScreen extends StatelessWidget {
     LoginViewModel viewModel = context.watch<LoginViewModel>();
 
     return Scaffold(
+      resizeToAvoidBottomInset: true, // 키보드 충돌 방지
       appBar: const CustomAppBar(title: '마이페이지', showBackButton: false),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: FutureBuilder(
           future: (vm.user == null && !vm.isLoading) ? vm.loadUser() : null,
