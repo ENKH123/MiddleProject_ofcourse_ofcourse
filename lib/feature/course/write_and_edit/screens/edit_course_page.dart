@@ -36,7 +36,7 @@ class _EditCourseView extends StatelessWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () => vm.saveEdit(context),
+              onPressed: () => vm.onPressSave(context),
               child: const Text("수정완료", style: TextStyle(color: Colors.orange)),
             ),
           ],
