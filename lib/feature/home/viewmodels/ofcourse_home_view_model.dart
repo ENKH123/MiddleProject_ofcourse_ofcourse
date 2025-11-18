@@ -16,7 +16,11 @@ class OfcourseHomeViewModel extends ChangeNotifier {
 
   bool isRefreshing = false;
 
+  // 🔥 추가: 뒤로가기 시간 저장
+  DateTime? lastBackPressTime;
+
   OfcourseHomeViewModel() {
+    lastBackPressTime = null;
     init();
   }
 
@@ -73,5 +77,17 @@ class OfcourseHomeViewModel extends ChangeNotifier {
 
     isRefreshing = false;
     notifyListeners();
+  }
+
+  bool handleWillPop() {
+    final now = DateTime.now();
+
+    if (lastBackPressTime == null ||
+        now.difference(lastBackPressTime!) > const Duration(seconds: 2)) {
+      lastBackPressTime = now;
+      return false; // 종료 막기
+    }
+
+    return true; // 종료 허용
   }
 }

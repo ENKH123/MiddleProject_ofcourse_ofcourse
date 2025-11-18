@@ -27,75 +27,92 @@ class _OfcourseHomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<OfcourseHomeViewModel>();
 
-    return Stack(
-      children: [
-        Scaffold(
-          appBar: HomeAppBar(
-            selectedGu: vm.selectedGu,
-            guList: vm.guList,
-            onGuChanged: vm.changeGu,
-            onNotificationPressed: () => context.push('/alert'),
-            selectedCategories: vm.selectedCategories,
-          ),
-          body: Column(
-            children: [
-              _buildTagSelector(context, vm),
-              const SizedBox(height: 12),
-              Expanded(
-                child: ListView.separated(
-                  controller: OfcourseHomePage.scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemCount: vm.courseList.length,
-                  itemBuilder: (_, index) {
-                    final course = vm.courseList[index];
+    return WillPopScope(
+      onWillPop: () async {
+        final shouldExit = vm.handleWillPop();
 
-                    return PostCard(
-                      title: course['title'],
-                      tags: (course['tags'] as List).cast<String>(),
-                      imageUrls: (course['images'] as List).cast<String>(),
-                      likeCount: course['like_count'],
-                      commentCount: course['comment_count'],
-                      isLiked: course['is_liked'],
-                      onTap: () async {
-                        final userId = await SupabaseManager.shared
-                            .getMyUserRowId();
-                        if (userId == null) return;
+        if (!shouldExit) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("한 번 더 누르면 앱이 종료됩니다."),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
 
-                        final updated = await context.push(
-                          '/detail',
-                          extra: {'courseId': course['id'], 'userId': userId},
-                        );
+        return shouldExit;
+      },
+      child: Stack(
+        children: [
+          Scaffold(
+            appBar: HomeAppBar(
+              selectedGu: vm.selectedGu,
+              guList: vm.guList,
+              onGuChanged: vm.changeGu,
+              onNotificationPressed: () => context.push('/alert'),
+              selectedCategories: vm.selectedCategories,
+            ),
+            body: Column(
+              children: [
+                _buildTagSelector(context, vm),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: ListView.separated(
+                    controller: OfcourseHomePage.scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemCount: vm.courseList.length,
+                    itemBuilder: (_, index) {
+                      final course = vm.courseList[index];
 
-                        if (updated == true) vm.loadCourses();
-                      },
-                    );
-                  },
+                      return PostCard(
+                        title: course['title'],
+                        tags: (course['tags'] as List).cast<String>(),
+                        imageUrls: (course['images'] as List).cast<String>(),
+                        likeCount: course['like_count'],
+                        commentCount: course['comment_count'],
+                        isLiked: course['is_liked'],
+                        onTap: () async {
+                          final userId = await SupabaseManager.shared
+                              .getMyUserRowId();
+                          if (userId == null) return;
+
+                          final updated = await context.push(
+                            '/detail',
+                            extra: {'courseId': course['id'], 'userId': userId},
+                          );
+
+                          if (updated == true) vm.loadCourses();
+                        },
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
-          ),
-          floatingActionButton: FloatingActionButton(
-            backgroundColor: Theme.of(context).primaryColor,
-            child: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: () async {
-              OfcourseHomePage.scrollController.animateTo(
-                0,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-              );
-              await vm.refreshAll();
-            },
-          ),
-        ),
-        if (vm.isRefreshing)
-          Container(
-            color: Colors.black.withOpacity(0.25),
-            child: const Center(
-              child: CircularProgressIndicator(strokeWidth: 4),
+              ],
+            ),
+            floatingActionButton: FloatingActionButton(
+              backgroundColor: Theme.of(context).primaryColor,
+              child: const Icon(Icons.refresh, color: Colors.white),
+              onPressed: () async {
+                OfcourseHomePage.scrollController.animateTo(
+                  0,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+                await vm.refreshAll();
+              },
             ),
           ),
-      ],
+
+          if (vm.isRefreshing)
+            Container(
+              color: Colors.black.withOpacity(0.25),
+              child: const Center(
+                child: CircularProgressIndicator(strokeWidth: 4),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
