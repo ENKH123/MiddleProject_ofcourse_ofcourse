@@ -182,29 +182,6 @@ class _CourseDetailMapState extends State<CourseDetailMap> {
                   indoorEnable: false,
                 ),
               ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Column(
-                  children: [
-                    _ZoomButton(
-                      icon: Icons.add,
-                      onPressed: () {
-                        _mapController
-                            ?.updateCamera(NCameraUpdate.zoomIn());
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    _ZoomButton(
-                      icon: Icons.remove,
-                      onPressed: () {
-                        _mapController
-                            ?.updateCamera(NCameraUpdate.zoomOut());
-                      },
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
