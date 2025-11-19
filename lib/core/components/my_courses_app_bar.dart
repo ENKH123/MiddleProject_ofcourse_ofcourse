@@ -28,9 +28,7 @@ extension SeoulDistrictExtension on SeoulDistrict {
   }
 }
 
-/// 홈화면 앱바 컴포넌트
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
-  /// 현재 선택된 지역
   final SeoulDistrict selectedDistrict;
   final Function(SeoulDistrict)? onDistrictChanged;
   final VoidCallback? onRandomPressed;
@@ -68,14 +66,12 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               _buildRandomButton(context),
             ],
           ),
-
           _buildNotificationIcon(context),
         ],
       ),
     );
   }
 
-  /// 지역 선택 드롭다운 빌드
   Widget _buildRegionSelector(BuildContext context) {
     return Container(
       height: 36,
@@ -130,7 +126,6 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  // todo 랜덤 버튼 연결
   Widget _buildRandomButton(BuildContext context) {
     return SizedBox(
       height: 36,
@@ -156,7 +151,6 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  // todo 알림 아이콘 빌드 (배지 포함)
   Widget _buildNotificationIcon(BuildContext context) {
     return SizedBox(
       height: 36,
@@ -176,7 +170,6 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               constraints: const BoxConstraints(),
             ),
           ),
-          // 배지 표시 (미확인 알림이 있을 때만)
           if (unreadAlertCount != null && unreadAlertCount! > 0)
             Positioned(
               top: 4,
@@ -212,44 +205,3 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
-
-
-// 더미 데이터 - 테스트 화면
-class HomeAppBarTestScreen extends StatefulWidget {
-  const HomeAppBarTestScreen({super.key});
-
-  @override
-  State<HomeAppBarTestScreen> createState() => _HomeAppBarTestScreenState();
-}
-
-class _HomeAppBarTestScreenState extends State<HomeAppBarTestScreen> {
-  // 현재 선택된 지역
-  SeoulDistrict _selectedDistrict = SeoulDistrict.gangnam;
-
-  // 미확인 알림 수
-  int _unreadAlertCount = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
-      appBar: HomeAppBar(
-        selectedDistrict: _selectedDistrict,
-        unreadAlertCount: _unreadAlertCount,
-        onDistrictChanged: (district) {
-          setState(() {
-            _selectedDistrict = district;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${district.displayName} 선택됨')),
-          );
-        },
-        onRandomPressed: () {
-          // 랜덤 추천 기능
-        },
-      ),
-      body: const SizedBox.shrink(),
-    );
-  }
-}
-

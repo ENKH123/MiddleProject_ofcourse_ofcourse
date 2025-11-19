@@ -9,8 +9,6 @@ import 'package:provider/provider.dart';
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   static const double _buttonHeight = 36.0;
   static const double _spacing = 8.0;
-  // static const Color _defaultBackgroundColor = Color(0xFFFAFAFA);
-  // static const Color _randomButtonColor = Color(0xFF003366);
   static const int _maxNotificationCount = 99;
 
   final GuModel? selectedGu;
@@ -35,6 +33,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      backgroundColor: backgroundColor,
       elevation: 0,
       scrolledUnderElevation: 0,
       automaticallyImplyLeading: false,
@@ -62,7 +61,6 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           height: _buttonHeight,
           padding: const EdgeInsets.symmetric(horizontal: _spacing),
           decoration: BoxDecoration(
-            //color: cs.surfaceContainer,
             borderRadius: BorderRadius.circular(_spacing),
             border: Border.all(color: Colors.grey[300]!),
           ),
@@ -73,7 +71,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
             underline: const SizedBox(),
-            icon: Icon(Icons.keyboard_arrow_down, color: cs.onBackground),
+            icon: Icon(Icons.keyboard_arrow_down, color: cs.onSurface),
             items: _buildDropdownItems(),
             onChanged: _handleGuChanged,
           ),
@@ -95,7 +93,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     items.addAll(
       guList.map(
-        (gu) => DropdownMenuItem<GuModel>(
+            (gu) => DropdownMenuItem<GuModel>(
           value: gu,
           child: Text(
             gu.name,
@@ -138,75 +136,25 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       return;
     }
 
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+
     try {
       final userRowId = await SupabaseManager.shared.getMyUserRowId();
 
       if (userRowId == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('로그인이 필요합니다.')));
+        messenger.showSnackBar(
+          const SnackBar(content: Text('로그인이 필요합니다.')),
+        );
         return;
       }
 
-      // 온보딩 화면으로 이동
-      context.push('/onboarding');
+      router.push('/onboarding');
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('추천 중 오류가 발생했습니다: $e')));
+      messenger.showSnackBar(
+        SnackBar(content: Text('추천 중 오류가 발생했습니다: $e')),
+      );
     }
-  }
-
-  String _buildRecommendationReason(
-    Map<String, dynamic> summary,
-    Map<String, dynamic> rec,
-  ) {
-    final percent = rec['similarity_percent'] ?? 0;
-
-    final matchedTags = rec['matched_tags'] as List<dynamic>? ?? [];
-    final matchedGus = rec['matched_gus'] as List<dynamic>? ?? [];
-
-    String? tagPart;
-    if (matchedTags.isNotEmpty) {
-      final names = matchedTags
-          .map((t) => t['name'])
-          .whereType<String>()
-          .where((s) => s.isNotEmpty)
-          .toList();
-      if (names.isNotEmpty) {
-        tagPart = names.join(', ');
-      }
-    }
-
-    String? guPart;
-    if (matchedGus.isNotEmpty) {
-      final names = matchedGus
-          .map((g) => g['name'])
-          .whereType<String>()
-          .where((s) => s.isNotEmpty)
-          .toList();
-      if (names.isNotEmpty) {
-        guPart = names.join(', ');
-      }
-    }
-
-    String sentence = '이 코스는 내 취향과 유사도 $percent%입니다.\n';
-
-    if (tagPart != null) {
-      sentence += '최근에 $tagPart 태그 코스를 좋아했고,\n';
-    }
-
-    if (guPart != null) {
-      sentence += '$guPart관련 코스를 자주 선택해 추천했어요.';
-    } else {
-      if (sentence.endsWith(',\n')) {
-        sentence = sentence.substring(0, sentence.length - 2);
-        sentence += '\n';
-      }
-      sentence += '추천했어요.';
-    }
-
-    return sentence;
   }
 
   Widget _buildNotificationIcon() {
