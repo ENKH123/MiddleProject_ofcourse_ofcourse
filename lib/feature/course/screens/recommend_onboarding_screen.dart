@@ -2,14 +2,16 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/data/core_data_source.dart';
 import 'package:of_course/feature/course/utils/recommendation_parser.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RecommendOnboardingScreen extends StatefulWidget {
   const RecommendOnboardingScreen({super.key});
 
   @override
-  State<RecommendOnboardingScreen> createState() => _RecommendOnboardingScreenState();
+  State<RecommendOnboardingScreen> createState() =>
+      _RecommendOnboardingScreenState();
 }
 
 class _RecommendOnboardingScreenState extends State<RecommendOnboardingScreen>
@@ -27,17 +29,11 @@ class _RecommendOnboardingScreenState extends State<RecommendOnboardingScreen>
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeIn,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
     );
 
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOutCubic,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
     );
 
     _animationController.forward();
@@ -56,15 +52,13 @@ class _RecommendOnboardingScreenState extends State<RecommendOnboardingScreen>
     String? userId;
 
     try {
-      userId = await SupabaseManager.shared.getMyUserRowId();
+      userId = await CoreDataSource.instance.getMyUserRowId();
 
       if (userId != null) {
         try {
-          final response = await SupabaseManager.shared.supabase.functions.invoke(
+          final response = await Supabase.instance.client.functions.invoke(
             'smart-task',
-            body: {
-              'user_id': userId,
-            },
+            body: {'user_id': userId},
           );
 
           debugPrint('맞춤형 추천 응답: $response');
@@ -87,8 +81,9 @@ class _RecommendOnboardingScreenState extends State<RecommendOnboardingScreen>
             }
 
             if (responseData != null) {
-              final parsedData =
-              RecommendationParser.parseFirstRecommendation(responseData);
+              final parsedData = RecommendationParser.parseFirstRecommendation(
+                responseData,
+              );
               debugPrint('맞춤형 추천 로딩 완료: $parsedData');
 
               if (parsedData != null) {
@@ -129,12 +124,15 @@ class _RecommendOnboardingScreenState extends State<RecommendOnboardingScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor =
-    isDark ? const Color(0xFF002245) : const Color(0xFFFAFAFA);
-    final textColor =
-    isDark ? const Color(0xFFFAFAFA) : const Color(0xFF030303);
-    final primaryColor =
-    isDark ? const Color(0xFFC5D5E4) : const Color(0xFF003366);
+    final backgroundColor = isDark
+        ? const Color(0xFF002245)
+        : const Color(0xFFFAFAFA);
+    final textColor = isDark
+        ? const Color(0xFFFAFAFA)
+        : const Color(0xFF030303);
+    final primaryColor = isDark
+        ? const Color(0xFFC5D5E4)
+        : const Color(0xFF003366);
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -147,11 +145,7 @@ class _RecommendOnboardingScreenState extends State<RecommendOnboardingScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    'assets/appLogo.png',
-                    width: 200,
-                    height: 200,
-                  ),
+                  Image.asset('assets/appLogo.png', width: 200, height: 200),
                   const SizedBox(height: 48),
 
                   SizedBox(

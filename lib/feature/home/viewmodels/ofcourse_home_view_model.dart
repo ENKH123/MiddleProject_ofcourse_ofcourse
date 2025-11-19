@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
-import 'package:of_course/core/models/gu_model.dart';
+import 'package:of_course/core/data/core_data_source.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
+import 'package:of_course/feature/home/data/home_data_source.dart';
+import 'package:of_course/feature/home/models/gu_model.dart';
 
 class OfcourseHomeViewModel extends ChangeNotifier {
-  final SupabaseManager supabase = SupabaseManager.shared;
-
   GuModel? selectedGu;
   List<GuModel> guList = [];
 
@@ -31,13 +30,13 @@ class OfcourseHomeViewModel extends ChangeNotifier {
   }
 
   Future<void> loadGu() async {
-    guList = await supabase.getGuList();
+    guList = await HomeDataSource.instance.getGuList();
     selectedGu = null;
     notifyListeners();
   }
 
   Future<void> loadTags() async {
-    tagList = await supabase.getTags();
+    tagList = await CoreDataSource.instance.getTags();
     notifyListeners();
   }
 
@@ -45,7 +44,7 @@ class OfcourseHomeViewModel extends ChangeNotifier {
     final guId = selectedGu?.id;
     final tagNames = selectedCategories.map((e) => e.name).toList();
 
-    courseList = await supabase.getCourseList(
+    courseList = await HomeDataSource.instance.getCourseList(
       guId: guId,
       selectedTagNames: tagNames.isEmpty ? null : tagNames,
     );

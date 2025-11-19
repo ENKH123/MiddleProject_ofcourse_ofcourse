@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/data/core_data_source.dart';
+import 'package:of_course/feature/course/data/course_data_source.dart';
 
 class WriteEntryPage extends StatefulWidget {
   final String? from;
@@ -43,12 +44,12 @@ class _WriteEntryPageState extends State<WriteEntryPage> {
 
   Future<void> _checkDraft() async {
     try {
-      final userId = await SupabaseManager.shared.getMyUserRowId();
+      final userId = await CoreDataSource.instance.getMyUserRowId();
       if (!mounted) return;
 
       if (userId == null) return _navigateBack();
 
-      final drafts = await SupabaseManager.shared.getDraftCourses(userId);
+      final drafts = await CourseDataSource.instance.getDraftCourses(userId);
       if (!mounted) return;
 
       if (drafts.isEmpty) return _navigateToNew();

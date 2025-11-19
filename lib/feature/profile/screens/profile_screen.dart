@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:of_course/core/app_theme.dart';
 import 'package:of_course/core/components/custom_app_bar.dart';
 import 'package:of_course/core/components/loading_dialog.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/data/core_data_source.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
 import 'package:of_course/feature/profile/screens/terms_mypage_screen.dart';
 import 'package:of_course/feature/profile/viewmodels/profile_viewmodel.dart';
@@ -102,7 +102,7 @@ class ProfileScreen extends StatelessWidget {
                     context,
                     label: '내가 만든 코스',
                     onTap: () async {
-                      final userId = await SupabaseManager.shared
+                      final userId = await CoreDataSource.instance
                           .getMyUserRowId();
                       if (userId == null) return;
                       context.push('/mypost', extra: userId);

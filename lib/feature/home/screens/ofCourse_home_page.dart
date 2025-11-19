@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:of_course/core/components/home_app_bar.dart';
 import 'package:of_course/core/components/post_component.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/data/core_data_source.dart';
+import 'package:of_course/feature/home/screens/home_app_bar.dart';
 import 'package:of_course/feature/home/viewmodels/ofcourse_home_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -73,7 +73,7 @@ class _OfcourseHomeView extends StatelessWidget {
                         commentCount: course['comment_count'],
                         isLiked: course['is_liked'],
                         onTap: () async {
-                          final userId = await SupabaseManager.shared
+                          final userId = await CoreDataSource.instance
                               .getMyUserRowId();
                           if (userId == null) return;
 
