@@ -26,38 +26,43 @@ class _RegisterScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(),
-      body: SafeArea(
-        child: Consumer<RegisterViewModel>(
-          builder: (context, viewmodel, child) {
-            return Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          SizedBox(height: 40), //상단 여백
-                          Text(
-                            "프로필 정보 입력",
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
+      body: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+        },
+        child: SafeArea(
+          child: Consumer<RegisterViewModel>(
+            builder: (context, viewmodel, child) {
+              return Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SizedBox(height: 40), //상단 여백
+                            Text(
+                              "프로필 정보 입력",
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          ProfileImage(viewmodel: viewmodel),
-                          NicknameTextField(viewModel: viewmodel),
-                        ],
+                            ProfileImage(viewmodel: viewmodel),
+                            NicknameTextField(viewModel: viewmodel),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  CompleteButton(),
-                ],
-              ),
-            );
-          },
+                    CompleteButton(),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -224,14 +229,14 @@ class CompleteButton extends StatelessWidget {
           width: double.maxFinite,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(),
-            onPressed: viewmodel.isNicknameValid
+            onPressed: viewmodel.isNicknameButtonValid
                 ? () async {
                     showFullScreenLoading(context);
                     final RegisterResult rgResult = await viewmodel.isSucceed();
                     Navigator.of(context).pop();
                     _showRegisterCompletePopup(
                       context,
-                      viewmodel.controller.text,
+                      viewmodel.nickname,
                       rgResult,
                       viewmodel,
                     );
@@ -266,16 +271,15 @@ class NicknameTextField extends StatelessWidget {
             onChanged: viewModel.updatedNickname,
             maxLines: 1,
             maxLength: 10,
-
             decoration: InputDecoration(
               labelText: '2 ~ 10자 사이로 입력해주세요',
-              labelStyle: viewModel.isNicknameValid
+              labelStyle: viewModel.isNicknameFieldValid
                   ? null
                   : TextStyle(color: Colors.redAccent),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10.0)),
                 // 텍스트 필드 테두리
-                borderSide: viewModel.isNicknameValid
+                borderSide: viewModel.isNicknameFieldValid
                     ? BorderSide(width: 1)
                     : BorderSide(width: 1, color: Colors.redAccent),
               ),

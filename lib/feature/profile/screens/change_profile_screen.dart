@@ -214,6 +214,8 @@ class ChangeProfileScreen extends StatelessWidget {
       ),
       child: TextField(
         textAlign: TextAlign.center,
+        maxLines: 1,
+        maxLength: 10,
         style: const TextStyle(color: Color(0xff030303)),
         controller: TextEditingController(text: vm.nickname)
           ..selection = TextSelection.fromPosition(
