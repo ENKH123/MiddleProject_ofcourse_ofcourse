@@ -24,11 +24,15 @@ class RegisterViewModel extends ChangeNotifier {
   final TextEditingController _controller = TextEditingController();
   TextEditingController get controller => _controller;
 
-  String editorText = "";
+  String _nickname = "";
+  String get nickname => _nickname;
 
   // 닉네임 2글자 이상
-  bool _isNicknameValid = true;
-  bool get isNicknameValid => _isNicknameValid;
+  bool _isNicknameFieldValid = true;
+  bool get isNicknameFieldValid => _isNicknameFieldValid;
+
+  bool _isNicknameButtonValid = false;
+  bool get isNicknameButtonValid => _isNicknameButtonValid;
 
   final int _minNicknameLength = 2;
   int get minNicknameLength => _minNicknameLength;
@@ -54,13 +58,13 @@ class RegisterViewModel extends ChangeNotifier {
           .getPublicUrl(filePath);
       AuthDataSource.instance.createUserProfile(
         _loginViewModel.googleUser?.email ?? "",
-        _controller.text,
+        _nickname,
         userProfileImage,
       );
     } else {
       AuthDataSource.instance.createUserProfile(
         _loginViewModel.googleUser?.email ?? "",
-        _controller.text,
+        _nickname,
       );
     }
   }
@@ -105,9 +109,27 @@ class RegisterViewModel extends ChangeNotifier {
 
   // 닉네임 2글자 이상 체크
   void updatedNickname(String value) {
-    _isNicknameValid =
-        value.length >= _minNicknameLength &&
-        value.length <= _maxNicknameLength;
+    // 공백 제거
+    final noSpace = value.replaceAll(' ', '');
+
+    if (_controller.text != noSpace) {
+      _controller.value = _controller.value.copyWith(
+        text: noSpace,
+        selection: TextSelection.collapsed(offset: noSpace.length),
+        composing: TextRange.empty,
+      );
+    }
+
+    _nickname = noSpace;
+
+    // 글자 수 확인
+    final isTrue =
+        _nickname.length >= _minNicknameLength &&
+        _nickname.length <= _maxNicknameLength;
+
+    _isNicknameFieldValid = isTrue;
+    _isNicknameButtonValid = isTrue;
+
     notifyListeners();
   }
 
@@ -115,7 +137,7 @@ class RegisterViewModel extends ChangeNotifier {
   Future<RegisterResult> isSucceed() async {
     // 닉네임 중복 여부
     bool nicknameSucceed = await AuthDataSource.instance.isDuplicatedNickname(
-      _controller.text,
+      _nickname,
     );
     if (nicknameSucceed) {
       return RegisterResult.success;
