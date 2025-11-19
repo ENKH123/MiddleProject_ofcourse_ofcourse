@@ -33,7 +33,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   final GlobalKey _mapSectionKey = GlobalKey();
   final CourseDetailMapController _mapController = CourseDetailMapController();
 
-  //static const Color _backgroundColor = Color(0xFFFAFAFA);
   static const double _spacingMedium = 16.0;
   static const double _spacingLarge = 24.0;
 
@@ -60,44 +59,44 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   Future<void> _handleToggleLike() async {
+    // context를 async 전에 사용해서 messenger를 만들어둠
+    final messenger = ScaffoldMessenger.of(context);
+
     try {
       await _viewModel.toggleLike();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              e.toString().contains('로그인')
-                  ? '로그인이 필요합니다.'
-                  : '좋아요 처리 중 오류가 발생했습니다: $e',
-            ),
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().contains('로그인')
+                ? '로그인이 필요합니다.'
+                : '좋아요 처리 중 오류가 발생했습니다: $e',
           ),
-        );
-      }
+        ),
+      );
     }
   }
 
   Future<void> _handleSubmitComment(String commentText) async {
+    // 마찬가지로 messenger를 먼저 만들어둔다
+    final messenger = ScaffoldMessenger.of(context);
+
     try {
       await _viewModel.submitComment(commentText);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('댓글이 작성되었습니다.')));
-      }
+      messenger.showSnackBar(
+        const SnackBar(content: Text('댓글이 작성되었습니다.')),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              e.toString().contains('로그인')
-                  ? '로그인이 필요합니다.'
-                  : '댓글 작성 중 오류가 발생했습니다: ${e.toString()}',
-            ),
-            duration: const Duration(seconds: 5),
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().contains('로그인')
+                ? '로그인이 필요합니다.'
+                : '댓글 작성 중 오류가 발생했습니다: ${e.toString()}',
           ),
-        );
-      }
+          duration: const Duration(seconds: 5),
+        ),
+      );
     }
   }
 
@@ -118,15 +117,16 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               try {
                 await _viewModel.deleteComment(commentId);
                 if (mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('댓글이 삭제되었습니다.')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('댓글이 삭제되었습니다.')),
+                  );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('댓글 삭제 중 오류가 발생했습니다: ${e.toString()}'),
+                      content:
+                      Text('댓글 삭제 중 오류가 발생했습니다: ${e.toString()}'),
                       duration: const Duration(seconds: 5),
                     ),
                   );
@@ -145,7 +145,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('게시글 삭제'),
-        content: const Text('정말 이 코스를 삭제하시겠습니까?\n연관된 댓글과 좋아요도 함께 삭제됩니다.'),
+        content:
+        const Text('정말 이 코스를 삭제하시겠습니까?\n연관된 댓글과 좋아요도 함께 삭제됩니다.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -159,7 +160,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('코스 및 관련 세트, 이미지, 댓글, 좋아요가 모두 삭제되었습니다.'),
+                      content:
+                      Text('코스 및 관련 세트, 이미지, 댓글, 좋아요가 모두 삭제되었습니다.'),
                     ),
                   );
                   Navigator.pop(context, true);
@@ -193,15 +195,16 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
     if (result == true) {
       await _viewModel.loadCourseDetail();
+      if (!mounted) return;
       setState(() {});
     }
   }
 
   void _navigateToReport(
-    String targetId,
-    ReportTargetType targetType, {
-    String? commentAuthor,
-  }) {
+      String targetId,
+      ReportTargetType targetType, {
+        String? commentAuthor,
+      }) {
     final courseDetail = _viewModel.courseDetail;
     Navigator.push(
       context,
@@ -268,7 +271,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         builder: (context, viewModel, child) {
           if (viewModel.isLoading) {
             return Scaffold(
-              backgroundColor: cs.background,
+              backgroundColor: cs.surface,
               appBar: _buildAppBar(),
               body: const Center(child: CircularProgressIndicator()),
             );
@@ -276,7 +279,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
           if (viewModel.errorMessage != null) {
             return Scaffold(
-              backgroundColor: cs.background,
+              backgroundColor: cs.surface,
               appBar: _buildAppBar(),
               body: Center(
                 child: Column(
@@ -300,7 +303,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           final courseDetail = viewModel.courseDetail;
           if (courseDetail == null) {
             return Scaffold(
-              backgroundColor: cs.background,
+              backgroundColor: cs.surface,
               appBar: _buildAppBar(),
               body: const Center(child: Text('코스 정보를 불러올 수 없습니다.')),
             );
@@ -316,13 +319,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
           return PopScope(
             canPop: false,
-            onPopInvoked: (didPop) {
+            onPopInvokedWithResult: (didPop, result) {
               if (!didPop) {
                 _handleBackNavigation();
               }
             },
             child: Scaffold(
-              backgroundColor: cs.background, // 코스 배경
+              backgroundColor: cs.surface,
               appBar: _buildAppBar(),
               body: Column(
                 children: [
@@ -338,9 +341,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             onReport: courseDetail.isAuthor
                                 ? null
                                 : () => _navigateToReport(
-                                    courseDetail.courseId,
-                                    ReportTargetType.course,
-                                  ),
+                              courseDetail.courseId,
+                              ReportTargetType.course,
+                            ),
                           ),
                           if (widget.recommendationReason != null) ...[
                             CourseDetailRecommendationReason(
