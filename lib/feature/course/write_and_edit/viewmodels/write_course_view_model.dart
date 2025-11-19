@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
@@ -712,19 +713,34 @@ class WriteCourseViewModel extends ChangeNotifier {
       String? img1, img2, img3;
 
       if (set.images.isNotEmpty) {
-        img1 = await CourseDataSource.instance.uploadCourseSetImage(
-          set.images[0],
-        );
+        File imgFile1 = set.images[0];
+
+        // HEIC 변환
+        if (imgFile1.path.toLowerCase().endsWith(".heic")) {
+          imgFile1 = await convertHeicToJpg(imgFile1);
+        }
+
+        img1 = await CourseDataSource.instance.uploadCourseSetImage(imgFile1);
       }
+
       if (set.images.length > 1) {
-        img2 = await CourseDataSource.instance.uploadCourseSetImage(
-          set.images[1],
-        );
+        File imgFile2 = set.images[1];
+
+        if (imgFile2.path.toLowerCase().endsWith(".heic")) {
+          imgFile2 = await convertHeicToJpg(imgFile2);
+        }
+
+        img2 = await CourseDataSource.instance.uploadCourseSetImage(imgFile2);
       }
+
       if (set.images.length > 2) {
-        img3 = await CourseDataSource.instance.uploadCourseSetImage(
-          set.images[2],
-        );
+        File imgFile3 = set.images[2];
+
+        if (imgFile3.path.toLowerCase().endsWith(".heic")) {
+          imgFile3 = await convertHeicToJpg(imgFile3);
+        }
+
+        img3 = await CourseDataSource.instance.uploadCourseSetImage(imgFile3);
       }
 
       final id = await CourseDataSource.instance.insertCourseSet(
@@ -782,7 +798,15 @@ class WriteCourseViewModel extends ChangeNotifier {
 
       List<String> uploaded = [];
       for (final f in set.images) {
-        final u = await CourseDataSource.instance.uploadCourseSetImage(f);
+        File fileToUpload = f;
+
+        if (fileToUpload.path.toLowerCase().endsWith(".heic")) {
+          fileToUpload = await convertHeicToJpg(fileToUpload);
+        }
+
+        final u = await CourseDataSource.instance.uploadCourseSetImage(
+          fileToUpload,
+        );
         if (u != null) uploaded.add(u);
       }
 
@@ -841,5 +865,25 @@ class WriteCourseViewModel extends ChangeNotifier {
           'is_done': isDone,
         })
         .eq('id', continueCourseId!);
+  }
+
+  Future<File> convertHeicToJpg(File heicFile) async {
+    try {
+      final bytes = await heicFile.readAsBytes();
+      final decoded = await decodeImageFromList(bytes);
+
+      final byteData = await decoded.toByteData(format: ImageByteFormat.png);
+      if (byteData == null) return heicFile;
+
+      final jpgBytes = byteData.buffer.asUint8List();
+      final newPath = heicFile.path.replaceAll(".heic", ".jpg");
+      final newFile = File(newPath);
+
+      await newFile.writeAsBytes(jpgBytes);
+      return newFile;
+    } catch (e) {
+      debugPrint("❌ HEIC 변환 실패 → 원본 업로드: $e");
+      return heicFile;
+    }
   }
 }

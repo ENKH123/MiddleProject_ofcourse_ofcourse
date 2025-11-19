@@ -264,7 +264,7 @@ class _WriteCourseSetView extends StatelessWidget {
       maxLength: 200,
       maxLines: null,
       decoration: const InputDecoration(
-        labelText: "설명",
+        labelText: "해당장소를 추천하는 이유와 장단점을 200자 이하로 작성해주세요",
         border: OutlineInputBorder(),
       ),
     );

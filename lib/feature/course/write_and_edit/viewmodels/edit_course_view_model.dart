@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' show ImageByteFormat;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
@@ -16,7 +17,9 @@ class EditCourseViewModel extends ChangeNotifier {
 
   EditCourseViewModel({required this.courseId});
 
+  // ─────────────────────────────────────────────
   // UI state
+  // ─────────────────────────────────────────────
   final ScrollController scrollController = ScrollController();
   final GlobalKey mapKey = GlobalKey(debugLabel: "edit_map_key");
 
@@ -38,7 +41,9 @@ class EditCourseViewModel extends ChangeNotifier {
   static const _naverId = 'sr1eyuomlk';
   static const _naverSecret = 'XtMhndnqfc7MFpLU81jxfzvivP0LNJbSIu2wphec';
 
+  // ─────────────────────────────────────────────
   // INIT
+  // ─────────────────────────────────────────────
   Future<void> init() async {
     tagList = await CoreDataSource.instance.getTags();
     await _loadCourse();
@@ -78,7 +83,9 @@ class EditCourseViewModel extends ChangeNotifier {
     });
   }
 
+  // ─────────────────────────────────────────────
   // MARKERS 복원
+  // ─────────────────────────────────────────────
   Future<void> _initMarkersForExistingSets() async {
     if (mapController == null) return;
 
@@ -128,7 +135,9 @@ class EditCourseViewModel extends ChangeNotifier {
     _initMarkersForExistingSets();
   }
 
+  // ─────────────────────────────────────────────
   // LOCATION SEARCH
+  // ─────────────────────────────────────────────
   Future<NLatLng?> _getLatLngFromAddress(String query) async {
     try {
       final url = Uri.parse(
@@ -215,20 +224,17 @@ class EditCourseViewModel extends ChangeNotifier {
     }
 
     if (loc == null) {
+      _showMessage("위치를 찾을 수 없어요.");
       return;
     }
 
-    // 저장
     courseSetData[index].query = query;
     courseSetData[index].lat = loc.latitude;
     courseSetData[index].lng = loc.longitude;
 
     final guName = await _reverseGeocode(loc.latitude, loc.longitude);
-    debugPrint("🔄 ReverseGeocode 결과: $guName");
-
     if (guName != null) {
       final guId = await CourseDataSource.instance.getGuIdFromName(guName);
-
       courseSetData[index].gu = guId;
     }
 
@@ -242,8 +248,6 @@ class EditCourseViewModel extends ChangeNotifier {
     await mapController?.updateCamera(
       NCameraUpdate.scrollAndZoomTo(target: loc, zoom: 15),
     );
-
-    debugPrint("✅ onSearch 완료(index: $index)\n");
 
     notifyListeners();
   }
@@ -276,8 +280,17 @@ class EditCourseViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateDescription(int index, String txt) {
+    courseSetData[index].description = txt;
+  }
+
+  void updateTag(int index, TagModel tag) {
+    courseSetData[index].tagId = tag.id;
+    notifyListeners();
+  }
+
   // ─────────────────────────────────────────────
-  // 스크롤 / 맵 위치 이동 (WriteCourseViewModel이랑 맞추기)
+  // UI Support - Scroll & Message
   // ─────────────────────────────────────────────
   void scrollToOffset(double offsetY) {
     scrollController.animateTo(
@@ -295,25 +308,75 @@ class EditCourseViewModel extends ChangeNotifier {
         duration: const Duration(milliseconds: 450),
         curve: Curves.easeOutCubic,
       );
-    } else {
-      scrollController.animateTo(
-        300,
-        duration: const Duration(milliseconds: 450),
-        curve: Curves.easeOutCubic,
-      );
     }
   }
 
-  void updateDescription(int index, String txt) {
-    courseSetData[index].description = txt;
+  void scrollToSet(int index) {
+    scrollController.animateTo(
+      index * 450,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
+    );
   }
 
-  void updateTag(int index, TagModel tag) {
-    courseSetData[index].tagId = tag.id;
-    notifyListeners();
+  void _showMessage(String msg) {
+    BuildContext? ctx = mapKey.currentContext;
+    ctx ??= scrollController.position.context.notificationContext;
+
+    if (ctx == null) return;
+
+    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  // ADD SET
+  // ─────────────────────────────────────────────
+  // VALIDATION
+  // ─────────────────────────────────────────────
+  bool validate() {
+    for (int i = 0; i < courseSetData.length; i++) {
+      final s = courseSetData[i];
+
+      if (s.lat == null || s.lng == null) {
+        scrollToSet(i);
+        highlightList[i] = true;
+        notifyListeners();
+        Future.delayed(const Duration(milliseconds: 600), () {
+          highlightList[i] = false;
+          notifyListeners();
+        });
+        _showMessage("세트 ${i + 1}: 위치검색을 해주세요.");
+        return false;
+      }
+
+      if (s.description == null || s.description!.trim().isEmpty) {
+        scrollToSet(i);
+        highlightList[i] = true;
+        notifyListeners();
+        Future.delayed(const Duration(milliseconds: 600), () {
+          highlightList[i] = false;
+          notifyListeners();
+        });
+        _showMessage("세트 ${i + 1}: 설명을 입력해주세요.");
+        return false;
+      }
+
+      if (s.tagId == null) {
+        scrollToSet(i);
+        highlightList[i] = true;
+        notifyListeners();
+        Future.delayed(const Duration(milliseconds: 600), () {
+          highlightList[i] = false;
+          notifyListeners();
+        });
+        _showMessage("세트 ${i + 1}: 태그를 선택해주세요.");
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // ─────────────────────────────────────────────
+  // SET 관리
+  // ─────────────────────────────────────────────
   void addSet() {
     courseSetData.add(CourseSetData());
     highlightList.add(false);
@@ -321,7 +384,6 @@ class EditCourseViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // DELETE SET
   Future<void> removeLastSet() async {
     final index = courseSetData.length - 1;
 
@@ -343,7 +405,9 @@ class EditCourseViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // DELETE IMAGE FROM STORAGE
+  // ─────────────────────────────────────────────
+  // DELETE IMAGE
+  // ─────────────────────────────────────────────
   Future<void> _deleteImageFromStorage(String publicUrl) async {
     if (publicUrl == "null" || publicUrl.isEmpty) return;
 
@@ -359,7 +423,9 @@ class EditCourseViewModel extends ChangeNotifier {
     ]);
   }
 
+  // ─────────────────────────────────────────────
   // SAVE EDIT
+  // ─────────────────────────────────────────────
   Future<void> saveEdit(BuildContext context) async {
     List<int?> setIds = [];
 
@@ -381,9 +447,16 @@ class EditCourseViewModel extends ChangeNotifier {
 
       List<String> uploaded = [];
       for (final f in set.images) {
-        final uploadedUrl = await CourseDataSource.instance
-            .uploadCourseSetImage(f);
-        if (uploadedUrl != null) uploaded.add(uploadedUrl);
+        File fileToUpload = f;
+
+        if (fileToUpload.path.toLowerCase().endsWith(".heic")) {
+          fileToUpload = await convertHeicToJpg(fileToUpload);
+        }
+
+        final u = await CourseDataSource.instance.uploadCourseSetImage(
+          fileToUpload,
+        );
+        if (u != null) uploaded.add(u);
       }
 
       final finalImages = [...current, ...uploaded];
@@ -425,12 +498,10 @@ class EditCourseViewModel extends ChangeNotifier {
       }
     }
 
-    // 삭제된 세트 제거
     for (final id in deletedSetIds) {
       await Supabase.instance.client.from("course_sets").delete().eq("id", id);
     }
 
-    // course 업데이트
     await Supabase.instance.client
         .from("courses")
         .update({
@@ -446,7 +517,21 @@ class EditCourseViewModel extends ChangeNotifier {
     if (context.mounted) context.pop(true);
   }
 
+  // ─────────────────────────────────────────────
+  // SAVE 버튼
+  // ─────────────────────────────────────────────
+  Future<void> onPressSave(BuildContext context) async {
+    if (!validate()) return; // 🔥 validate 추가됨
+
+    final ok = await _confirm(context, "해당 내용으로 코스를 수정하시겠습니까?");
+    if (ok) {
+      await saveEdit(context);
+    }
+  }
+
+  // ─────────────────────────────────────────────
   // 뒤로가기 확인
+  // ─────────────────────────────────────────────
   Future<bool> onWillPop(BuildContext context) async {
     final ok = await cancel_confirm(
       context,
@@ -462,81 +547,7 @@ class EditCourseViewModel extends ChangeNotifier {
           barrierDismissible: true,
           useRootNavigator: false,
           builder: (ctx) {
-            return Center(
-              child: Material(
-                color: Colors.transparent,
-                child: Container(
-                  width: 290,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 22,
-                    horizontal: 16,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.warning_amber_rounded,
-                        size: 40,
-                        color: Colors.orange,
-                      ),
-                      const SizedBox(height: 12),
-
-                      // TITLE
-                      Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // 확인 버튼
-                      GestureDetector(
-                        onTap: () => Navigator.pop(ctx, true),
-                        child: Container(
-                          height: 44,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: Colors.orange,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Text(
-                            "확인",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      // 취소 버튼
-                      GestureDetector(
-                        onTap: () => Navigator.pop(ctx, false),
-                        child: Container(
-                          height: 40,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: Color(0xFFF2F2F2),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const Text("취소"),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
+            return _confirmDialog(title, ctx, Icons.warning_amber_rounded);
           },
         ) ??
         false;
@@ -548,86 +559,92 @@ class EditCourseViewModel extends ChangeNotifier {
           barrierDismissible: true,
           useRootNavigator: false,
           builder: (ctx) {
-            return Center(
-              child: Material(
-                color: Colors.transparent,
-                child: Container(
-                  width: 290,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 22,
-                    horizontal: 16,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.edit, size: 40, color: Colors.orange),
-                      const SizedBox(height: 12),
-
-                      // TITLE
-                      Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // 확인 버튼
-                      GestureDetector(
-                        onTap: () => Navigator.pop(ctx, true),
-                        child: Container(
-                          height: 44,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: Colors.orange,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Text(
-                            "확인",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      // 취소 버튼
-                      GestureDetector(
-                        onTap: () => Navigator.pop(ctx, false),
-                        child: Container(
-                          height: 40,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: Color(0xFFF2F2F2),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const Text("취소"),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
+            return _confirmDialog(title, ctx, Icons.edit);
           },
         ) ??
         false;
   }
 
-  Future<void> onPressSave(BuildContext context) async {
-    final ok = await _confirm(context, "해당 내용으로 코스를 수정하시겠습니까?");
-    if (ok) {
-      await saveEdit(context);
+  Widget _confirmDialog(String title, BuildContext ctx, IconData icon) {
+    return Center(
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          width: 290,
+          padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 40, color: Colors.orange),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: () => Navigator.pop(ctx, true),
+                child: Container(
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.orange,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    "확인",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: () => Navigator.pop(ctx, false),
+                child: Container(
+                  height: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Color(0xFFF2F2F2),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Text("취소"),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<File> convertHeicToJpg(File heicFile) async {
+    try {
+      final bytes = await heicFile.readAsBytes();
+      final decoded = await decodeImageFromList(bytes);
+
+      final byteData = await decoded.toByteData(format: ImageByteFormat.png);
+      if (byteData == null) return heicFile;
+
+      final jpgBytes = byteData.buffer.asUint8List();
+      final newPath = heicFile.path.replaceAll(".heic", ".jpg");
+      final newFile = File(newPath);
+
+      await newFile.writeAsBytes(jpgBytes);
+      return newFile;
+    } catch (e) {
+      debugPrint("❌ HEIC 변환 실패 → 원본 업로드: $e");
+      return heicFile;
     }
   }
 }

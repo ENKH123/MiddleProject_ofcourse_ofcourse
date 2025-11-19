@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -144,6 +145,25 @@ class WriteCourseSetViewModel extends ChangeNotifier {
     hideSuggestions();
   }
 
+  Future<File> convertHeicToJpg(File heicFile) async {
+    final bytes = await heicFile.readAsBytes();
+
+    // Flutter 자체 HEIC 디코더 없음 → 이미지 라이브러리로 변환
+    final decoded = await decodeImageFromList(bytes);
+
+    final picture = await decoded.toByteData(format: ImageByteFormat.png);
+    if (picture == null) return heicFile;
+
+    // JPG로 저장
+    final jpgBytes = picture.buffer.asUint8List();
+
+    final newPath = heicFile.path.replaceAll(".heic", ".jpg");
+    final newFile = File(newPath);
+    await newFile.writeAsBytes(jpgBytes);
+
+    return newFile;
+  }
+
   // 이미지 추가 BottomSheet
   Future<void> addImage(BuildContext context) async {
     showModalBottomSheet(
@@ -177,7 +197,14 @@ class WriteCourseSetViewModel extends ChangeNotifier {
                     source: ImageSource.gallery,
                   );
                   if (xFile != null) {
-                    images.add(File(xFile.path));
+                    File f = File(xFile.path);
+
+                    // HEIC 변환
+                    if (f.path.toLowerCase().endsWith(".heic")) {
+                      f = await convertHeicToJpg(f);
+                    }
+
+                    images.add(f);
                     onImagesChanged?.call(images);
                     notifyListeners();
                   }

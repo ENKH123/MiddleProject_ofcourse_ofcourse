@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:of_course/core/models/tag_color_model.dart';
 import 'package:of_course/feature/course/models/course_detail_models.dart';
@@ -74,6 +75,7 @@ class _SetCard extends StatelessWidget {
                   children: set.setImages.asMap().entries.map((entry) {
                     final index = entry.key;
                     final url = entry.value;
+
                     return Expanded(
                       child: GestureDetector(
                         onTap: () => onImageTap(url),
@@ -86,11 +88,36 @@ class _SetCard extends StatelessWidget {
                             child: SizedBox(
                               width: double.infinity,
                               height: 150,
-                              child: Image.network(
-                                url,
+                              child: CachedNetworkImage(
+                                imageUrl: url,
                                 fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: 150,
+
+                                // 🔵 로딩 표시
+                                progressIndicatorBuilder:
+                                    (context, url, progress) => Container(
+                                      width: double.infinity,
+                                      height: 150,
+                                      color: Colors.grey[200],
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          value: progress.progress,
+                                        ),
+                                      ),
+                                    ),
+
+                                // 🔴 에러 위젯
+                                errorWidget: (context, url, error) {
+                                  debugPrint("❌ IMAGE ERROR: $url | $error");
+                                  return Container(
+                                    width: double.infinity,
+                                    height: 150,
+                                    color: Colors.grey[300],
+                                    child: const Icon(
+                                      Icons.error,
+                                      color: Colors.red,
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ),
@@ -100,6 +127,7 @@ class _SetCard extends StatelessWidget {
                   }).toList(),
                 ),
               ),
+
             const SizedBox(height: 16),
             if (set.setAddress.isNotEmpty)
               GestureDetector(
