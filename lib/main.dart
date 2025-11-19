@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:of_course/core/app_theme.dart';
@@ -12,7 +14,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/providers/auth_provider.dart';
 
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    final client = super.createHttpClient(context);
+    client.badCertificateCallback = (cert, host, port) => true;
+    return client;
+  }
+}
+
 Future<void> main() async {
+  HttpOverrides.global = MyHttpOverrides();
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseManager.initialize();
   await FlutterNaverMap().init(

@@ -49,6 +49,7 @@ class _EditCourseView extends StatelessWidget {
               children: [
                 TextField(
                   controller: vm.titleController,
+                  maxLength: 20,
                   decoration: const InputDecoration(hintText: "코스 제목"),
                 ),
                 const SizedBox(height: 16),

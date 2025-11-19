@@ -57,6 +57,7 @@ class _WriteCourseView extends StatelessWidget {
                     // 제목
                     TextField(
                       controller: vm.titleController,
+                      maxLength: 20,
                       decoration: InputDecoration(
                         hintText: '코스 제목',
                         border: OutlineInputBorder(

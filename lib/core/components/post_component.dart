@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:of_course/core/models/tag_color_model.dart';
 
@@ -75,11 +76,30 @@ class PostCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                           child: url == null
                               ? const SizedBox.shrink()
-                              : Image.network(
-                                  url,
+                              : CachedNetworkImage(
+                                  imageUrl: url,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
-                                      Container(color: Colors.grey[300]),
+                                  progressIndicatorBuilder:
+                                      (context, url, progress) => Container(
+                                        width: double.infinity,
+                                        height: 100,
+                                        color: Colors.grey[200],
+                                        child: Center(
+                                          child: CircularProgressIndicator(
+                                            value: progress.progress,
+                                          ),
+                                        ),
+                                      ),
+                                  errorWidget: (_, __, error) {
+                                    debugPrint("❌ IMAGE ERROR: $url | $error");
+                                    return Container(
+                                      color: Colors.grey[300],
+                                      child: const Icon(
+                                        Icons.error,
+                                        color: Colors.red,
+                                      ),
+                                    );
+                                  },
                                 ),
                         ),
                       ),
