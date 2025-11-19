@@ -59,7 +59,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   Future<void> _handleToggleLike() async {
-    // context를 async 전에 사용해서 messenger를 만들어둠
     final messenger = ScaffoldMessenger.of(context);
 
     try {
@@ -78,7 +77,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   Future<void> _handleSubmitComment(String commentText) async {
-    // 마찬가지로 messenger를 먼저 만들어둔다
     final messenger = ScaffoldMessenger.of(context);
 
     try {
