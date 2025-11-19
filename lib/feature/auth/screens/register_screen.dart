@@ -48,10 +48,7 @@ class _RegisterScreen extends StatelessWidget {
                             ),
                           ),
                           ProfileImage(viewmodel: viewmodel),
-                          NicknameTextField(
-                            controller: viewmodel.controller,
-                            onChanged: viewmodel.updatedNickname,
-                          ),
+                          NicknameTextField(viewModel: viewmodel),
                         ],
                       ),
                     ),
@@ -223,12 +220,11 @@ class CompleteButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<RegisterViewModel>(
       builder: (context, viewmodel, child) {
-        final bool isEnabled = viewmodel.isNicknameValid;
         return SizedBox(
           width: double.maxFinite,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(),
-            onPressed: isEnabled
+            onPressed: viewmodel.isNicknameValid
                 ? () async {
                     showFullScreenLoading(context);
                     final RegisterResult rgResult = await viewmodel.isSucceed();
@@ -250,13 +246,8 @@ class CompleteButton extends StatelessWidget {
 }
 
 class NicknameTextField extends StatelessWidget {
-  final TextEditingController controller;
-  final void Function(String)? onChanged;
-  const NicknameTextField({
-    super.key,
-    required this.controller,
-    this.onChanged,
-  });
+  final RegisterViewModel viewModel;
+  const NicknameTextField({super.key, required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
@@ -271,17 +262,22 @@ class NicknameTextField extends StatelessWidget {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           TextField(
-            controller: controller,
-            onChanged: onChanged,
+            controller: viewModel.controller,
+            onChanged: viewModel.updatedNickname,
+            maxLines: 1,
+            maxLength: 10,
+
             decoration: InputDecoration(
-              hintText: 'Enter your nickname',
+              labelText: '2 ~ 10자 사이로 입력해주세요',
+              labelStyle: viewModel.isNicknameValid
+                  ? null
+                  : TextStyle(color: Colors.redAccent),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10.0)),
                 // 텍스트 필드 테두리
-                // borderSide: BorderSide(
-                //   width: 1,
-                //   color: Colors.redAccent,
-                // ),
+                borderSide: viewModel.isNicknameValid
+                    ? BorderSide(width: 1)
+                    : BorderSide(width: 1, color: Colors.redAccent),
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10.0)),
