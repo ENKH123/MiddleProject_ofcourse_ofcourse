@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/data/core_data_source.dart';
 import 'package:of_course/core/models/supabase_user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -26,7 +26,7 @@ class ChangeProfileViewModel extends ChangeNotifier {
 
     final email = supabase.auth.currentUser?.email;
     if (email != null) {
-      user = await SupabaseManager.shared.fetchPublicUser(email);
+      user = await CoreDataSource.instance.fetchPublicUser(email);
     }
 
     nickname = user?.nickname ?? '';

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/data/core_data_source.dart';
+import 'package:of_course/feature/course/data/course_data_source.dart';
 import 'package:of_course/feature/course/models/course_detail_models.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CourseDetailViewModel extends ChangeNotifier {
   CourseDetail? _courseDetail;
@@ -34,7 +36,7 @@ class CourseDetailViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final data = await SupabaseManager.shared.getCourseDetail(
+      final data = await CourseDataSource.instance.getCourseDetail(
         courseId,
         userId,
       );
@@ -53,16 +55,18 @@ class CourseDetailViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
 
-      _loadLikeInfo().then((likeInfo) {
-        _isLiked = likeInfo['isLiked'] as bool;
-        _likeCount = likeInfo['likeCount'] as int;
-        notifyListeners();
-      }).catchError((e) {
-        debugPrint('좋아요 정보 로드 오류: $e');
-        _isLiked = false;
-        _likeCount = 0;
-        notifyListeners();
-      });
+      _loadLikeInfo()
+          .then((likeInfo) {
+            _isLiked = likeInfo['isLiked'] as bool;
+            _likeCount = likeInfo['likeCount'] as int;
+            notifyListeners();
+          })
+          .catchError((e) {
+            debugPrint('좋아요 정보 로드 오류: $e');
+            _isLiked = false;
+            _likeCount = 0;
+            notifyListeners();
+          });
     } catch (e, st) {
       debugPrint('코스 디테일 로드 오류: $e');
       debugPrint('스택 트레이스: $st');
@@ -77,7 +81,7 @@ class CourseDetailViewModel extends ChangeNotifier {
 
   Future<Map<String, dynamic>> _loadLikeInfo() async {
     try {
-      final supabase = SupabaseManager.shared.supabase;
+      final supabase = Supabase.instance.client;
 
       final likedCourses = await supabase
           .from('liked_courses')
@@ -100,13 +104,13 @@ class CourseDetailViewModel extends ChangeNotifier {
   }
 
   Future<void> toggleLike() async {
-    final userRowId = await SupabaseManager.shared.getMyUserRowId();
+    final userRowId = await CoreDataSource.instance.getMyUserRowId();
     if (userRowId == null) {
       throw Exception('로그인이 필요합니다.');
     }
 
     try {
-      final supabase = SupabaseManager.shared.supabase;
+      final supabase = Supabase.instance.client;
 
       if (_isLiked) {
         await supabase
@@ -132,21 +136,21 @@ class CourseDetailViewModel extends ChangeNotifier {
   }
 
   Future<void> submitComment(String commentText) async {
-    final userRowId = await SupabaseManager.shared.getMyUserRowId();
+    final userRowId = await CoreDataSource.instance.getMyUserRowId();
     if (userRowId == null) {
       throw Exception('로그인이 필요합니다.');
     }
 
     try {
-      final supabase = SupabaseManager.shared.supabase;
+      final supabase = Supabase.instance.client;
 
       final response = await supabase
           .from('comments')
           .insert({
-        'course_id': courseId,
-        'user_id': userRowId,
-        'comment': commentText,
-      })
+            'course_id': courseId,
+            'user_id': userRowId,
+            'comment': commentText,
+          })
           .select('''
         *,
         user:users!comments_user_id_fkey(nickname, profile_img)
@@ -174,8 +178,7 @@ class CourseDetailViewModel extends ChangeNotifier {
 
   Future<void> deleteComment(String commentId) async {
     try {
-      final supabase = SupabaseManager.shared.supabase;
-
+      final supabase = Supabase.instance.client;
       await supabase
           .from('comments')
           .update({'deleted_at': DateTime.now().toIso8601String()})
@@ -193,7 +196,7 @@ class CourseDetailViewModel extends ChangeNotifier {
 
   Future<void> deleteCourse() async {
     try {
-      final supabase = SupabaseManager.shared.supabase;
+      final supabase = Supabase.instance.client;
 
       final courseData = await supabase
           .from('courses')
@@ -226,8 +229,8 @@ class CourseDetailViewModel extends ChangeNotifier {
         final imageUrls = [set['img_01'], set['img_02'], set['img_03']]
             .where(
               (url) =>
-          url != null && url != "null" && url.toString().isNotEmpty,
-        )
+                  url != null && url != "null" && url.toString().isNotEmpty,
+            )
             .toList();
 
         for (final url in imageUrls) {

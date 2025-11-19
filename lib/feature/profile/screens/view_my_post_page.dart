@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:of_course/core/components/post_component.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/data/core_data_source.dart';
 import 'package:of_course/feature/profile/viewmodels/view_my_post_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -39,7 +39,7 @@ class _ViewMyPostView extends StatelessWidget {
               tags: course['tags'],
               imageUrls: course['images'],
               onTap: () async {
-                final myUserId = await SupabaseManager.shared.getMyUserRowId();
+                final myUserId = await CoreDataSource.instance.getMyUserRowId();
                 if (myUserId == null) return;
 
                 final updated = await context.push(

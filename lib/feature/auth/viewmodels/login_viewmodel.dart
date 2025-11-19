@@ -45,18 +45,14 @@ class LoginViewModel extends ChangeNotifier {
   Future<void> finishOnboarding() async {
     await _prefs.setBool('onboarding', true);
     _onboarding = true;
-    print('Onboarding finished: $_onboarding');
     notifyListeners();
   }
 
   // 데이터를 로드하는 함수
   Future<void> _isFinished() async {
     final data = _prefs.getBool('onboarding');
-    print(data);
     _onboarding = data ?? false;
-    print(data);
     notifyListeners();
-    print(data);
   }
 
   void isDialogType(DialogType type) {

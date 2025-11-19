@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/data/core_data_source.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../utils/recommendation_parser.dart';
 
 class CourseRecommendScreen extends StatefulWidget {
@@ -39,7 +41,7 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
     });
 
     try {
-      final userRowId = await SupabaseManager.shared.getMyUserRowId();
+      final userRowId = await CoreDataSource.instance.getMyUserRowId();
       if (userRowId == null) {
         setState(() {
           _isLoading = false;
@@ -48,11 +50,9 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
         return;
       }
 
-      final response = await SupabaseManager.shared.supabase.functions.invoke(
+      final response = await Supabase.instance.client.functions.invoke(
         'smart-task',
-        body: {
-          'user_id': userRowId,
-        },
+        body: {'user_id': userRowId},
       );
 
       debugPrint('엣지 펑션 전체 응답: $response');
@@ -76,9 +76,7 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
         responseData = Map<String, dynamic>.from(rawData);
       } else if (rawData is String) {
         try {
-          responseData = Map<String, dynamic>.from(
-            jsonDecode(rawData) as Map,
-          );
+          responseData = Map<String, dynamic>.from(jsonDecode(rawData) as Map);
         } catch (e) {
           debugPrint('JSON 파싱 오류: $e');
           setState(() {
@@ -98,8 +96,9 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
 
       debugPrint('파싱된 응답 데이터: $responseData');
 
-      final parsedData =
-      RecommendationParser.parseFirstRecommendation(responseData);
+      final parsedData = RecommendationParser.parseFirstRecommendation(
+        responseData,
+      );
 
       if (parsedData == null) {
         setState(() {
@@ -128,7 +127,7 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
   }
 
   void _navigateToDetail(int courseId) async {
-    final userRowId = await SupabaseManager.shared.getMyUserRowId();
+    final userRowId = await CoreDataSource.instance.getMyUserRowId();
     if (context.mounted) {
       context.push(
         '/detail',
@@ -175,123 +174,119 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
             ? const Center(child: CircularProgressIndicator())
             : _errorMessage != null
             ? Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.red),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: _spacingMedium),
-              ElevatedButton(
-                onPressed: _loadRecommendation,
-                child: const Text('다시 시도'),
-              ),
-            ],
-          ),
-        )
-            : SingleChildScrollView(
-          padding: const EdgeInsets.all(_spacingMedium),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(_spacingMedium),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(_borderRadius),
-                  border: Border.all(color: Colors.grey[300]!),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: _spacingMedium),
+                    ElevatedButton(
+                      onPressed: _loadRecommendation,
+                      child: const Text('다시 시도'),
+                    ),
+                  ],
                 ),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(_spacingMedium),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.lightbulb_outline,
-                          color: _mainColor,
-                          size: 24,
-                        ),
-                        const SizedBox(width: _spacingSmall),
-                        const Text(
-                          '코스 추천 사유',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(_spacingMedium),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(_borderRadius),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.lightbulb_outline,
+                                color: _mainColor,
+                                size: 24,
+                              ),
+                              const SizedBox(width: _spacingSmall),
+                              const Text(
+                                '코스 추천 사유',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: _spacingMedium),
+                          if (_recommendationReason != null)
+                            Text(
+                              _recommendationReason!,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[700],
+                                height: 1.5,
+                              ),
+                            )
+                          else
+                            const Text(
+                              '추천 사유를 불러올 수 없습니다.',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: _spacingMedium),
-                    if (_recommendationReason != null)
-                      Text(
-                        _recommendationReason!,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
-                          height: 1.5,
+                    const SizedBox(height: _spacingLarge), // 여기 간격 크게
+                    if (_recommendedCourseId != null)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () =>
+                              _navigateToDetail(_recommendedCourseId!),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _mainColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                _borderRadius,
+                              ),
+                            ),
+                          ),
+                          child: const Text(
+                            '추천 코스 상세 보기',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       )
                     else
-                      const Text(
-                        '추천 사유를 불러올 수 없습니다.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(_spacingMedium),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(_borderRadius),
+                        ),
+                        child: const Text(
+                          '추천할 코스가 없습니다.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                       ),
                   ],
                 ),
               ),
-              const SizedBox(height: _spacingLarge), // 여기 간격 크게
-              if (_recommendedCourseId != null)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () =>
-                        _navigateToDetail(_recommendedCourseId!),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _mainColor,
-                      foregroundColor: Colors.white,
-                      padding:
-                      const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius.circular(_borderRadius),
-                      ),
-                    ),
-                    child: const Text(
-                      '추천 코스 상세 보기',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                )
-              else
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(_spacingMedium),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius:
-                    BorderRadius.circular(_borderRadius),
-                  ),
-                  child: const Text(
-                    '추천할 코스가 없습니다.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
       ),
     );
   }

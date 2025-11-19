@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/data/core_data_source.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
+import 'package:of_course/feature/course/data/course_data_source.dart';
 import 'package:of_course/feature/course/models/course_set_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditCourseViewModel extends ChangeNotifier {
   final int courseId;
@@ -38,7 +40,7 @@ class EditCourseViewModel extends ChangeNotifier {
 
   // INIT
   Future<void> init() async {
-    tagList = await SupabaseManager.shared.getTags();
+    tagList = await CoreDataSource.instance.getTags();
     await _loadCourse();
     notifyListeners();
   }
@@ -47,7 +49,7 @@ class EditCourseViewModel extends ChangeNotifier {
   // LOAD COURSE
   // ─────────────────────────────────────────────
   Future<void> _loadCourse() async {
-    final data = await SupabaseManager.shared.getCourseForEdit(courseId);
+    final data = await CourseDataSource.instance.getCourseForEdit(courseId);
     if (data == null) return;
 
     titleController.text = data['title'];
@@ -173,14 +175,62 @@ class EditCourseViewModel extends ChangeNotifier {
     return null;
   }
 
+  Future<String?> _reverseGeocode(double lat, double lng) async {
+    try {
+      final url = Uri.parse(
+        'https://maps.apigw.ntruss.com/map-reversegeocode/v2/gc?request=coordsToaddr&coords=$lng,$lat&sourcecrs=epsg:4326&orders=admcode,legalcode,addr,roadaddr&output=json',
+      );
+
+      final response = await http.get(
+        url,
+        headers: {
+          'Accept': 'application/json',
+          'X-NCP-APIGW-API-KEY-ID': _naverId,
+          'X-NCP-APIGW-API-KEY': _naverSecret,
+        },
+      );
+
+      final json = jsonDecode(response.body);
+
+      if (json['results'] == null || json['results'].isEmpty) {
+        return null;
+      }
+
+      final region = json['results'][0]['region'];
+
+      final area2 = region['area2']?['name'];
+
+      return area2;
+    } catch (e, st) {
+      debugPrint("❌ Reverse geocode error: $e\n$st");
+      return null;
+    }
+  }
+
   Future<void> onSearch(int index, String query) async {
     NLatLng? loc = await _getLatLngFromAddress(query);
-    loc ??= await _getLatLngFromKakao(query);
-    if (loc == null) return;
 
+    if (loc == null) {
+      loc = await _getLatLngFromKakao(query);
+    }
+
+    if (loc == null) {
+      return;
+    }
+
+    // 저장
     courseSetData[index].query = query;
     courseSetData[index].lat = loc.latitude;
     courseSetData[index].lng = loc.longitude;
+
+    final guName = await _reverseGeocode(loc.latitude, loc.longitude);
+    debugPrint("🔄 ReverseGeocode 결과: $guName");
+
+    if (guName != null) {
+      final guId = await CourseDataSource.instance.getGuIdFromName(guName);
+
+      courseSetData[index].gu = guId;
+    }
 
     await _removeMarkerIfExists(index);
 
@@ -192,6 +242,8 @@ class EditCourseViewModel extends ChangeNotifier {
     await mapController?.updateCamera(
       NCameraUpdate.scrollAndZoomTo(target: loc, zoom: 15),
     );
+
+    debugPrint("✅ onSearch 완료(index: $index)\n");
 
     notifyListeners();
   }
@@ -302,9 +354,9 @@ class EditCourseViewModel extends ChangeNotifier {
 
     final filePath = publicUrl.substring(base.length);
 
-    await SupabaseManager.shared.supabase.storage
-        .from("course_set_image")
-        .remove([filePath]);
+    await Supabase.instance.client.storage.from("course_set_image").remove([
+      filePath,
+    ]);
   }
 
   // SAVE EDIT
@@ -329,9 +381,8 @@ class EditCourseViewModel extends ChangeNotifier {
 
       List<String> uploaded = [];
       for (final f in set.images) {
-        final uploadedUrl = await SupabaseManager.shared.uploadCourseSetImage(
-          f,
-        );
+        final uploadedUrl = await CourseDataSource.instance
+            .uploadCourseSetImage(f);
         if (uploadedUrl != null) uploaded.add(uploadedUrl);
       }
 
@@ -342,7 +393,7 @@ class EditCourseViewModel extends ChangeNotifier {
       String? img3 = finalImages.length > 2 ? finalImages[2] : null;
 
       if (oldId != null) {
-        await SupabaseManager.shared.supabase
+        await Supabase.instance.client
             .from("course_sets")
             .update({
               'img_01': img1,
@@ -359,7 +410,7 @@ class EditCourseViewModel extends ChangeNotifier {
 
         setIds.add(oldId);
       } else {
-        final newId = await SupabaseManager.shared.insertCourseSet(
+        final newId = await CourseDataSource.instance.insertCourseSet(
           img1: img1,
           img2: img2,
           img3: img3,
@@ -376,14 +427,11 @@ class EditCourseViewModel extends ChangeNotifier {
 
     // 삭제된 세트 제거
     for (final id in deletedSetIds) {
-      await SupabaseManager.shared.supabase
-          .from("course_sets")
-          .delete()
-          .eq("id", id);
+      await Supabase.instance.client.from("course_sets").delete().eq("id", id);
     }
 
     // course 업데이트
-    await SupabaseManager.shared.supabase
+    await Supabase.instance.client
         .from("courses")
         .update({
           'title': titleController.text,
