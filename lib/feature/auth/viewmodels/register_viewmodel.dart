@@ -27,8 +27,11 @@ class RegisterViewModel extends ChangeNotifier {
   String editorText = "";
 
   // 닉네임 2글자 이상
-  bool _isNicknameValid = true;
-  bool get isNicknameValid => _isNicknameValid;
+  bool _isNicknameFieldValid = true;
+  bool get isNicknameFieldValid => _isNicknameFieldValid;
+
+  bool _isNicknameButtonValid = false;
+  bool get isNicknameButtonValid => _isNicknameButtonValid;
 
   final int _minNicknameLength = 2;
   int get minNicknameLength => _minNicknameLength;
@@ -105,9 +108,13 @@ class RegisterViewModel extends ChangeNotifier {
 
   // 닉네임 2글자 이상 체크
   void updatedNickname(String value) {
-    _isNicknameValid =
+    final isTrue =
         value.length >= _minNicknameLength &&
         value.length <= _maxNicknameLength;
+
+    _isNicknameFieldValid = isTrue;
+    _isNicknameButtonValid = isTrue;
+
     notifyListeners();
   }
 
