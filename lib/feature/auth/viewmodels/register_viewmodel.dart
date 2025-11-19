@@ -15,7 +15,7 @@ enum ProfilePickResult { camera, album }
 
 class RegisterViewModel extends ChangeNotifier {
   // 로그인 뷰모델 주입
-  LoginViewModel _loginViewModel;
+  final LoginViewModel _loginViewModel;
 
   RegisterViewModel(BuildContext context)
     : _loginViewModel = context.read<LoginViewModel>();
@@ -27,11 +27,16 @@ class RegisterViewModel extends ChangeNotifier {
   String editorText = "";
 
   // 닉네임 2글자 이상
-  bool _isNicknameValid = false;
+  bool _isNicknameValid = true;
   bool get isNicknameValid => _isNicknameValid;
 
+  final int _minNicknameLength = 2;
+  int get minNicknameLength => _minNicknameLength;
+
+  final int _maxNicknameLength = 10;
+  int get maxNicknameLength => _maxNicknameLength;
   // 이미지 피커
-  ImagePicker _picker = ImagePicker();
+  final ImagePicker _picker = ImagePicker();
   ImagePicker get picker => _picker;
 
   // 선택된 프로필 사진
@@ -100,7 +105,9 @@ class RegisterViewModel extends ChangeNotifier {
 
   // 닉네임 2글자 이상 체크
   void updatedNickname(String value) {
-    _isNicknameValid = value.length >= 2;
+    _isNicknameValid =
+        value.length >= _minNicknameLength &&
+        value.length <= _maxNicknameLength;
     notifyListeners();
   }
 
