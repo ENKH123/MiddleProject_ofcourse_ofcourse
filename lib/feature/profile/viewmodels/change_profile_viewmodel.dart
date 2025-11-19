@@ -19,6 +19,23 @@ class ChangeProfileViewModel extends ChangeNotifier {
   bool isLoading = false;
   bool isSaving = false;
 
+  String _initialNickname = '';
+  String? _initialProfileImageUrl;
+  String? _initialOldStoragePath;
+
+  void setNickname(String value) {
+    // 띄어쓰기 제거
+    final noSpace = value.replaceAll(' ', '');
+    nickname = noSpace;
+    notifyListeners();
+  }
+
+  bool get isNicknameTooLong => nickname.length > 10;
+  bool get isNicknameEmpty => nickname.trim().isEmpty;
+
+  // 버튼 활성화 여부
+  bool get canSave => !isSaving && !isNicknameEmpty && !isNicknameTooLong;
+
   // 유저 정보 불러오기
   Future<void> loadUser() async {
     isLoading = true;
@@ -51,13 +68,15 @@ class ChangeProfileViewModel extends ChangeNotifier {
       oldStoragePath = null;
     }
 
+    // 여기서 초기 상태 백업
+    _initialNickname = nickname;
+    _initialProfileImageUrl = profileImageUrl;
+    _initialOldStoragePath = oldStoragePath;
+    isDeleted = false;
+    newImageFile = null;
+
     isLoading = false;
     notifyListeners();
-  }
-
-  void setNickname(String value) {
-    nickname = value;
-    // 필요하면 notifyListeners(); (실시간 반영 원하면)
   }
 
   void pickNewImage(File file) {
@@ -73,6 +92,27 @@ class ChangeProfileViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // 변경사항 여부
+  bool get hasChanges {
+    final nicknameChanged = nickname != _initialNickname;
+    final imageChanged =
+        isDeleted ||
+        newImageFile != null ||
+        profileImageUrl != _initialProfileImageUrl;
+
+    return nicknameChanged || imageChanged;
+  }
+
+  // 변경사항 되돌리기
+  void resetChanges() {
+    nickname = _initialNickname;
+    profileImageUrl = _initialProfileImageUrl;
+    oldStoragePath = _initialOldStoragePath;
+    newImageFile = null;
+    isDeleted = false;
+    notifyListeners();
+  }
+
   Future<bool> save() async {
     if (user == null) return false;
 
@@ -82,7 +122,7 @@ class ChangeProfileViewModel extends ChangeNotifier {
     String? newStoragePath;
     String? newPublicUrl;
 
-    // 새 이미지 업로드
+    // 1) 새 이미지 업로드
     if (newImageFile != null) {
       final email = user!.email;
       final ext = newImageFile!.path.split('.').last;
@@ -98,7 +138,7 @@ class ChangeProfileViewModel extends ChangeNotifier {
           .getPublicUrl(newStoragePath);
     }
 
-    // 이전 이미지 삭제 (새 이미지 선택 또는 삭제한 경우)
+    // 2) 이전 이미지 삭제 (새 이미지 선택 또는 삭제한 경우)
     if ((newImageFile != null || isDeleted) && oldStoragePath != null) {
       await supabase.storage.from('profile').remove([oldStoragePath!]);
     }
@@ -113,6 +153,25 @@ class ChangeProfileViewModel extends ChangeNotifier {
     }
 
     await supabase.from('users').update(updateData).eq('id', user!.id);
+
+    final currentProfileUrl = isDeleted
+        ? null
+        : (newPublicUrl ?? profileImageUrl);
+
+    profileImageUrl = currentProfileUrl;
+
+    // storage path 갱신
+    if (newStoragePath != null) {
+      oldStoragePath = newStoragePath;
+    } else if (isDeleted) {
+      oldStoragePath = null;
+    }
+    // 새 기준으로 초기 상태 다시 세팅
+    _initialNickname = nickname.trim();
+    _initialProfileImageUrl = profileImageUrl;
+    _initialOldStoragePath = oldStoragePath;
+    isDeleted = false;
+    newImageFile = null;
 
     isSaving = false;
     notifyListeners();
