@@ -1,11 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-
 import 'package:go_router/go_router.dart';
-
 import 'package:of_course/core/managers/supabase_manager.dart';
-
 import 'package:of_course/feature/course/utils/recommendation_parser.dart';
 
 class RecommendOnboardingScreen extends StatefulWidget {
@@ -59,7 +56,6 @@ class _RecommendOnboardingScreenState extends State<RecommendOnboardingScreen>
     String? userId;
 
     try {
-      // 맞춤형 추천 로딩 시도
       userId = await SupabaseManager.shared.getMyUserRowId();
 
       if (userId != null) {
@@ -103,17 +99,14 @@ class _RecommendOnboardingScreenState extends State<RecommendOnboardingScreen>
           }
         } catch (e) {
           debugPrint('맞춤형 추천 로딩 오류 (무시): $e');
-          // 추천 로딩 실패해도 계속 진행
         }
       }
 
-      // 최소 2초는 표시 (너무 빠르게 넘어가지 않도록)
       await Future.delayed(const Duration(seconds: 2));
 
       if (mounted) {
-        // 코스 ID가 있으면 상세 화면으로, 없으면 추천 화면으로
         if (courseId != null && userId != null) {
-          context.push(
+          context.pushReplacement(
             '/detail',
             extra: {
               'courseId': courseId,
@@ -122,14 +115,12 @@ class _RecommendOnboardingScreenState extends State<RecommendOnboardingScreen>
             },
           );
         } else {
-          // 추천 데이터를 가져오지 못한 경우 추천 화면으로
           context.go('/recommend');
         }
       }
     } catch (e) {
       debugPrint('온보딩 오류: $e');
       if (mounted) {
-        // 오류 발생 시 추천 화면으로
         context.go('/recommend');
       }
     }
@@ -138,15 +129,12 @@ class _RecommendOnboardingScreenState extends State<RecommendOnboardingScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? const Color(0xFF002245)
-        : const Color(0xFFFAFAFA);
-    final textColor = isDark
-        ? const Color(0xFFFAFAFA)
-        : const Color(0xFF030303);
-    final primaryColor = isDark
-        ? const Color(0xFFC5D5E4)
-        : const Color(0xFF003366);
+    final backgroundColor =
+    isDark ? const Color(0xFF002245) : const Color(0xFFFAFAFA);
+    final textColor =
+    isDark ? const Color(0xFFFAFAFA) : const Color(0xFF030303);
+    final primaryColor =
+    isDark ? const Color(0xFFC5D5E4) : const Color(0xFF003366);
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -159,7 +147,6 @@ class _RecommendOnboardingScreenState extends State<RecommendOnboardingScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // 앱 로고
                   Image.asset(
                     'assets/appLogo.png',
                     width: 200,
@@ -167,7 +154,6 @@ class _RecommendOnboardingScreenState extends State<RecommendOnboardingScreen>
                   ),
                   const SizedBox(height: 48),
 
-                  // 로딩 인디케이터
                   SizedBox(
                     width: 40,
                     height: 40,
@@ -178,7 +164,6 @@ class _RecommendOnboardingScreenState extends State<RecommendOnboardingScreen>
                   ),
                   const SizedBox(height: 32),
 
-                  // 메시지
                   Text(
                     '맞춤형 추천을 준비하고 있어요',
                     style: TextStyle(
@@ -204,4 +189,3 @@ class _RecommendOnboardingScreenState extends State<RecommendOnboardingScreen>
     );
   }
 }
-

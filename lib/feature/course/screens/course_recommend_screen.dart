@@ -24,7 +24,7 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
   static const double _borderRadius = 8.0;
   static const double _spacingSmall = 8.0;
   static const double _spacingMedium = 16.0;
-  static const double _spacingLarge = 32.0; // 간격 조금 더 크게
+  static const double _spacingLarge = 32.0;
 
   @override
   void initState() {
@@ -143,7 +143,6 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
 
   void _goToHome() {
     if (context.mounted) {
-      // 라우팅 히스토리를 완전히 교체하여 홈으로 이동
       context.go('/home');
     }
   }
@@ -245,7 +244,7 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: _spacingLarge), // 여기 간격 크게
+              const SizedBox(height: _spacingLarge),
               if (_recommendedCourseId != null)
                 SizedBox(
                   width: double.infinity,
