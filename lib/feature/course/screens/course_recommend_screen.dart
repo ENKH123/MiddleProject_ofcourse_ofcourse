@@ -15,7 +15,6 @@ class CourseRecommendScreen extends StatefulWidget {
 class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
   bool _isLoading = true;
   String? _errorMessage;
-  Map<String, dynamic>? _recommendationData;
   int? _recommendedCourseId;
   String? _recommendationReason;
 
@@ -113,7 +112,6 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
       debugPrint('코스 ID: ${parsedData['courseId']}');
 
       setState(() {
-        _recommendationData = parsedData;
         _recommendedCourseId = parsedData['courseId'] as int?;
         _recommendationReason = parsedData['reason'] as String?;
         _isLoading = false;
@@ -129,29 +127,28 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
 
   void _navigateToDetail(int courseId) async {
     final userRowId = await SupabaseManager.shared.getMyUserRowId();
-    if (context.mounted) {
-      context.push(
-        '/detail',
-        extra: {
-          'courseId': courseId,
-          'userId': userRowId ?? '',
-          'recommendationReason': _recommendationReason,
-        },
-      );
-    }
+    if (!mounted) return;
+
+    context.push(
+      '/detail',
+      extra: {
+        'courseId': courseId,
+        'userId': userRowId ?? '',
+        'recommendationReason': _recommendationReason,
+      },
+    );
   }
 
   void _goToHome() {
-    if (context.mounted) {
-      context.go('/home');
-    }
+    if (!mounted) return;
+    context.go('/home');
   }
 
   @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (!didPop) {
           _goToHome();
         }
@@ -200,7 +197,8 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
                 padding: const EdgeInsets.all(_spacingMedium),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(_borderRadius),
+                  borderRadius:
+                  BorderRadius.circular(_borderRadius),
                   border: Border.all(color: Colors.grey[300]!),
                 ),
                 child: Column(
