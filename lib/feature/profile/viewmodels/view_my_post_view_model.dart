@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/feature/profile/data/profile_data_source.dart';
 
 class ViewMyPostViewModel extends ChangeNotifier {
-  final SupabaseManager supabase = SupabaseManager.shared;
-
   List<Map<String, dynamic>> myPosts = [];
   String userId;
 
@@ -12,7 +10,7 @@ class ViewMyPostViewModel extends ChangeNotifier {
   }
 
   Future<void> loadMyPosts() async {
-    myPosts = await supabase.getMyCourses(userId);
+    myPosts = await ProfileDataSource.instance.getMyCourses(userId);
     notifyListeners();
   }
 }

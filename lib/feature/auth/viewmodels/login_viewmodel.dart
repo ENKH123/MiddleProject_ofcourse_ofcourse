@@ -2,9 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/data/core_data_source.dart';
 import 'package:of_course/core/models/supabase_user_model.dart';
-import 'package:of_course/core/providers/alert_provider.dart';
+import 'package:of_course/feature/alert/providers/alert_provider.dart';
+import 'package:of_course/feature/auth/data/auth_data_source.dart';
 import 'package:of_course/main.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -102,7 +103,7 @@ class LoginViewModel extends ChangeNotifier {
     // 토큰 발급 과정?
 
     // supabase public 테이블에 _googleUser로 받은 이메일이 있는지 확인
-    userAccount = await SupabaseManager.shared.fetchPublicUser(
+    userAccount = await CoreDataSource.instance.fetchPublicUser(
       _googleUser!.email,
     );
     // supabase public 테이블에 _googleUser로 받은 이메일이 있는지 확인
@@ -125,6 +126,6 @@ class LoginViewModel extends ChangeNotifier {
 
   // 회원탈퇴
   Future<void> resign() async {
-    await SupabaseManager.shared.resign();
+    await AuthDataSource.instance.resign();
   }
 }

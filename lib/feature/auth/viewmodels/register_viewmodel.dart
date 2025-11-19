@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/feature/auth/data/auth_data_source.dart';
 import 'package:of_course/feature/auth/viewmodels/login_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -47,13 +47,13 @@ class RegisterViewModel extends ChangeNotifier {
       String userProfileImage = supabase.storage
           .from('profile')
           .getPublicUrl(filePath);
-      SupabaseManager.shared.createUserProfile(
+      AuthDataSource.instance.createUserProfile(
         _loginViewModel.googleUser?.email ?? "",
         _controller.text,
         userProfileImage,
       );
     } else {
-      SupabaseManager.shared.createUserProfile(
+      AuthDataSource.instance.createUserProfile(
         _loginViewModel.googleUser?.email ?? "",
         _controller.text,
       );
@@ -107,7 +107,7 @@ class RegisterViewModel extends ChangeNotifier {
   // 닉네임 중복 체크
   Future<RegisterResult> isSucceed() async {
     // 닉네임 중복 여부
-    bool nicknameSucceed = await SupabaseManager.shared.isDuplicatedNickname(
+    bool nicknameSucceed = await AuthDataSource.instance.isDuplicatedNickname(
       _controller.text,
     );
     if (nicknameSucceed) {

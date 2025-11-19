@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/data/core_data_source.dart';
 import 'package:of_course/core/models/supabase_user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -30,7 +30,7 @@ class ProfileViewModel extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
 
-    user = await SupabaseManager.shared.fetchPublicUser(email);
+    user = await CoreDataSource.instance.fetchPublicUser(email);
 
     isLoading = false;
     notifyListeners();
