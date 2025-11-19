@@ -335,8 +335,8 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context); // dialog 닫기
-                  Navigator.pop(context); // 화면 닫기
+                  Navigator.pop(context);
+                  Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
