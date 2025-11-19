@@ -1,6 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfileDataSource {
+  ProfileDataSource._();
+  static final ProfileDataSource instance = ProfileDataSource._();
   final supabase = Supabase.instance.client;
 
   Future<List<Map<String, dynamic>>> getMyCourses(String userId) async {

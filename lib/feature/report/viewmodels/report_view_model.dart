@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/feature/report/data/report_data_source.dart';
 
 import '../models/report_models.dart';
 
@@ -82,7 +82,7 @@ class ReportViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await SupabaseManager.shared.submitReport(
+      await ReportDataSource.instance.submitReport(
         targetId: targetId,
         targetType: reportTargetType,
         reportReason: _selectedReason!,

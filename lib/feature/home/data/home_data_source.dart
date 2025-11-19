@@ -1,7 +1,10 @@
+import 'package:of_course/core/data/core_data_source.dart';
 import 'package:of_course/feature/home/models/gu_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomeDataSource {
+  HomeDataSource._();
+  static final HomeDataSource instance = HomeDataSource._();
   final supabase = Supabase.instance.client;
 
   // 구 목록 가져오기
@@ -89,7 +92,7 @@ class HomeDataSource {
       commentCountMap[cid] = (commentCountMap[cid] ?? 0) + 1;
     }
 
-    final userId = await getMyUserRowId();
+    final userId = await CoreDataSource.instance.getMyUserRowId();
     Set<int> likedCourseIds = {};
 
     if (userId != null) {

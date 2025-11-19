@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/data/core_data_source.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
+import 'package:of_course/feature/course/data/course_data_source.dart';
 import 'package:of_course/feature/course/models/course_set_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class WriteCourseViewModel extends ChangeNotifier {
   // ─────────────────────────────────────────────────────────────
@@ -57,7 +59,7 @@ class WriteCourseViewModel extends ChangeNotifier {
   }
 
   Future<void> _loadTags() async {
-    tagList = await SupabaseManager.shared.getTags();
+    tagList = await CoreDataSource.instance.getTags();
   }
 
   bool isUploading = false;
@@ -70,7 +72,7 @@ class WriteCourseViewModel extends ChangeNotifier {
   // Continue 모드 데이터 로드
   // ─────────────────────────────────────────────────────────────
   Future<void> _loadContinueCourse(int courseId) async {
-    final data = await SupabaseManager.shared.getCourseDetailForContinue(
+    final data = await CourseDataSource.instance.getCourseDetailForContinue(
       courseId,
     );
     if (data == null) return;
@@ -214,6 +216,38 @@ class WriteCourseViewModel extends ChangeNotifier {
     return null;
   }
 
+  Future<String?> _reverseGeocode(double lat, double lng) async {
+    try {
+      final url = Uri.parse(
+        'https://maps.apigw.ntruss.com/map-reversegeocode/v2/gc?request=coordsToaddr&coords=$lng,$lat&sourcecrs=epsg:4326&orders=admcode,legalcode,addr,roadaddr&output=json',
+      );
+
+      final response = await http.get(
+        url,
+        headers: {
+          'Accept': 'application/json',
+          'X-NCP-APIGW-API-KEY-ID': _naverClientId,
+          'X-NCP-APIGW-API-KEY': _naverClientSecret,
+        },
+      );
+
+      final json = jsonDecode(response.body);
+
+      if (json['results'] == null || json['results'].isEmpty) {
+        return null;
+      }
+
+      final region = json['results'][0]['region'];
+
+      final area2 = region['area2']?['name'];
+
+      return area2;
+    } catch (e, st) {
+      debugPrint("❌ Reverse geocode error: $e\n$st");
+      return null;
+    }
+  }
+
   Future<NLatLng?> _getLatLngFromKakao(String query) async {
     try {
       final url = Uri.parse(
@@ -247,6 +281,15 @@ class WriteCourseViewModel extends ChangeNotifier {
     set.query = query;
     set.lat = location.latitude;
     set.lng = location.longitude;
+
+    final guName = await _reverseGeocode(location.latitude, location.longitude);
+
+    if (guName != null) {
+      final guId = await CourseDataSource.instance.getGuIdFromName(guName);
+
+      set.gu = guId;
+      debugPrint("📍 ReverseGeocode: $guName → 구ID $guId 저장됨");
+    }
 
     await _removeMarkerIfExists(index);
 
@@ -357,9 +400,9 @@ class WriteCourseViewModel extends ChangeNotifier {
 
       debugPrint('🧹 Storage 삭제 시도: bucket=$bucket, path=$objectPath');
 
-      final res = await SupabaseManager.shared.supabase.storage
-          .from(bucket)
-          .remove([objectPath]);
+      final res = await Supabase.instance.client.storage.from(bucket).remove([
+        objectPath,
+      ]);
 
       debugPrint('🧹 Storage 삭제 결과: $res');
     } catch (e, st) {
@@ -661,7 +704,7 @@ class WriteCourseViewModel extends ChangeNotifier {
   // 새 코스 저장
   // ─────────────────────────────────────────────────────────────
   Future<void> _saveNew(bool isDone) async {
-    final userID = await SupabaseManager.shared.getMyUserRowId();
+    final userID = await CoreDataSource.instance.getMyUserRowId();
 
     List<int?> setIds = [];
 
@@ -669,16 +712,22 @@ class WriteCourseViewModel extends ChangeNotifier {
       String? img1, img2, img3;
 
       if (set.images.isNotEmpty) {
-        img1 = await SupabaseManager.shared.uploadCourseSetImage(set.images[0]);
+        img1 = await CourseDataSource.instance.uploadCourseSetImage(
+          set.images[0],
+        );
       }
       if (set.images.length > 1) {
-        img2 = await SupabaseManager.shared.uploadCourseSetImage(set.images[1]);
+        img2 = await CourseDataSource.instance.uploadCourseSetImage(
+          set.images[1],
+        );
       }
       if (set.images.length > 2) {
-        img3 = await SupabaseManager.shared.uploadCourseSetImage(set.images[2]);
+        img3 = await CourseDataSource.instance.uploadCourseSetImage(
+          set.images[2],
+        );
       }
 
-      final id = await SupabaseManager.shared.insertCourseSet(
+      final id = await CourseDataSource.instance.insertCourseSet(
         img1: img1,
         img2: img2,
         img3: img3,
@@ -692,7 +741,7 @@ class WriteCourseViewModel extends ChangeNotifier {
       setIds.add(id);
     }
 
-    await SupabaseManager.shared.supabase.from('courses').insert({
+    await Supabase.instance.client.from('courses').insert({
       'title': titleController.text,
       'user_id': userID,
       'set_01': setIds.length > 0 ? setIds[0] : null,
@@ -733,7 +782,7 @@ class WriteCourseViewModel extends ChangeNotifier {
 
       List<String> uploaded = [];
       for (final f in set.images) {
-        final u = await SupabaseManager.shared.uploadCourseSetImage(f);
+        final u = await CourseDataSource.instance.uploadCourseSetImage(f);
         if (u != null) uploaded.add(u);
       }
 
@@ -744,7 +793,7 @@ class WriteCourseViewModel extends ChangeNotifier {
       String? img3 = finalImages.length > 2 ? finalImages[2] : null;
 
       if (oldId != null) {
-        await SupabaseManager.shared.supabase
+        await Supabase.instance.client
             .from('course_sets')
             .update({
               'img_01': img1,
@@ -761,7 +810,7 @@ class WriteCourseViewModel extends ChangeNotifier {
 
         setIds.add(oldId);
       } else {
-        final newId = await SupabaseManager.shared.insertCourseSet(
+        final newId = await CourseDataSource.instance.insertCourseSet(
           img1: img1,
           img2: img2,
           img3: img3,
@@ -777,13 +826,10 @@ class WriteCourseViewModel extends ChangeNotifier {
     }
 
     for (final del in deletedSetIds) {
-      await SupabaseManager.shared.supabase
-          .from('course_sets')
-          .delete()
-          .eq('id', del);
+      await Supabase.instance.client.from('course_sets').delete().eq('id', del);
     }
 
-    await SupabaseManager.shared.supabase
+    await Supabase.instance.client
         .from('courses')
         .update({
           'title': titleController.text,

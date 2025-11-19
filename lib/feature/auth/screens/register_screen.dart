@@ -169,7 +169,6 @@ class ProfileImage extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        print("프로필 클릭");
         viewmodel.pickImage(context);
       },
       child: ClipRRect(

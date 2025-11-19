@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/data/core_data_source.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
+import 'package:of_course/feature/course/data/course_data_source.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LikedCourseViewModel extends ChangeNotifier {
-  final SupabaseManager supabase = SupabaseManager.shared;
-
   List<TagModel> tagList = [];
   Set<TagModel> selectedCategories = {};
   List<Map<String, dynamic>> courseList = [];
@@ -25,7 +24,7 @@ class LikedCourseViewModel extends ChangeNotifier {
   // Load Tags
   // -----------------------------
   Future<void> _loadTags() async {
-    final tags = await supabase.getTags();
+    final tags = await CoreDataSource.instance.getTags();
     tagList = tags;
     notifyListeners();
   }
@@ -45,7 +44,7 @@ class LikedCourseViewModel extends ChangeNotifier {
 
     final selectedTagNames = selectedCategories.map((t) => t.name).toList();
 
-    final data = await supabase.getLikedCourses(
+    final data = await CourseDataSource.instance.getLikedCourses(
       selectedTagNames: selectedTagNames,
     );
 

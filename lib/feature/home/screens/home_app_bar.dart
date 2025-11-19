@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:of_course/core/managers/supabase_manager.dart';
+import 'package:of_course/core/data/core_data_source.dart';
 import 'package:of_course/core/models/tags_moedl.dart';
 import 'package:of_course/feature/alert/providers/alert_provider.dart';
 import 'package:of_course/feature/home/models/gu_model.dart';
@@ -139,7 +139,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     }
 
     try {
-      final userRowId = await SupabaseManager.shared.getMyUserRowId();
+      final userRowId = await CoreDataSource.instance.getMyUserRowId();
 
       if (userRowId == null) {
         ScaffoldMessenger.of(

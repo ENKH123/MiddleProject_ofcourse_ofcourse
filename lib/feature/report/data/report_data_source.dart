@@ -1,9 +1,12 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:of_course/feature/report/models/report_models.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ReportDataSource {
+  ReportDataSource._();
+  static final ReportDataSource instance = ReportDataSource._();
   final supabase = Supabase.instance.client;
 
   Future<void> submitReport({

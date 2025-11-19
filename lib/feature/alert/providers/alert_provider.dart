@@ -15,7 +15,7 @@ class AlertProvider extends ChangeNotifier {
   String? _publicUserId;
   String? get publicUserId => _publicUserId;
 
-  late RealtimeChannel? channel;
+  RealtimeChannel? channel;
 
   AlertProvider() {
     _init();
@@ -26,6 +26,9 @@ class AlertProvider extends ChangeNotifier {
     _publicUserId = await AlertDataSource.instance.fetchPublicUserId(
       currentUser?.email ?? "",
     );
+    if (_publicUserId != null) {
+      channel = await _subscribeAlertEvent();
+    }
     // 처음 뷰모델 생성시 알림 불러오기
     fetchAlerts();
   }
