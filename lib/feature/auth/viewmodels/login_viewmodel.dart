@@ -113,7 +113,9 @@ class LoginViewModel extends ChangeNotifier {
     alertViewModel.resubscribeRealtime();
     // 리얼타임 채널 재구독
 
-    alertViewModel.fetchAlerts();
+    if (userAccount != null) {
+      alertViewModel.fetchAlerts();
+    }
   }
 
   // 로그아웃
