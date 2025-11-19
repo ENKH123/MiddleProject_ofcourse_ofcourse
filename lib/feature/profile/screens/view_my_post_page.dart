@@ -29,31 +29,43 @@ class _ViewMyPostView extends StatelessWidget {
       appBar: AppBar(scrolledUnderElevation: 0, title: const Text("내가 작성한 코스")),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: ListView.separated(
-          itemCount: vm.myPosts.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (_, index) {
-            final course = vm.myPosts[index];
-            return PostCard(
-              title: course['title'],
-              tags: course['tags'],
-              imageUrls: course['images'],
-              onTap: () async {
-                final myUserId = await CoreDataSource.instance.getMyUserRowId();
-                if (myUserId == null) return;
+        child: vm.myPosts.isEmpty
+            ? const Center(
+                child: Text(
+                  "작성한 코스가 없습니다.",
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              )
+            : ListView.separated(
+                itemCount: vm.myPosts.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (_, index) {
+                  final course = vm.myPosts[index];
+                  return PostCard(
+                    title: course['title'],
+                    tags: course['tags'],
+                    imageUrls: course['images'],
+                    onTap: () async {
+                      final myUserId = await CoreDataSource.instance
+                          .getMyUserRowId();
+                      if (myUserId == null) return;
 
-                final updated = await context.push(
-                  '/detail',
-                  extra: {'courseId': course['id'], 'userId': myUserId},
-                );
+                      final updated = await context.push(
+                        '/detail',
+                        extra: {'courseId': course['id'], 'userId': myUserId},
+                      );
 
-                if (updated == true) {
-                  vm.loadMyPosts();
-                }
-              },
-            );
-          },
-        ),
+                      if (updated == true) {
+                        vm.loadMyPosts();
+                      }
+                    },
+                  );
+                },
+              ),
       ),
     );
   }

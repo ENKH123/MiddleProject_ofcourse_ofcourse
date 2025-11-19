@@ -105,6 +105,19 @@ class _LikedCourseView extends StatelessWidget {
               Expanded(
                 child: vm.isLoading
                     ? const Center(child: CircularProgressIndicator())
+                    // 코스가 하나도 없을 때 UI
+                    : vm.courseList.isEmpty
+                    ? const Center(
+                        child: Text(
+                          "저장한 코스가 없습니다.",
+                          style: TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      )
+                    // 코스가 있을 때 기존 리스트 표시
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: vm.courseList.length,
