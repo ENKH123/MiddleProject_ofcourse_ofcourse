@@ -17,7 +17,6 @@ class CourseRecommendScreen extends StatefulWidget {
 class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
   bool _isLoading = true;
   String? _errorMessage;
-  Map<String, dynamic>? _recommendationData;
   int? _recommendedCourseId;
   String? _recommendationReason;
 
@@ -26,7 +25,7 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
   static const double _borderRadius = 8.0;
   static const double _spacingSmall = 8.0;
   static const double _spacingMedium = 16.0;
-  static const double _spacingLarge = 32.0; // 간격 조금 더 크게
+  static const double _spacingLarge = 32.0;
 
   @override
   void initState() {
@@ -112,7 +111,6 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
       debugPrint('코스 ID: ${parsedData['courseId']}');
 
       setState(() {
-        _recommendationData = parsedData;
         _recommendedCourseId = parsedData['courseId'] as int?;
         _recommendationReason = parsedData['reason'] as String?;
         _isLoading = false;
@@ -128,30 +126,28 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
 
   void _navigateToDetail(int courseId) async {
     final userRowId = await CoreDataSource.instance.getMyUserRowId();
-    if (context.mounted) {
-      context.push(
-        '/detail',
-        extra: {
-          'courseId': courseId,
-          'userId': userRowId ?? '',
-          'recommendationReason': _recommendationReason,
-        },
-      );
-    }
+    if (!mounted) return;
+
+    context.push(
+      '/detail',
+      extra: {
+        'courseId': courseId,
+        'userId': userRowId ?? '',
+        'recommendationReason': _recommendationReason,
+      },
+    );
   }
 
   void _goToHome() {
-    if (context.mounted) {
-      // 라우팅 히스토리를 완전히 교체하여 홈으로 이동
-      context.go('/home');
-    }
+    if (!mounted) return;
+    context.go('/home');
   }
 
   @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (!didPop) {
           _goToHome();
         }
@@ -244,7 +240,7 @@ class _CourseRecommendScreenState extends State<CourseRecommendScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: _spacingLarge), // 여기 간격 크게
+                    const SizedBox(height: _spacingLarge),
                     if (_recommendedCourseId != null)
                       SizedBox(
                         width: double.infinity,

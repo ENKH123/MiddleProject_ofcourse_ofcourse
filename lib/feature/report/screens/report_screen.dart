@@ -34,7 +34,9 @@ class ReportScreen extends StatelessWidget {
 class _ReportScreenBody extends StatefulWidget {
   final String reportingUser;
 
-  const _ReportScreenBody({super.key, required this.reportingUser});
+  const _ReportScreenBody({
+    required this.reportingUser,
+  });
 
   @override
   State<_ReportScreenBody> createState() => _ReportScreenBodyState();
@@ -126,7 +128,7 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
             _buildLabel('신고 사유'),
             const SizedBox(height: 8),
             DropdownButtonFormField<ReportReason>(
-              value: vm.selectedReason,
+              initialValue: vm.selectedReason,
               decoration: InputDecoration(
                 hintText: '신고 사유를 선택하세요',
                 border: OutlineInputBorder(
@@ -174,15 +176,14 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
           controller: _detailsController,
           maxLines: 5,
           maxLength: vm.maxDetailsLength,
-          buildCounter:
-              (
-                context, {
+          buildCounter: (
+              context, {
                 required int currentLength,
                 required bool isFocused,
                 int? maxLength,
               }) {
-                return null;
-              },
+            return null;
+          },
           decoration: const InputDecoration(
             hintText: '신고 사유를 작성해주세요',
             border: OutlineInputBorder(
@@ -301,17 +302,17 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
       ),
       child: vm.isSubmitting
           ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            )
+        height: 20,
+        width: 20,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        ),
+      )
           : const Text(
-              '신고하기',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+        '신고하기',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
     );
   }
 
@@ -334,8 +335,8 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context); // dialog 닫기
-                  Navigator.pop(context); // 화면 닫기
+                  Navigator.pop(context);
+                  Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
@@ -395,8 +396,8 @@ class _ReportScreenBodyState extends State<_ReportScreenBody> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context); // dialog
-                  Navigator.pop(context); // screen
+                  Navigator.pop(context);
+                  Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
