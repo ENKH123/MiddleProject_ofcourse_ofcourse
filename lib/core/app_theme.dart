@@ -99,6 +99,7 @@ Future<ThemeMode?> showThemeModeDialog(
 
 /// 라이트 테마
 final ThemeData lightTheme = ThemeData(
+  fontFamily: 'write',
   useMaterial3: true,
   colorScheme:
       ColorScheme.fromSeed(
@@ -129,7 +130,7 @@ final ThemeData lightTheme = ThemeData(
     bodyMedium: TextStyle(color: Color(0xFF030303)),
     titleLarge: TextStyle(
       color: Color(0xFF030303),
-      //fontWeight: FontWeight.bold,
+      fontWeight: FontWeight.bold,
     ),
   ),
 
@@ -137,16 +138,11 @@ final ThemeData lightTheme = ThemeData(
     style: ElevatedButton.styleFrom(
       backgroundColor: const Color(0xFF003366), // 버튼 배경
       foregroundColor: const Color(0xFFFAFAFA), // 버튼 글자색
-      //textStyle: const TextStyle(fontWeight: FontWeight.bold),
-      //shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
   ),
 
   textButtonTheme: TextButtonThemeData(
-    style: TextButton.styleFrom(
-      foregroundColor: const Color(0xFF003366),
-      //textStyle: const TextStyle(fontWeight: FontWeight.w500),
-    ),
+    style: TextButton.styleFrom(foregroundColor: const Color(0xFF003366)),
   ),
 
   appBarTheme: const AppBarTheme(
@@ -158,22 +154,17 @@ final ThemeData lightTheme = ThemeData(
   bottomNavigationBarTheme: const BottomNavigationBarThemeData(
     backgroundColor: Color(0xfffafafa),
     selectedItemColor: Color(0xff003366),
-    unselectedItemColor: Color(0xffD9D9D9),
+    unselectedItemColor: Color(0xffc5c5c5),
   ),
 
   filledButtonTheme: FilledButtonThemeData(
     style: FilledButton.styleFrom(
       backgroundColor: const Color(0xFF003366),
       foregroundColor: const Color(0xFFFAFAFA),
-      //shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
   ),
   outlinedButtonTheme: OutlinedButtonThemeData(
-    style: OutlinedButton.styleFrom(
-      foregroundColor: const Color(0xFF003366),
-      //side: const BorderSide(color: Color(0xFF003366)),
-      //shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ),
+    style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFF003366)),
   ),
   iconButtonTheme: const IconButtonThemeData(
     style: ButtonStyle(
@@ -188,6 +179,7 @@ final ThemeData lightTheme = ThemeData(
 
 /// 다크 테마
 final ThemeData darkTheme = ThemeData(
+  fontFamily: 'write',
   useMaterial3: true,
   colorScheme: ColorScheme(
     brightness: Brightness.dark,
@@ -229,16 +221,11 @@ final ThemeData darkTheme = ThemeData(
     style: ElevatedButton.styleFrom(
       backgroundColor: const Color(0xFFC5D5E4), // 버튼 배경
       foregroundColor: const Color(0xFF030303), // 버튼 글자색
-      //textStyle: const TextStyle(fontWeight: FontWeight.bold),
-      //shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
   ),
 
   textButtonTheme: TextButtonThemeData(
-    style: TextButton.styleFrom(
-      foregroundColor: const Color(0xFFC5D5E4),
-      //textStyle: const TextStyle(fontWeight: FontWeight.w500),
-    ),
+    style: TextButton.styleFrom(foregroundColor: const Color(0xFFC5D5E4)),
   ),
 
   appBarTheme: const AppBarTheme(
@@ -257,15 +244,10 @@ final ThemeData darkTheme = ThemeData(
     style: FilledButton.styleFrom(
       backgroundColor: const Color(0xFFC5D5E4),
       foregroundColor: const Color(0xFF030303),
-      //shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
   ),
   outlinedButtonTheme: OutlinedButtonThemeData(
-    style: OutlinedButton.styleFrom(
-      foregroundColor: const Color(0xFFC5D5E4),
-      //side: const BorderSide(color: Color(0xFFC5D5E4)),
-      //shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ),
+    style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFC5D5E4)),
   ),
   iconButtonTheme: const IconButtonThemeData(
     style: ButtonStyle(

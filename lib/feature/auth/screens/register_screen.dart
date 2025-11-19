@@ -236,7 +236,7 @@ class CompleteButton extends StatelessWidget {
                     Navigator.of(context).pop();
                     _showRegisterCompletePopup(
                       context,
-                      viewmodel.controller.text,
+                      viewmodel.nickname,
                       rgResult,
                       viewmodel,
                     );
