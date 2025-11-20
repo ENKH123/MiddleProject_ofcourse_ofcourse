@@ -44,6 +44,13 @@ class WriteCourseViewModel extends ChangeNotifier {
   // ─────────────────────────────────────────────────────────────
   Future<void> init(int? continueCourseId) async {
     this.continueCourseId = continueCourseId;
+    courseSetData.clear();
+    highlightList.clear();
+    existingSetIds.clear();
+    deletedSetIds.clear();
+    originalImageUrls.clear();
+    markerIdBySet.clear();
+    titleController.clear();
     await _loadTags();
 
     if (continueCourseId != null) {
