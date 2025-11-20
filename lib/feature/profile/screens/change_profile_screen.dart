@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:of_course/feature/profile/viewmodels/change_profile_viewmodel.dart';
@@ -15,11 +16,10 @@ class ChangeProfileScreen extends StatelessWidget {
 
     return WillPopScope(
       onWillPop: () async {
-        // 시스템 뒤로가기 / 제스처 등
         return await _maybeShowDiscardDialog(context, vm);
       },
       child: Scaffold(
-        resizeToAvoidBottomInset: true, // 키보드 충돌 방지
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           title: const Text('프로필 변경'),
           centerTitle: true,
@@ -46,12 +46,10 @@ class ChangeProfileScreen extends StatelessWidget {
     );
   }
 
-  /// 🔹 나가기 전에 변경사항 확인 다이얼로그
   Future<bool> _maybeShowDiscardDialog(
     BuildContext context,
     ChangeProfileViewModel vm,
   ) async {
-    // 변경사항이 없으면 그냥 나가기
     if (!vm.hasChanges) return true;
 
     final result = await showDialog<bool>(
@@ -62,14 +60,14 @@ class ChangeProfileScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(false); // 취소
+                Navigator.of(context).pop(false);
               },
               child: const Text('취소'),
             ),
             TextButton(
               onPressed: () {
-                vm.resetChanges(); // 원래 상태로 롤백
-                Navigator.of(context).pop(true); // 나가기
+                vm.resetChanges();
+                Navigator.of(context).pop(true);
               },
               child: const Text('나가기'),
             ),
@@ -78,7 +76,7 @@ class ChangeProfileScreen extends StatelessWidget {
       },
     );
 
-    return result ?? false; // null이면 취소로 처리
+    return result ?? false;
   }
 
   Widget _buildBody(BuildContext context, ChangeProfileViewModel vm) {
@@ -106,8 +104,11 @@ class ChangeProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 28),
+
+          // 닉네임 입력 필드
           _nicknameField(vm),
-          const SizedBox(height: 8),
+
+          const SizedBox(height: 4),
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -122,9 +123,9 @@ class ChangeProfileScreen extends StatelessWidget {
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: (canSave)
+              onPressed: canSave
                   ? () async {
-                      FocusScope.of(context).unfocus();
+                      FocusScope.of(context).unfocus(); // 키보드 내리기
                       final ok = await vm.save();
                       if (!context.mounted) return;
 
@@ -139,7 +140,7 @@ class ChangeProfileScreen extends StatelessWidget {
                         ).showSnackBar(const SnackBar(content: Text('저장 실패')));
                       }
                     }
-                  : null, // 조건 안 맞으면 비활성화
+                  : null,
               child: vm.isSaving
                   ? const SizedBox(
                       width: 20,
@@ -149,17 +150,6 @@ class ChangeProfileScreen extends StatelessWidget {
                   : const Text('변경'),
             ),
           ),
-
-          // 글자수 초과 에러 문구
-          if (vm.isNicknameTooLong) const SizedBox(height: 8),
-          if (vm.isNicknameTooLong)
-            const Align(
-              alignment: Alignment.center,
-              child: Text(
-                '10자이하로 입력해주세요',
-                style: TextStyle(color: Colors.red, fontSize: 12),
-              ),
-            ),
         ],
       ),
     );
@@ -198,6 +188,8 @@ class ChangeProfileScreen extends StatelessWidget {
   }
 
   Widget _nicknameField(ChangeProfileViewModel vm) {
+    final currentLength = vm.nicknameLength;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
@@ -213,18 +205,24 @@ class ChangeProfileScreen extends StatelessWidget {
         ],
       ),
       child: TextField(
+        controller: vm.nicknameController,
+        onChanged: vm.setNickname,
         textAlign: TextAlign.center,
         maxLines: 1,
         maxLength: 10,
+        maxLengthEnforcement: MaxLengthEnforcement.enforced,
         style: const TextStyle(color: Color(0xff030303)),
-        controller: TextEditingController(text: vm.nickname)
-          ..selection = TextSelection.fromPosition(
-            TextPosition(offset: vm.nickname.length),
-          ),
-        onChanged: vm.setNickname,
-        decoration: const InputDecoration(
+        inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
+        decoration: InputDecoration(
           border: InputBorder.none,
           hintText: '닉네임을 입력하세요',
+          counter: Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              '$currentLength/10',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ),
         ),
       ),
     );
