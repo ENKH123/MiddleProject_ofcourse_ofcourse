@@ -135,13 +135,15 @@ GoRouter createAppRouter(BuildContext context) {
           ),
           GoRoute(
             path: '/write/new',
-            builder: (context, state) => const WriteCoursePage(),
+            pageBuilder: (context, state) =>
+                MaterialPage(child: WriteCoursePage()),
           ),
+
           GoRoute(
             path: '/write/continue',
-            builder: (context, state) {
-              final courseId = state.extra as int;
-              return WriteCoursePage(continueCourseId: courseId);
+            pageBuilder: (context, state) {
+              final id = state.extra as int;
+              return MaterialPage(child: WriteCoursePage(continueCourseId: id));
             },
           ),
 
