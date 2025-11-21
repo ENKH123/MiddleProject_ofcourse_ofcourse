@@ -77,7 +77,7 @@
 
 | 팀장 | 부팀장 | 팀원 | 팀원 |
 | :-: | :--: | :-: | :-: |
-| <img width="100" height="100" alt="Image" src="https://github.com/user-attachments/assets/93d32ea6-17e6-4bdd-8767-cb5f0c2a9233" /> | <img width="100" height="100" alt="Image" src="https://github.com/user-attachments/assets/fb7da56a-2946-4931-a0b8-c36f328cbc6c" /> |  <img width="100" height="100" alt="Image" src="https://github.com/user-attachments/assets/3b370bd6-d490-4882-92f6-d333fb7ef7a0" /> | <img width="100" height="100" alt="Image" src="https://github.com/user-attachments/assets/06193817-4aec-4562-abed-fad9e370a7db" /> |
+| <img width="140" height="140" alt="Image" src="https://github.com/user-attachments/assets/93d32ea6-17e6-4bdd-8767-cb5f0c2a9233" /> | <img width="140" height="140" alt="Image" src="https://github.com/user-attachments/assets/fb7da56a-2946-4931-a0b8-c36f328cbc6c" /> |  <img width="140" height="140" alt="Image" src="https://github.com/user-attachments/assets/3b370bd6-d490-4882-92f6-d333fb7ef7a0" /> | <img width="140" height="140" alt="Image" src="https://github.com/user-attachments/assets/06193817-4aec-4562-abed-fad9e370a7db" /> |
 | [신강현](https://github.com/ENKH123) | [김재현](https://github.com/kimdzhekhon) | [권영진](https://github.com/0jhin) | [엄수빈](https://github.com/EomSB)
 
 | 팀원 | 역할 |
