@@ -69,12 +69,17 @@
 | 로그인 화면 | 약관동의 화면 | 회원가입 화면 |
 | --- | --- | --- |
 | <img width="250" height="800" alt="Image" src="https://github.com/user-attachments/assets/4d99a82a-4115-4168-b109-4389208f483f" /> | <img width="250" height="800" alt="Image" src="https://github.com/user-attachments/assets/e8b3aefa-1ced-4d15-854a-5c3fd9988a17" /> | <img width="250" height="800" alt="Image" src="https://github.com/user-attachments/assets/24b1f332-c3bf-4137-a8e6-4d74b72dbacf" /> |
+
 | 홈 화면 | 코스작성 화면 | 코스작성 화면 |
 | --- | --- | --- |
 | <img width="250" height="800" alt="Image" src="https://github.com/user-attachments/assets/1c73d026-611e-461b-b985-2fba927bc7b3" /> | <img width="250" height="800" alt="Image" src="https://github.com/user-attachments/assets/b84c0da7-0ee3-46f8-9e8e-1b0848543930" /> | <img width="250" height="800" alt="Image" src="https://github.com/user-attachments/assets/d7d0b027-f837-48a6-9b43-2237d318dc75" /> |
+
 | 알림 화면 | 코스상세 화면 | 프로필 화면 |
+| --- | --- | --- |
 | <img width="250" height="800" alt="Image" src="https://github.com/user-attachments/assets/8b8e8656-62d3-427c-a764-9bafa685898f" /> | <img width="250" height="800" alt="Image" src="https://github.com/user-attachments/assets/05bbf1b9-8e13-4c90-b9da-55d02433cdc7" /> | <img width="250" height="800" alt="Image" src="https://github.com/user-attachments/assets/311d899b-828c-4cf4-9ac0-14b52ace4b87" /> |
+
 | 테마변경 화면 | 온보딩 화면 | 신고화면 |
+| --- | --- | --- |
 | <img width="250" height="800" alt="Image" src="https://github.com/user-attachments/assets/81b082e0-061d-41e1-b069-7794a5c80563" /> | <img width="250" height="800" alt="Image" src="https://github.com/user-attachments/assets/af63cae7-3173-40b8-887e-8eddcd5a87bb" /> |<img width="250" height="800" alt="Image" src="https://github.com/user-attachments/assets/2dbd26b8-a386-41a8-89f8-2df900b075e4" /> |
 
 # 시연 영상 (넣을지 말지 고민)
