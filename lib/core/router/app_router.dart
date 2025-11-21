@@ -136,14 +136,19 @@ GoRouter createAppRouter(BuildContext context) {
           GoRoute(
             path: '/write/new',
             pageBuilder: (context, state) =>
-                MaterialPage(child: WriteCoursePage()),
+                MaterialPage(key: UniqueKey(), child: WriteCoursePage()),
           ),
 
           GoRoute(
             path: '/write/continue',
             pageBuilder: (context, state) {
               final id = state.extra as int;
-              return MaterialPage(child: WriteCoursePage(continueCourseId: id));
+              return MaterialPage(
+                key: ValueKey(
+                  "write_continue_$id${DateTime.now().millisecondsSinceEpoch}",
+                ),
+                child: WriteCoursePage(continueCourseId: id),
+              );
             },
           ),
 
