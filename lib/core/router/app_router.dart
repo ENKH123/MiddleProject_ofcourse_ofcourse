@@ -135,10 +135,8 @@ GoRouter createAppRouter(BuildContext context) {
           ),
           GoRoute(
             path: '/write/new',
-            pageBuilder: (context, state) => MaterialPage(
-              key: UniqueKey(), // ❗❗ 이거 하나로 문제 완전 해결
-              child: WriteCoursePage(),
-            ),
+            pageBuilder: (context, state) =>
+                MaterialPage(key: UniqueKey(), child: WriteCoursePage()),
           ),
 
           GoRoute(
