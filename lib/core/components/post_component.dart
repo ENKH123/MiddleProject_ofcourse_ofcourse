@@ -79,6 +79,14 @@ class PostCard extends StatelessWidget {
                               : CachedNetworkImage(
                                   imageUrl: url,
                                   fit: BoxFit.cover,
+                                  // 캐시 식별을 위해 URL 사용
+                                  cacheKey: url,
+                                  // 실제 표시 크기의 2배로 캐시
+                                  memCacheWidth: 200,
+                                  memCacheHeight: 200,
+                                  // 메모리 절약을 위해 원본 크기 제한
+                                  maxWidthDiskCache: 800,
+                                  maxHeightDiskCache: 800,
                                   progressIndicatorBuilder:
                                       (context, url, progress) => Container(
                                         width: double.infinity,

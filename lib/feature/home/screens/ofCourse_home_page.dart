@@ -60,12 +60,17 @@ class _OfcourseHomeView extends StatelessWidget {
                   child: ListView.separated(
                     controller: OfcourseHomePage.scrollController,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
+                    // 캐시 영역을 화면 높이의 3배 정도를 캐시하여 위젯이 dispose되지 않도록 함
+                    cacheExtent: 2000.0,
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemCount: vm.courseList.length,
                     itemBuilder: (_, index) {
                       final course = vm.courseList[index];
+                      final courseId = course['id'].toString();
 
                       return PostCard(
+                        // 코스Id를 위젯키로 설정하여 위젯 재생성 방지
+                        key: ValueKey('postcard$courseId'),
                         title: course['title'],
                         tags: (course['tags'] as List).cast<String>(),
                         imageUrls: (course['images'] as List).cast<String>(),
